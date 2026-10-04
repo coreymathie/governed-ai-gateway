@@ -1,0 +1,19 @@
+[project]
+name = "multi-provider-llm-router"
+version = "0.4.0"
+description = "OpenAI-compatible LLM gateway across OpenAI, Anthropic, Gemini, and Ollama with fallback, spend caps, and spend-anomaly detection"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Corey Mathie", email = "Coremathie@gmail.com" }]
+keywords = ["llm", "gateway", "litellm", "openai", "anthropic", "gemini", "ollama", "finops"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "BLE", "UP", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

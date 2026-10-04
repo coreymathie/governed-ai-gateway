@@ -1,0 +1,31 @@
+# Regulated-workload routes.
+#
+# Load with: ROUTER_ROUTES_FILE=./config/regulated.yaml uvicorn router.main:app
+#
+# Posture: NO public LLM calls for these aliases. All inference routes to the
+# on-prem Ollama endpoint only. If Ollama is down, the request fails — we do
+# NOT fall back to a public provider, because the whole point is to keep the
+# data on-prem.
+#
+# Use alongside a key schema where team names encode the regulatory profile
+# (e.g., team="hipaa" or team="pci").
+
+aliases:
+  regulated-fast:
+    - { provider: ollama, model: llama3.1:8b,  timeout_s: 60 }
+
+  regulated-reasoning:
+    - { provider: ollama, model: qwen2.5:14b,  timeout_s: 120 }
+
+  # Explicit NO-public policy: this alias intentionally has no fallback.
+  phi-safe:
+    - { provider: ollama, model: llama3.1:8b,  timeout_s: 60 }
+
+policies:
+  # Lower per-key cap — if a regulated key is doing >$10/day in local
+  # inference something is unusual (local inference is near-free, so the only
+  # way to spend money here is to accidentally route to a public provider).
+  per_key_daily_usd: 10.0
+  per_team_daily_usd: 50.0
+  rate_limit_rpm: 30
+  auto_pause_on_anomaly: false   # local inference is ~$0, so spend anomalies don't apply

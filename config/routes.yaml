@@ -1,0 +1,34 @@
+# Model aliases: your code calls these, the router picks the real provider.
+# Entries are tried in order; on error/timeout/429 the next is used.
+# `provider` must be one of: openai, anthropic, gemini, ollama
+
+aliases:
+  smart-fast:
+    - { provider: anthropic, model: claude-haiku-4-5, timeout_s: 20 }
+    - { provider: openai,    model: gpt-4.1-mini,     timeout_s: 20 }
+    - { provider: ollama,    model: llama3.1:8b,      timeout_s: 60 }
+
+  heavy-reasoning:
+    - { provider: anthropic, model: claude-sonnet-4-5, timeout_s: 60 }
+    - { provider: openai,    model: gpt-4.1,           timeout_s: 60 }
+
+  cheap-batch:
+    - { provider: openai,    model: gpt-4.1-nano,      timeout_s: 15 }
+    - { provider: gemini,    model: gemini-2.5-flash,  timeout_s: 15 }
+
+  local-first:
+    - { provider: ollama,    model: llama3.1:8b,       timeout_s: 60 }
+    - { provider: anthropic, model: claude-haiku-4-5,  timeout_s: 20 }
+
+policies:
+  # Hard caps enforced before any provider call
+  per_key_daily_usd: 50.0
+  per_team_daily_usd: 500.0
+  rate_limit_rpm: 120
+  # Block a key whose spend this hour reaches 10x its 7-day hourly baseline.
+  # Off by default: turn it on once keys have a week of history.
+  auto_pause_on_anomaly: false
+  # Serve repeated deterministic requests (temperature 0) from cache for an hour.
+  # Cache entries are scoped per team. Set cache_ttl_seconds: 0 to turn it off.
+  cache_ttl_seconds: 3600
+  cache_max_temperature: 0.0
