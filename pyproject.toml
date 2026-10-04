@@ -5,7 +5,7 @@ description = "OpenAI-compatible LLM gateway across OpenAI, Anthropic, Gemini, a
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
-authors = [{ name = "Corey Mathie", email = "Coremathie@gmail.com" }]
+authors = [{ name = "Corey Mathie" }]
 keywords = ["llm", "gateway", "litellm", "openai", "anthropic", "gemini", "ollama", "finops"]
 
 [tool.ruff]
