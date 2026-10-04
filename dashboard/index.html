@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<title>LLM Router — Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #121821; --fg: #e6edf3; --muted: #8b98a5;
+    --accent: #4fb3ff; --danger: #ff6b6b; --ok: #4ade80; --border: #1f2a37;
+  }
+  :root:not([data-theme="dark"]) {
+    --bg: #ffffff; --panel: #f6f8fa; --fg: #1f2328; --muted: #656d76;
+    --accent: #0969da; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #ffffff; --panel: #f6f8fa; --fg: #1f2328; --muted: #656d76;
+      --accent: #0969da; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--fg); padding: 16px;
+  }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 12px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .stat { font-size: 24px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; }
+  td.err { color: var(--danger); font-family: ui-monospace, monospace; font-size: 11px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+  input, button {
+    font: inherit; border: 1px solid var(--border); background: var(--bg); color: var(--fg);
+    padding: 6px 12px; border-radius: 6px;
+  }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+          background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
+  .pill.err { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
+</style>
+</head>
+<body>
+<header>
+  <h1>LLM Router</h1>
+  <div class="row">
+    <input id="adminKey" type="password" placeholder="admin key" style="width: 260px;" />
+    <button class="primary" onclick="save()">Save</button>
+    <button onclick="toggleTheme()">theme</button>
+  </div>
+</header>
+
+<div class="grid">
+  <div class="card"><h2>Spend today (all keys)</h2><div class="stat" id="totalSpend">—</div></div>
+  <div class="card"><h2>Calls today</h2><div class="stat" id="totalCalls">—</div></div>
+  <div class="card"><h2>Provider error rate (60 min)</h2><div id="providerErr">—</div></div>
+  <div class="card"><h2>Keys flagged now</h2><div class="stat" id="flaggedCount">—</div></div>
+  <div class="card"><h2>Saved by cache today</h2><div class="stat" id="cacheSaved">—</div><div class="muted" id="cacheRate"></div></div>
+</div>
+
+<div class="card" style="margin-bottom: 16px;">
+  <h2>Spend anomalies (this hour vs. 7-day baseline)</h2>
+  <table>
+    <thead><tr><th>Key</th><th>Team</th><th>This hour</th><th>Baseline / hr</th><th>Multiple</th><th>Status</th></tr></thead>
+    <tbody id="anomalyBody"></tbody>
+  </table>
+  <div class="muted" style="margin-top:8px">Flagged at 3x baseline, paused at 10x (when auto-pause is on). Keys need 24 hours of history before they're judged.</div>
+</div>
+
+<div class="card" style="margin-bottom: 16px;">
+  <h2>Spend by team (today)</h2>
+  <table><thead><tr><th>Team</th><th>Spend</th></tr></thead><tbody id="teamBody"></tbody></table>
+</div>
+
+<div class="card" style="margin-bottom: 16px;">
+  <h2>Spend by key (today)</h2>
+  <table><thead><tr><th>Label</th><th>Team</th><th>Spend</th></tr></thead><tbody id="keyBody"></tbody></table>
+</div>
+
+<div class="card">
+  <h2>Recent calls</h2>
+  <table>
+    <thead><tr><th>Time</th><th>Key · Alias</th><th>Provider / Model</th><th>Tokens</th><th>$</th><th>Error</th></tr></thead>
+    <tbody id="callsBody"></tbody>
+  </table>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const BASE = location.origin;
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute("data-theme", r.getAttribute("data-theme") === "dark" ? "light" : "dark");
+}
+function getKey() { try { return sessionStorage.getItem("adminKey") || ""; } catch { return ""; } }
+function save() { try { sessionStorage.setItem("adminKey", $("adminKey").value); } catch {}  refresh(); }
+async function call(path) {
+  const r = await fetch(BASE + path, { headers: { "Authorization": "Bearer " + getKey() } });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function refresh() {
+  if (!getKey()) return;
+  try {
+    const [usage, calls, anomalies] = await Promise.all([
+      call("/admin/usage/today"), call("/admin/recent?limit=50"), call("/admin/anomalies"),
+    ]);
+    $("totalSpend").textContent = "$" + usage.total_spend_usd.toFixed(4);
+    $("totalCalls").textContent = usage.calls_today;
+    const cache = usage.cache || { saved_usd: 0, hits: 0, hit_rate: 0 };
+    $("cacheSaved").textContent = "$" + cache.saved_usd.toFixed(4);
+    $("cacheRate").textContent = `${cache.hits} hits · ${(cache.hit_rate * 100).toFixed(1)}% of calls`;
+    const flagged = anomalies.filter(a => a.verdict !== "ok").length;
+    $("flaggedCount").textContent = flagged;
+    $("flaggedCount").style.color = flagged ? "var(--danger)" : "";
+
+    $("providerErr").innerHTML = (usage.provider_errors_60m || []).map(p => {
+      const rate = p.total ? (p.errors / p.total * 100).toFixed(1) : "0";
+      return `<span class="${p.errors ? "pill err" : "pill"}" style="margin-right:6px">${esc(p.provider)}: ${rate}% (${p.errors}/${p.total})</span>`;
+    }).join("") || '<span class="muted">no calls in the last hour</span>';
+
+    $("anomalyBody").innerHTML = anomalies.map(a => {
+      const cls = a.verdict === "ok" ? "pill" : "pill err";
+      const status = a.history_hours < 24 ? '<span class="muted">learning</span>' : `<span class="${cls}">${esc(a.verdict)}</span>`;
+      return `<tr><td>${esc(a.label)}</td><td>${esc(a.team)}</td><td>$${a.hour_spend_usd.toFixed(4)}</td>
+        <td>$${a.baseline_hourly_usd.toFixed(4)}</td><td>${a.multiple ? a.multiple.toFixed(1) + "x" : "—"}</td><td>${status}</td></tr>`;
+    }).join("") || '<tr><td colspan="6" class="muted">no keys yet</td></tr>';
+
+    $("teamBody").innerHTML = Object.entries(usage.per_team).map(([t, s]) =>
+      `<tr><td>${esc(t)}</td><td>$${s.toFixed(4)}</td></tr>`).join("") || '<tr><td colspan="2" class="muted">—</td></tr>';
+    $("keyBody").innerHTML = usage.per_key.map(k =>
+      `<tr><td>${esc(k.label)}</td><td>${esc(k.team)}</td><td>$${k.spend_usd.toFixed(4)}</td></tr>`).join("")
+      || '<tr><td colspan="3" class="muted">—</td></tr>';
+    $("callsBody").innerHTML = calls.map(c => `
+      <tr>
+        <td>${new Date(c.ts.replace(" ", "T") + "Z").toLocaleTimeString()}</td>
+        <td>${esc(c.label)} · ${esc(c.alias)}</td>
+        <td>${c.cached ? '<span class="pill">cache</span> ' : ""}${esc(c.provider)} / ${esc(c.model)}</td>
+        <td>${c.prompt_tokens}+${c.completion_tokens}</td>
+        <td>$${c.cost_usd.toFixed(5)}${c.cached ? ` <span class="muted">saved $${c.saved_usd.toFixed(5)}</span>` : ""}</td>
+        <td class="err">${esc(c.error || "")}</td>
+      </tr>`).join("") || '<tr><td colspan="6" class="muted">no calls yet</td></tr>';
+  } catch (e) {
+    $("teamBody").innerHTML = `<tr><td colspan="2" class="muted">${esc(e.message)}</td></tr>`;
+  }
+}
+$("adminKey").value = getKey();
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
