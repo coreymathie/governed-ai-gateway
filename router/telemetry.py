@@ -35,7 +35,7 @@ try:  # optional dependency
 except ImportError:  # pragma: no cover - exercised by monkeypatching in tests
     _otel_trace = None
 
-TRACER_NAME = "multi-provider-llm-router"
+TRACER_NAME = "governed-ai-gateway"
 PROVIDER_NAMES = {"openai": "openai", "anthropic": "anthropic", "gemini": "gcp.gemini", "ollama": "ollama"}
 
 _provider_override = None  # tests can inject a TracerProvider without touching the global one

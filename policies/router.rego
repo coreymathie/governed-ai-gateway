@@ -1,4 +1,4 @@
-# Example OPA policy for multi-provider-llm-router (OPA 1.x / Rego v1 syntax).
+# Example OPA policy for governed-ai-gateway (OPA 1.x / Rego v1 syntax).
 #
 # The gateway POSTs {"input": {...}} to /v1/data/router/decision after its own
 # policy allows a request. Input fields: team, key_label, alias, targets

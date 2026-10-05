@@ -1,0 +1,101 @@
+{
+ "files": [
+  {
+   "about": "",
+   "file": "tests/test_anomaly.py",
+   "tests": 4
+  },
+  {
+   "about": "End-to-end API tests with LiteLLM's completion call stubbed (no network).",
+   "file": "tests/test_api.py",
+   "tests": 10
+  },
+  {
+   "about": "Circuit breaker state machine: every transition, driven by a fake clock.",
+   "file": "tests/test_breaker.py",
+   "tests": 17
+  },
+  {
+   "about": "",
+   "file": "tests/test_config_and_store.py",
+   "tests": 4
+  },
+  {
+   "about": "Live-mode console endpoints: simulated providers, request traces, key holds, budget overrides, config",
+   "file": "tests/test_console_api.py",
+   "tests": 17
+  },
+  {
+   "about": "The console's Evals screen reads demo/data/*.json; they must match what the repo's eval code produces now.",
+   "file": "tests/test_console_data.py",
+   "tests": 2
+  },
+  {
+   "about": "The console's demo mode (demo/engine.py request path and api()), run under CPython with the same modules",
+   "file": "tests/test_demo_console.py",
+   "tests": 10
+  },
+  {
+   "about": "The browser demo's engine, run under CPython: same router modules Pyodide loads, simulated providers.",
+   "file": "tests/test_demo_engine.py",
+   "tests": 19
+  },
+  {
+   "about": "Eval harness (simulated providers only: no real model is called here) and shadow mode through the API.",
+   "file": "tests/test_evals_shadow.py",
+   "tests": 16
+  },
+  {
+   "about": "Application keys hashed at rest: storage, lookup, pepper, API surface, and migration of a v0.5 database.",
+   "file": "tests/test_keys_at_rest.py",
+   "tests": 7
+  },
+  {
+   "about": "Latency-aware ordering and the provider fallback chain (no HTTP, no LiteLLM).",
+   "file": "tests/test_latency_and_chain.py",
+   "tests": 14
+  },
+  {
+   "about": "MCP tool gateway: policy core, and the HTTP proxy against a fake MCP server on a real local port.",
+   "file": "tests/test_mcp_gateway.py",
+   "tests": 11
+  },
+  {
+   "about": "Policy-as-code: schema, layer combination, evaluation, OPA (fake server over real HTTP), and the API path.",
+   "file": "tests/test_policy.py",
+   "tests": 22
+  },
+  {
+   "about": "PII detection, content hooks, the opt-in content log and the hash-chained audit trail. All data is fictional.",
+   "file": "tests/test_privacy.py",
+   "tests": 16
+  },
+  {
+   "about": "Semantic cache: embedder, guards, partitions, TTL/LRU, calibration (bundled fictional pairs), and the API path.",
+   "file": "tests/test_semcache.py",
+   "tests": 12
+  },
+  {
+   "about": "Token estimation, TPM limiter, budget hierarchy, showback aggregation (pure functions).",
+   "file": "tests/test_tokens_budgets_showback.py",
+   "tests": 17
+  },
+  {
+   "about": "v0.4: streaming (with real LiteLLM mock chunks), response cache, metrics, schema migration.",
+   "file": "tests/test_v04_streaming_cache.py",
+   "tests": 8
+  },
+  {
+   "about": "v0.5 end to end through the HTTP API, LiteLLM stubbed (no network, no provider keys).",
+   "file": "tests/test_v05_api.py",
+   "tests": 22
+  }
+ ],
+ "last_run": {
+  "date": "2026-10-05",
+  "exit_code": 0,
+  "summary": "277 passed, 1 skipped, 2 warnings"
+ },
+ "measured": "counted from the test sources; CI runs pytest -q on every push",
+ "total": 228
+}

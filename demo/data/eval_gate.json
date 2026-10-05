@@ -1,0 +1,27 @@
+{
+ "baseline": {
+  "alias": "smart-fast",
+  "errors": 0,
+  "quality": 0.975,
+  "total_cost_usd": 0.0012
+ },
+ "candidate": {
+  "alias": "cheap-batch",
+  "errors": 0,
+  "quality": 0.775,
+  "total_cost_usd": 0.000155
+ },
+ "command": "python scripts/eval_gate.py --baseline-report r.json --candidate-report r.json --alias smart-fast --candidate-alias cheap-batch",
+ "cost_change_pct": -0.8708,
+ "limits": {
+  "max_cost_increase": 0.1,
+  "max_quality_drop": 0.02
+ },
+ "measured": "simulated: same profiles and cases as eval_routes.json",
+ "ok": false,
+ "quality_delta": -0.2,
+ "question": "Would moving smart-fast traffic to cheap-batch pass the CI gate?",
+ "reasons": [
+  "quality fell 0.200 (limit 0.020): 0.975 -> 0.775"
+ ]
+}
