@@ -35,7 +35,7 @@
 
 | Module | Responsibility | Third-party imports |
 |---|---|---|
-| `main.py` | HTTP API, admin endpoints, dashboard | FastAPI |
+| `main.py` | HTTP API, admin endpoints, console mount (`/console/`), dashboard | FastAPI |
 | `routing.py` | Request pipeline above; streaming relay; response headers | FastAPI, LiteLLM (lazy) |
 | `fallback.py` | `run_chain`: walk targets, skip open breakers, record attempts | none |
 | `breaker.py` | Circuit breaker state machine, error classification, Retry-After parsing | none |
@@ -60,8 +60,12 @@
 | `mcp_gateway.py` | `POST /mcp/{server}`: JSON-RPC proxy (JSON or SSE replies), filtering, decisions, audit, usage | httpx, FastAPI |
 | `evals.py` | Eval cases, scoring, simulated provider, replay through `run_chain`, summaries, gate, Markdown report | none |
 | `evalrun.py` | CLI glue: load routes, sim or real (LiteLLM) provider, key checks | PyYAML, pydantic; LiteLLM for real runs |
+| `traces.py` | Per-request decision traces (stage, decision, summary, wall time) in a bounded per-worker buffer | none |
+| `configcheck.py` | Validate policies/routes/MCP YAML with the gateway's own loaders; policy decision matrices | none at import (PyYAML, pydantic lazily) |
+| `console.py` | Live console back end: config read/validate/apply (atomic, reload, restore on failure), dry runs, overview | PyYAML (via configcheck) |
+| `mock_provider.py` | Simulated OpenAI-compatible providers and MCP servers for `ROUTER_MOCK_PROVIDERS=true`, with runtime fault knobs | none |
 
-The modules marked "none" are what the [browser demo](../demo/) loads into Pyodide unchanged; `tests/test_demo_engine.py` fails if one of them gains a third-party import at module level.
+The modules marked "none" (plus `configcheck.py`, and `models.py` on demand with Pyodide's pydantic) are what the [console's demo mode](../demo/) loads into Pyodide unchanged; `tests/test_demo_engine.py` fails if one of them gains a third-party import at module level.
 
 ## Design choices
 
