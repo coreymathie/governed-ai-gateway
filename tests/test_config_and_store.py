@@ -27,8 +27,8 @@ def test_unknown_provider_fails_at_load(router_env):
 def test_time_windows_only_count_recent_calls():
     """Regression: ISO 'T' timestamps compared as text used to count the whole day as 'last 60 minutes'."""
     k = store.create_key("app")
-    store.record_call(k.key, "default", "smart-fast", "openai", "gpt-4.1-mini", 1, 1, 0.01, error="boom", ts=_ts(3))
-    store.record_call(k.key, "default", "smart-fast", "openai", "gpt-4.1-mini", 1, 1, 0.01, ts=_ts(0))
+    store.record_call(k.id, "default", "smart-fast", "openai", "gpt-4.1-mini", 1, 1, 0.01, error="boom", ts=_ts(3))
+    store.record_call(k.id, "default", "smart-fast", "openai", "gpt-4.1-mini", 1, 1, 0.01, ts=_ts(0))
     errs = store.per_provider_errors(60)
     assert errs == [{"provider": "openai", "errors": 0, "total": 1}]
 
@@ -36,9 +36,9 @@ def test_time_windows_only_count_recent_calls():
 def test_spend_today_by_key_and_team():
     a = store.create_key("a", team="product")
     b = store.create_key("b", team="product")
-    store.record_call(a.key, "product", "smart-fast", "openai", "m", 1, 1, 0.25)
-    store.record_call(b.key, "product", "smart-fast", "openai", "m", 1, 1, 0.50)
-    assert store.spend_today(key=a.key) == pytest.approx(0.25)
+    store.record_call(a.id, "product", "smart-fast", "openai", "m", 1, 1, 0.25)
+    store.record_call(b.id, "product", "smart-fast", "openai", "m", 1, 1, 0.50)
+    assert store.spend_today(key=a.id) == pytest.approx(0.25)
     assert store.spend_today(team="product") == pytest.approx(0.75)
     assert store.spend_today() == pytest.approx(0.75)
     assert store.calls_today() == 2
