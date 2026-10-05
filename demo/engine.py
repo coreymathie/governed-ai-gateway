@@ -21,8 +21,17 @@ knobs in the UI), the request mix, the 7-day spend history behind each key's
 anomaly baseline, and time itself (a virtual clock, so a "30 s cooldown" doesn't
 make you wait). Nothing here calls a network or needs an API key.
 
-The request path mirrors router/routing.py: budgets -> anomaly pause -> TPM
-reservation -> fallback chain -> settle tokens -> record cost. The governance
+The console (`request()`, used by every screen of demo/) follows router/routing.py
+stage by stage: auth -> policy -> budgets -> anomaly pause -> pre_request hooks ->
+exact cache -> semantic cache -> TPM reservation -> fallback chain -> settle ->
+post_response hooks -> content log, and records a trace in the same shape as the
+gateway's GET /admin/traces. The console's Policies screen validates YAML with the
+gateway's loaders (router/configcheck.py: router/policy.py, router/mcp_policy.py, and
+router/models.py with Pyodide's pydantic for routes.yaml).
+
+The older `send()` path (kept for its tests) mirrors router/routing.py's core:
+budgets -> anomaly pause -> TPM reservation -> fallback chain -> settle tokens ->
+record cost. The governance
 panel (`prompt()`) adds the governance stages: policy decision -> pre_request
 hooks (plus any the policy requires) -> provider (only deployments the policy
 permits) -> post_response hooks -> opt-in redacted content log, with an audit
@@ -33,23 +42,148 @@ the same entries to a hash-chained SQLite table (router/audit.py).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 from dataclasses import asdict, dataclass
 
-from router import anomaly, costs, mcp_policy, pii, policy, semcache, showback
+from router import anomaly, configcheck, costs, mcp_policy, pii, policy, semcache, showback
 from router.breaker import BreakerConfig, BreakerRegistry
 from router.budgets import Hierarchy, Limits
 from router.budgets import check as check_budgets
 from router.fallback import ChainExhausted, run_chain
 from router.latency import LatencyConfig, LatencyTracker
 from router.tokens import TokenLimitExceeded, TokenRateLimiter, estimate_request_tokens, estimator_name
+from router.traces import LABELS as STAGE_LABELS
 
 ALIAS = "smart-fast"
 REAL_MODULES = [
     "breaker", "fallback", "latency", "tokens", "budgets", "anomaly", "costs", "showback", "pii", "policy", "semcache",
-    "mcp_policy",
+    "mcp_policy", "configcheck", "traces",
 ]  # fmt: skip
+# Same aliases as config/routes.yaml (tests/test_demo_engine.py fails if they drift).
+DEMO_ALIASES = {
+    "smart-fast": {
+        "strategy": "ordered",
+        "targets": ["anthropic/claude-haiku-4-5", "openai/gpt-4.1-mini", "ollama/llama3.1:8b"],
+    },
+    "heavy-reasoning": {"strategy": "ordered", "targets": ["anthropic/claude-sonnet-4-5", "openai/gpt-4.1"]},
+    "cheap-batch": {"strategy": "ordered", "targets": ["openai/gpt-4.1-nano", "gemini/gemini-2.5-flash"]},
+    "local-first": {"strategy": "ordered", "targets": ["ollama/llama3.1:8b", "anthropic/claude-haiku-4-5"]},
+    "fast-chat": {
+        "strategy": "latency",
+        "targets": ["anthropic/claude-haiku-4-5", "openai/gpt-4.1-mini", "gemini/gemini-2.5-flash"],
+    },
+}
+# Same invented profiles as evals/sim_profiles.json (latency, error rate, USD per 1M tokens), for deployments the
+# three original demo providers don't cover. Simulated: not measurements of any real model.
+SIM_PROFILES = {
+    "anthropic/claude-haiku-4-5": {
+        "quality": 0.90,
+        "latency_ms": 650,
+        "error_rate": 0.02,
+        "price_in_per_1m": 1.00,
+        "price_out_per_1m": 5.00,
+    },
+    "anthropic/claude-sonnet-4-5": {
+        "quality": 0.96,
+        "latency_ms": 1400,
+        "error_rate": 0.01,
+        "price_in_per_1m": 3.00,
+        "price_out_per_1m": 15.00,
+    },
+    "openai/gpt-4.1": {
+        "quality": 0.95,
+        "latency_ms": 1200,
+        "error_rate": 0.01,
+        "price_in_per_1m": 2.00,
+        "price_out_per_1m": 8.00,
+    },
+    "openai/gpt-4.1-mini": {
+        "quality": 0.88,
+        "latency_ms": 480,
+        "error_rate": 0.02,
+        "price_in_per_1m": 0.40,
+        "price_out_per_1m": 1.60,
+    },
+    "openai/gpt-4.1-nano": {
+        "quality": 0.72,
+        "latency_ms": 300,
+        "error_rate": 0.02,
+        "price_in_per_1m": 0.10,
+        "price_out_per_1m": 0.40,
+    },
+    "gemini/gemini-2.5-flash": {
+        "quality": 0.86,
+        "latency_ms": 520,
+        "error_rate": 0.02,
+        "price_in_per_1m": 0.30,
+        "price_out_per_1m": 2.50,
+    },
+    "ollama/llama3.1:8b": {
+        "quality": 0.70,
+        "latency_ms": 1300,
+        "error_rate": 0.00,
+        "price_in_per_1m": 0.05,
+        "price_out_per_1m": 0.05,
+    },
+    "ollama/qwen2.5:14b": {
+        "quality": 0.78,
+        "latency_ms": 2100,
+        "error_rate": 0.00,
+        "price_in_per_1m": 0.08,
+        "price_out_per_1m": 0.08,
+    },
+}
+PROVIDER_LABELS = {"anthropic": "Anthropic", "openai": "OpenAI", "gemini": "Gemini", "ollama": "Ollama (local)"}
+NOW_HOUR = 14  # the simulated time of day the overview chart is drawn at
+# Which hours of the day each demo key is active (simulated history for the overview chart).
+ACTIVE_HOURS = {
+    "web-app": range(8, 22),
+    "mobile-app": range(7, 23),
+    "support-bot": range(0, 24),
+    "nightly-batch": range(0, 6),
+}
+KEY_ALIAS = {
+    "web-app": "smart-fast",
+    "mobile-app": "fast-chat",
+    "support-bot": "smart-fast",
+    "nightly-batch": "cheap-batch",
+}
+SAMPLE_PROMPTS = {
+    "product": [
+        "Draft a two-sentence release note for the new CSV export.",
+        "Rewrite this error so a customer understands it: 'E_TIMEOUT 504 upstream'.",
+        "Suggest three names for a saved-search feature, one line each.",
+        "Turn these bullet points into a short changelog entry: faster search, dark mode, bug fixes.",
+    ],
+    "support": [
+        "How do I export my invoices as CSV?",
+        "A customer says they were charged twice this month. What should I check first?",
+        "Summarize ticket T-1042 for the on-call engineer in three bullets.",
+        "How do I rotate an API key in the dashboard?",
+    ],
+    "data": [
+        "Summarize each of these 40 support tickets in one line and tag it billing, bug, how-to or feature "
+        "request. "
+        + " ".join(
+            f"Ticket T-{1000 + i}: {s}. The customer wrote in twice and attached screenshots from the web app."
+            for i, s in enumerate(
+                [
+                    "invoice export to CSV fails with a timeout",
+                    "asks for a dark mode in the reporting pages",
+                    "password reset email arrives after the link expired",
+                    "card was charged twice for the same monthly plan",
+                    "search takes over ten seconds on large workspaces",
+                    "wants single sign-on for the whole company",
+                    "CSV export shows dates in the wrong time zone",
+                    "cannot invite a teammate from the settings page",
+                ]
+                * 5
+            )
+        )
+    ],
+}  # fmt: skip
 # Same document as config/mcp.example.yaml (tests/test_demo_engine.py fails if they drift).
 DEMO_MCP = {
     "version": 1,
@@ -242,6 +376,7 @@ class Engine:
         self.content_log: list[dict] = []
         self.prompts: list[dict] = []
         self.baselines = {k.label: self._synthetic_history(k) for k in self.keys}
+        self._reset_console()
         self._apply_prices()
 
     def _synthetic_history(self, k: DemoKey) -> list[float]:
@@ -253,7 +388,8 @@ class Engine:
         ]
 
     def _apply_prices(self) -> None:
-        costs.set_price_overrides({d.id: (d.price_in_1k * 1000, d.price_out_1k * 1000) for d in self.deployments})
+        deps = list(getattr(self, "pool", {}).values()) or self.deployments
+        costs.set_price_overrides({d.id: (d.price_in_1k * 1000, d.price_out_1k * 1000) for d in deps})
 
     def hierarchy(self) -> Hierarchy:
         return Hierarchy(
@@ -270,6 +406,8 @@ class Engine:
         for d in self.deployments:
             if d.id == dep_id:
                 return d
+        if dep_id in getattr(self, "pool", {}):
+            return self.pool[dep_id]
         raise KeyError(dep_id)
 
     def update_deployment(self, dep_id: str, changes: dict) -> None:
@@ -329,22 +467,25 @@ class Engine:
         baseline, hours = anomaly.baseline_from_hourly(self.baselines[k.label])
         return anomaly.classify(k.label, self._hour_spend(k), baseline, hours)
 
-    def _record(self, k: DemoKey, d: Deployment, pt: int, ct: int, cost: float, error: str | None) -> None:
+    def _record(
+        self, k: DemoKey, d: Deployment, pt: int, ct: int, cost: float, error: str | None, alias: str = ALIAS,
+        cached: bool = False, saved: float = 0.0,
+    ) -> None:  # fmt: skip
         self.ledger.append(
             {
                 "key_id": k.key_id,
                 "key_label": k.label,
                 "key_fp": showback.fingerprint(k.key_id),
                 "team": k.team,
-                "alias": ALIAS,
+                "alias": alias,
                 "provider": d.provider,
                 "model": d.model,
                 "prompt_tokens": pt,
                 "completion_tokens": ct,
                 "cost_usd": cost,
                 "error": error,
-                "cached": 0,
-                "saved_usd": 0.0,
+                "cached": int(cached),
+                "saved_usd": saved,
                 "hour": int(self.clock() // 3600),
             }
         )
@@ -780,6 +921,589 @@ class Engine:
             "budget_warnings": h.warnings(),
         }
 
+    # ---------- console (demo/): state ----------
+
+    def _reset_console(self) -> None:
+        self.pool: dict[str, Deployment] = {d.id: d for d in self.deployments}
+        self.routes: dict[str, dict] = {}
+        self._set_routes(DEMO_ALIASES)
+        self.traces: list[dict] = []
+        self.trace_seq = 0
+        self.revoked: set[str] = set()
+        self.holds: dict[str, str] = {}  # key label -> "paused" | "override"
+        self.cache_on = True  # exact cache for temperature-0 requests (cache_ttl_seconds > 0 in routes.yaml)
+        self.exact_cache: dict[str, dict] = {}
+        self.semantic_teams: set[str] = set()  # semantic cache off by default, as in the gateway
+        self.config_text: dict[str, str] = {}
+        self.history = self._history_today()
+
+    def _deployment_for(self, dep_id: str) -> Deployment:
+        if dep_id not in self.pool:
+            provider, _, model = dep_id.partition("/")
+            prof = SIM_PROFILES.get(dep_id, {"latency_ms": 800, "error_rate": 0.01, "price_in_per_1m": 1.0,
+                                             "price_out_per_1m": 4.0})  # fmt: skip
+            self.pool[dep_id] = Deployment(
+                provider, model, PROVIDER_LABELS.get(provider, provider), float(prof["latency_ms"]),
+                float(prof["error_rate"]), price_in_1k=prof["price_in_per_1m"] / 1000,
+                price_out_1k=prof["price_out_per_1m"] / 1000,
+            )  # fmt: skip
+        return self.pool[dep_id]
+
+    def _set_routes(self, aliases: dict[str, dict]) -> None:
+        self.routes = {a: {"strategy": r["strategy"], "targets": list(r["targets"])} for a, r in aliases.items()}
+        for r in self.routes.values():
+            for dep_id in r["targets"]:
+                self._deployment_for(dep_id)
+        self._apply_prices()
+
+    def _history_today(self) -> list[float]:
+        """Simulated spend for each hour of today before NOW_HOUR, around each key's 7-day baseline."""
+        rng = random.Random(f"{self.seed}-today")
+        out = [0.0] * 24
+        for k in self.keys:
+            for h in ACTIVE_HOURS.get(k.label, range(0)):
+                if h < NOW_HOUR:
+                    out[h] += max(0.0, rng.gauss(k.baseline_per_hour, k.baseline_per_hour * 0.25))
+        return [round(v, 6) for v in out]
+
+    def _baseline_by_hour(self) -> list[float]:
+        out = [0.0] * 24
+        for k in self.keys:
+            for h in ACTIVE_HOURS.get(k.label, range(0)):
+                out[h] += k.baseline_per_hour
+        return [round(v, 6) for v in out]
+
+    # ---------- console: the governed request path (mirrors router/routing.py route()) ----------
+
+    def _new_trace(self, k: DemoKey, alias: str, source: str) -> dict:
+        self.trace_seq += 1
+        return {
+            "id": f"tr_demo{self.trace_seq:05d}", "ts": f"{NOW_HOUR:02d}:{int(self.clock() // 60) % 60:02d}:"
+            f"{int(self.clock()) % 60:02d}", "t": round(self.clock(), 2), "key": k.label,
+            "key_fp": showback.fingerprint(k.key_id), "team": k.team, "alias": alias, "stream": False,
+            "status": None, "outcome": "pending", "reason": "", "served_by": None, "fell_back": False, "attempts": 0,
+            "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0, "saved_usd": 0.0, "cache": "miss",
+            "latency_ms": 0.0, "simulated": True, "source": source, "stages": [],
+        }  # fmt: skip
+
+    def _stage(self, tr: dict, name: str, decision: str, summary: str, ms: float | None = None, **detail) -> None:
+        tr["stages"].append({"stage": name, "label": STAGE_LABELS.get(name, name), "decision": decision,
+                             "summary": summary, "ms": None if ms is None else round(ms, 2),
+                             "detail": {k: v for k, v in detail.items() if v is not None}})  # fmt: skip
+
+    def _finish(self, tr: dict, started: float, status: int, reason: str = "") -> dict:
+        tr["status"], tr["reason"] = status, reason
+        if status < 400:
+            tr["outcome"] = "cache_hit" if tr["cache"] in ("hit", "semantic-hit") else "ok"
+        else:
+            tr["outcome"] = "error" if status >= 500 else "rejected"
+        tr["latency_ms"] = round((self.clock() - started) * 1000, 1)
+        self.traces.append(tr)
+        del self.traces[:-500]
+        return tr
+
+    def _deny(self, tr: dict, started: float, stage: str, status: int, reason: str, **detail) -> dict:
+        self._stage(tr, stage, "error" if status >= 500 else "deny", reason, **detail)
+        return self._finish(tr, started, status, reason)
+
+    def find_key(self, label: str) -> DemoKey | None:
+        return next((k for k in self.keys if k.label == label), None)
+
+    async def _simulate(self, d: Deployment, prompt_tokens: int, max_tokens: int | None) -> tuple[int, int]:
+        """A simulated provider call: same failure modes as _call, tokens from the request text."""
+        if d.outage:
+            self.clock.advance(d.timeout_s)
+            d.failed += 1
+            raise SimulatedProviderError(f"timed out after {d.timeout_s:g}s")
+        if d.rate_limited:
+            self.clock.advance(0.05)
+            d.failed += 1
+            raise SimulatedProviderError("429 rate limited", status_code=429, retry_after=8)
+        jitter = self.rng.uniform(0.8, 1.3)
+        if self.rng.random() < d.error_rate:
+            self.clock.advance(d.latency_ms / 1000 * 0.4 * jitter)
+            d.failed += 1
+            raise SimulatedProviderError("503 upstream error", status_code=503)
+        self.clock.advance(d.latency_ms / 1000 * jitter)
+        d.served += 1
+        ct = int(self.rng.uniform(60, 260))
+        return prompt_tokens, min(ct, max_tokens or ct)
+
+    def _cache_key(self, team: str, alias: str, text: str, max_tokens: int | None, fp: str) -> str:
+        return hashlib.sha256(json.dumps([team, alias, text, max_tokens, fp]).encode()).hexdigest()
+
+    async def request(
+        self, key_label: str, alias: str, text: str, max_tokens: int | None = None, temperature: float = 0.7,
+        gap_s: float = 0.5, source: str = "playground",
+    ) -> dict:  # fmt: skip
+        """One chat request through every gateway stage, with a trace like GET /admin/traces/{id}."""
+        self.clock.advance(gap_s)
+        started = self.clock()
+        k = self.find_key(key_label)
+        if k is None or k.label in self.revoked:
+            k = k or DemoKey(key_label or "unknown", "-", 0.0, 0.0, 1, 0, 0)
+            tr = self._new_trace(k, alias, source)
+            return self._deny(tr, started, "auth", 401, "invalid or revoked key")
+        tr = self._new_trace(k, alias, source)
+        self._stage(tr, "auth", "pass", f"key {k.label} ({tr['key_fp']}) · team {k.team}")
+
+        # policy (router/admission.py -> router/policy.py)
+        if alias not in self.routes:
+            return self._deny(tr, started, "policy", 400, f"unknown model alias {alias!r}; available: "
+                              f"{sorted(self.routes)}")  # fmt: skip
+        route = self.routes[alias]
+        targets = [self.pool[t] for t in route["targets"]]
+        msgs = [{"role": "user", "content": text}]
+        facts = policy.RequestFacts(
+            team=k.team, alias=alias, targets=targets, max_tokens=max_tokens,
+            request_bytes=len(json.dumps(msgs, ensure_ascii=False).encode()), messages=1, key_label=k.label,
+        )  # fmt: skip
+        dec = policy.evaluate(self.policies, facts)
+        self._audit("policy", "allow" if dec.allow else "deny", k.team,
+                    {"rules": dec.rules, "removed": [r["deployment"] for r in dec.removed],
+                     "reason": "; ".join(dec.reasons), "stage": alias})  # fmt: skip
+        if not dec.allow:
+            return self._deny(tr, started, "policy", dec.status, "policy: " + "; ".join(dec.reasons),
+                              rules=dec.rules, removed=dec.removed or None)  # fmt: skip
+        summary = f"allow ({', '.join(dec.rules)})"
+        if dec.removed:
+            summary += f"; removed {', '.join(r['deployment'] for r in dec.removed)}"
+        if dec.max_tokens_clamped:
+            summary += f"; max_tokens {dec.max_tokens}"
+        self._stage(tr, "policy", "pass", summary, rules=dec.rules, removed=dec.removed or None,
+                    targets=[d.id for d in dec.targets], max_tokens=dec.max_tokens,
+                    required_hooks=dec.required_hooks or None, source="local")  # fmt: skip
+
+        # budgets: org -> team -> key
+        h = self.hierarchy()
+        breach = check_budgets(h, k.team, k.label, k.key_id, self._spend)
+        if breach:
+            return self._deny(tr, started, "budgets", 402, breach.message)
+        cap = h.team(k.team).daily_usd or 0.0
+        spent = self._spend("team", k.team, "daily")
+        self._stage(tr, "budgets", "pass", f"team {k.team} ${spent:,.4f} of " + (f"${cap:,.2f}" if cap else "no cap")
+                    + " today", team_spent_usd=round(spent, 6))  # fmt: skip
+
+        # anomaly pause and admin holds
+        hold = self.holds.get(k.label)
+        if hold == "paused":
+            return self._deny(tr, started, "anomaly", 429, "key paused by an admin. Contact an admin.")
+        sig = self.signal(k) if k.label in self.baselines else anomaly.classify(k.label, 0.0, 0.0, 0)
+        if self.auto_pause and sig.verdict == "pause" and hold != "override":
+            return self._deny(tr, started, "anomaly", 429, f"key paused: this hour's spend is {sig.multiple:.0f}x "
+                              "its 7-day baseline. Contact an admin.", verdict=sig.verdict)  # fmt: skip
+        if self.auto_pause:
+            note = " (admin override this hour)" if hold == "override" and sig.verdict == "pause" else ""
+            self._stage(tr, "anomaly", "pass", f"{sig.verdict}: {sig.multiple:.1f}x the 7-day baseline{note}",
+                        verdict=sig.verdict)  # fmt: skip
+        else:
+            self._stage(tr, "anomaly", "skip", "auto-pause is off")
+
+        # pre_request content hooks (team mode plus any the policy requires)
+        pre = self._hooks("pre_request", k.team, [text], dec.required_hooks)
+        names = pii.resolve_hooks(HOOK_MODES[self.content.get(k.team, {"mode": "off"})["mode"]], dec.required_hooks)
+        if pre.blocked:
+            return self._deny(tr, started, "pre_hooks", 422, f"blocked by content policy ({pre.blocked_by}): "
+                              f"{pre.reason}", hooks=names, findings=pre.findings() or None)  # fmt: skip
+        found = pre.findings()
+        if names:
+            what = ", ".join(f"{a}={b}" for a, b in sorted(found.items())) or "nothing found"
+            self._stage(tr, "pre_hooks", "pass", f"{', '.join(names)}: {what}", hooks=names, findings=found or None)
+        else:
+            self._stage(tr, "pre_hooks", "skip", "no hooks configured")
+        sent = pre.texts[0]
+        tr["sent"] = sent  # what the simulated provider received (shown in the playground, not in the trace list)
+
+        # exact cache (temperature 0 only), then the semantic cache if the team opted in
+        fp = dec.fingerprint() + "|" + ",".join(names)
+        ck = self._cache_key(k.team, alias, sent, dec.max_tokens, fp)
+        if self.cache_on and temperature <= 0:
+            hit = self.exact_cache.get(ck)
+            if hit:
+                self._stage(tr, "cache", "hit", f"exact match for team {k.team}")
+                return self._serve_cached(tr, started, k, alias, hit, "hit")
+            self._stage(tr, "cache", "miss", "no cached answer")
+        else:
+            self._stage(tr, "cache", "skip", "cache off" if not self.cache_on else "temperature above 0")
+        sem_part = None
+        if k.team in self.semantic_teams and temperature <= 0:
+            sem_part = semcache.partition_key(k.team, alias, fp)
+            found_sem = self.semantic.lookup(sem_part, sent, self.embedder.embed(sent))
+            if found_sem.hit:
+                self._stage(tr, "semantic_cache", "hit", f"similarity {found_sem.similarity:.3f}",
+                            similarity=round(found_sem.similarity, 4))  # fmt: skip
+                return self._serve_cached(tr, started, k, alias, found_sem.entry.value, "semantic-hit")
+            self._stage(tr, "semantic_cache", "miss", f"{found_sem.reason} (similarity {found_sem.similarity:.3f})",
+                        similarity=round(found_sem.similarity, 4))  # fmt: skip
+        else:
+            self._stage(tr, "semantic_cache", "skip", "off for this team" if k.team not in self.semantic_teams
+                        else "not eligible (temperature above 0)")  # fmt: skip
+
+        # TPM reservation
+        estimate = estimate_request_tokens(msgs, dec.max_tokens, 256)
+        limits = {f"team:{k.team}": h.team(k.team).tpm or 0, f"key:{k.label}": h.key(k.label).tpm or 0}
+        reservation = None
+        if any(limits.values()):
+            try:
+                reservation = self.tpm.reserve(limits, estimate)
+            except TokenLimitExceeded as e:
+                return self._deny(tr, started, "tpm", 429, f"{e} (retry in {e.retry_after:.0f}s)")
+            self._stage(tr, "tpm", "pass", f"reserved {estimate} estimated tokens", estimate=estimate)
+        else:
+            self._stage(tr, "tpm", "skip", "no TPM limit for this key or team")
+
+        # fallback chain
+        pt_est = max(1, len(sent) // 4)
+        t0 = self.clock()
+
+        def on_attempt(target: Deployment, a) -> None:
+            if a.outcome == "skipped":
+                target.skipped += 1
+            elif a.outcome == "error":
+                self._record(k, target, 0, 0, 0.0, a.error, alias)
+
+        try:
+            result = await run_chain(
+                dec.targets, lambda d: self._simulate(d, pt_est, dec.max_tokens), strategy=route["strategy"],
+                breakers=self.breakers, latency=self.latency, clock=self.clock, on_attempt=on_attempt,
+            )  # fmt: skip
+        except ChainExhausted as e:
+            if reservation:
+                reservation.release()
+            self._chain_stage(tr, route["strategy"], e.attempts, False, (self.clock() - t0) * 1000)
+            if e.all_skipped:
+                return self._finish(tr, started, 503, f"no provider available for alias {alias!r}: all circuits open")
+            return self._finish(tr, started, 502, f"all providers failed for alias {alias!r}")
+        self._chain_stage(tr, route["strategy"], result.attempts, True, (self.clock() - t0) * 1000)
+
+        # settle, price, record
+        d = result.target
+        pt, ct = result.value
+        if reservation:
+            reservation.settle(pt + ct)
+        cost = costs.dollars_for(d.provider, d.model, pt, ct)
+        self._record(k, d, pt, ct, cost, None, alias)
+        tr.update(prompt_tokens=pt, completion_tokens=ct, cost_usd=cost)
+        self._stage(tr, "settle", "pass", f"{pt} in + {ct} out tokens · ${cost:.6f}", cost_usd=round(cost, 8))
+        reply = f"(simulated {d.label} reply) Received {len(sent.split())} words: {sent[:140]}"
+
+        # post_response hooks, caches, content log
+        post = self._hooks("post_response", k.team, [reply])
+        post_names = HOOK_MODES[self.content.get(k.team, {"mode": "off"})["mode"]]
+        if post.blocked:
+            return self._deny(tr, started, "post_hooks", 422, f"response withheld by content policy: {post.reason}")
+        if post_names:
+            pf = post.findings()
+            what = ", ".join(f"{a}={b}" for a, b in sorted(pf.items())) or "nothing found"
+            self._stage(tr, "post_hooks", "pass", f"{', '.join(post_names)}: {what}", hooks=post_names)
+        else:
+            self._stage(tr, "post_hooks", "skip", "no hooks configured")
+        tr["response"] = post.texts[0]
+        value = {"answer": tr["response"], "cost_usd": cost, "served_by": d.id, "pt": pt, "ct": ct}
+        if self.cache_on and temperature <= 0:
+            self.exact_cache[ck] = value
+        if sem_part is not None:
+            self.semantic.put(sem_part, sent, self.embedder.embed(sent), value)
+        self._content_log_stage(tr, k.team, text, tr["response"])
+        return self._finish(tr, started, 200)
+
+    def _chain_stage(self, tr: dict, strategy: str, attempts: list, ok: bool, ms: float) -> None:
+        tried = [a for a in attempts if a.outcome != "skipped"]
+        failed = [a.deployment for a in attempts if a.outcome == "error"]
+        skipped = [a.deployment for a in attempts if a.outcome == "skipped"]
+        served = next((a.deployment for a in attempts if a.outcome == "ok"), None)
+        parts = [f"{strategy} order"]
+        if served:
+            parts.append(f"served by {served}")
+        if failed:
+            parts.append(f"failed: {', '.join(failed)}")
+        if skipped:
+            parts.append(f"skipped (circuit open): {', '.join(skipped)}")
+        self._stage(tr, "chain", "pass" if ok else "error", "; ".join(parts), ms,
+                    attempts=[a.as_dict() for a in attempts], strategy=strategy)  # fmt: skip
+        tr.update(attempts=len(tried), fell_back=len(attempts) > 1, served_by=served)
+
+    def _content_log_stage(self, tr: dict, team: str, text: str, response: str) -> None:
+        if self.content.get(team, {}).get("log_content"):
+            req, rc = pii.redact(text)
+            resp, sc = pii.redact(response)
+            self.content_log.append({"t": round(self.clock(), 2), "team": team, "request": req, "response": resp})
+            del self.content_log[:-20]
+            self._audit("privacy", "content_logged", team, {"findings": {**rc, **sc}})
+            self._stage(tr, "content_log", "pass", "stored redacted (team opted in)")
+        else:
+            self._stage(tr, "content_log", "skip", "off: metadata only")
+
+    def _serve_cached(self, tr: dict, started: float, k: DemoKey, alias: str, hit: dict, kind: str) -> dict:
+        d = self.deployment(hit["served_by"])
+        self._record(k, d, int(hit.get("pt", 0)), int(hit.get("ct", 0)), 0.0, None, alias, True, hit["cost_usd"])
+        tr.update(cache=kind, served_by=hit["served_by"], saved_usd=hit["cost_usd"],
+                  prompt_tokens=int(hit.get("pt", 0)), completion_tokens=int(hit.get("ct", 0)))  # fmt: skip
+        tr["response"] = hit["answer"]
+        self._stage(tr, "settle", "pass", f"served from cache at $0; saved ${hit['cost_usd']:.6f}")
+        self._content_log_stage(tr, k.team, tr.get("sent", ""), hit["answer"])
+        return self._finish(tr, started, 200)
+
+    # ---------- console: traffic generator ----------
+
+    async def traffic(self, n: int = 20, scenario: str = "mix") -> dict:
+        """Simulated request mix (or a runaway batch job) through request(). Returns a summary."""
+        out = []
+        for i in range(max(1, min(int(n), 200))):
+            if scenario == "spike":  # a batch job stuck in a retry loop on the premium route
+                k, gap = self.key("nightly-batch"), 4.0
+            else:
+                k, gap = self.pick_key(), 0.25
+            prompts = SAMPLE_PROMPTS.get(k.team, SAMPLE_PROMPTS["product"])
+            text = prompts[(self.counter + i) % len(prompts)]
+            temp = 0.0 if k.team == "support" else 0.7
+            alias = "smart-fast" if scenario == "spike" else KEY_ALIAS.get(k.label, "smart-fast")
+            out.append(await self.request(k.label, alias, text, k.max_tokens, temp, gap, source=scenario))
+        self.counter += len(out)
+        counts: dict[str, int] = {}
+        for t in out:
+            counts[t["outcome"]] = counts.get(t["outcome"], 0) + 1
+        return {"sent": len(out), "outcomes": counts, "last": out[-1]["id"]}
+
+    # ---------- console: views ----------
+
+    def overview(self) -> dict:
+        chat = [t for t in self.traces]
+        served = [t for t in chat if t["outcome"] in ("ok", "cache_hit")]
+        rows = [r for r in self.ledger if r["provider"] != "mcp"]
+        flags = []
+        for k in self.keys:
+            if k.label in self.baselines:
+                s = self.signal(k)
+                if s.verdict != "ok":
+                    flags.append({"label": k.label, "team": k.team, "multiple": round(s.multiple, 2),
+                                  "verdict": s.verdict})  # fmt: skip
+        today = list(self.history)
+        today[NOW_HOUR] = round(today[NOW_HOUR] + sum(r["cost_usd"] for r in self.ledger), 6)
+        rejected: dict[str, int] = {}
+        for t in chat:
+            if t["outcome"] in ("rejected", "error"):
+                rejected[str(t["status"])] = rejected.get(str(t["status"]), 0) + 1
+        breakers = [self.breakers.get(d).snapshot() for d in sorted(self.pool)]
+        lat = sorted(t["latency_ms"] for t in served)
+        return {
+            "date": "simulated day",
+            "kpis": {
+                "spend_usd": round(sum(r["cost_usd"] for r in self.ledger), 6),
+                "requests": sum(1 for r in rows if not r["error"]),
+                "failed_attempts": sum(1 for r in rows if r["error"]),
+                "tool_calls": sum(1 for r in self.ledger if r["provider"] == "mcp"),
+                "cache": {
+                    "saved_usd": round(sum(r["saved_usd"] for r in self.ledger), 6),
+                    "hits": sum(r["cached"] for r in rows),
+                    "hit_rate": round(sum(r["cached"] for r in rows) / len([r for r in rows if not r["error"]]), 4)
+                    if any(not r["error"] for r in rows) else 0.0,
+                },
+                "anomalies_flagged": sum(1 for f in flags if f["verdict"] == "flagged"),
+                "anomalies_paused": sum(1 for f in flags if f["verdict"] == "pause"),
+                "open_circuits": sum(1 for b in breakers if b["state"] != "closed"),
+            },
+            "traces": {
+                "requests": len(chat), "served": len(served),
+                "fallbacks": sum(1 for t in served if t["fell_back"]),
+                "fallback_rate": round(sum(1 for t in served if t["fell_back"]) / len(served), 4) if served else 0.0,
+                "by_status": rejected, "latency_p50_ms": lat[len(lat) // 2] if lat else None,
+                "window": "this browser session (simulated)",
+            },
+            "by_team": showback.aggregate(self.ledger, ("team",)),
+            "by_model": showback.aggregate(rows, ("provider", "model")),
+            "hourly": {"today": today, "baseline_7d": self._baseline_by_hour(), "current_hour": NOW_HOUR,
+                       "history_simulated_before": NOW_HOUR},
+            "anomalies": sorted(flags, key=lambda f: -f["multiple"]),
+            "breakers": breakers,
+            "mock_providers": True,
+        }  # fmt: skip
+
+    def trace_rows(self, limit: int = 100, team: str = "", outcome: str = "", q: str = "") -> list[dict]:
+        needle = q.lower().strip()
+        out = []
+        for t in reversed(self.traces):
+            if team and t["team"] != team:
+                continue
+            if outcome and t["outcome"] != outcome:
+                continue
+            if needle:
+                hay = " ".join(str(t.get(f)) for f in ("id", "key", "key_fp", "team", "alias", "served_by", "reason",
+                                                       "status")).lower()  # fmt: skip
+                if needle not in hay:
+                    continue
+            out.append({k: v for k, v in t.items() if k not in ("stages", "sent", "response")})
+            if len(out) >= limit:
+                break
+        return out
+
+    def trace(self, trace_id: str) -> dict | None:
+        for t in self.traces:
+            if t["id"] == trace_id:
+                return {k: v for k, v in t.items() if k not in ("sent", "response")}
+        return None
+
+    def routes_view(self) -> dict:
+        return {a: dict(r) for a, r in sorted(self.routes.items())}
+
+    def providers_view(self) -> dict:
+        out: dict[str, dict] = {}
+        for d in sorted(self.pool.values(), key=lambda x: x.id):
+            p = out.setdefault(d.provider, {"provider": d.provider, "label": d.label, "deployments": [],
+                                             "outage": False, "rate_limited": False})  # fmt: skip
+            br = self.breakers.get(d.id).snapshot()
+            ewma = self.latency.ewma(d.id)
+            p["deployments"].append({"id": d.id, "latency_ms": d.latency_ms, "error_rate": d.error_rate,
+                                     "served": d.served, "failed": d.failed, "skipped": d.skipped,
+                                     "breaker": br["state"], "consecutive_failures": br["consecutive_failures"],
+                                     "ewma_ms": round(ewma * 1000) if ewma is not None else None})  # fmt: skip
+            p["outage"] = p["outage"] or d.outage
+            p["rate_limited"] = p["rate_limited"] or d.rate_limited
+            p.setdefault("latency_ms", d.latency_ms)
+            p["error_rate"] = max(p.get("error_rate", 0.0), d.error_rate)
+        return {"providers": list(out.values()), "transitions": self.breakers.recent_transitions(30),
+                "clock_s": round(self.clock(), 2)}  # fmt: skip
+
+    def set_provider(self, provider: str, changes: dict) -> None:
+        deps = [d for d in self.pool.values() if d.provider == provider]
+        if not deps:
+            raise KeyError(provider)
+        for d in deps:
+            self.update_deployment(d.id, changes)
+
+    def reset_breakers(self) -> None:
+        self.breakers.reset()
+
+    # ---------- console: keys, holds and budgets ----------
+
+    def keys_view(self) -> list[dict]:
+        out = []
+        for k in self.keys:
+            s = self.signal(k) if k.label in self.baselines else None
+            out.append({
+                "id": k.key_id, "label": k.label, "team": k.team, "key_prefix": "sk-demo-" + k.label[:4],
+                "fingerprint": showback.fingerprint(k.key_id), "is_admin": False, "created_at": "simulated",
+                "revoked_at": "revoked" if k.label in self.revoked else None, "hold": self.holds.get(k.label),
+                "verdict": s.verdict if s else "ok", "multiple": round(s.multiple, 2) if s else 0.0,
+                "spent_today_usd": round(self._spend("key", k.key_id, "daily"), 6),
+                "cap_usd": self.hierarchy().key(k.label).daily_usd or 0.0,
+            })  # fmt: skip
+        return out
+
+    def create_key(self, label: str, team: str) -> dict:
+        label, team = label.strip(), team.strip()
+        if not label or not team or self.find_key(label):
+            raise ValueError("label must be new and non-empty; team must be non-empty")
+        k = DemoKey(label, team, 0.0, 0.01, 8, 300, 300)
+        self.keys.append(k)
+        if team not in self.content:
+            self.content[team] = {"mode": "off", "log_content": False}
+        self._audit("admin", "key_created", team, {"stage": label})
+        return {"id": k.key_id, "label": label, "team": team, "key": "sk-demo-" + hashlib.sha256(
+            f"{self.seed}{label}".encode()).hexdigest()[:24], "simulated": True}  # fmt: skip
+
+    def revoke_key(self, label: str) -> None:
+        self.key(label)
+        self.revoked.add(label)
+        self._audit("admin", "key_revoked", self.key(label).team, {"stage": label})
+
+    def pause_key(self, label: str) -> None:
+        self.holds[label] = "paused"
+        self._audit("admin", "key_paused", self.key(label).team, {"stage": label})
+
+    def unpause_key(self, label: str) -> str:
+        k = self.key(label)
+        had = self.holds.pop(label, None)
+        sig = self.signal(k) if label in self.baselines else None
+        if self.auto_pause and sig is not None and sig.verdict == "pause":
+            self.holds[label] = "override"
+            self._audit("admin", "anomaly_override", k.team, {"stage": label})
+            return "override"
+        if had:
+            self._audit("admin", "key_unpaused", k.team, {"stage": label})
+            return "unpaused"
+        return "not_paused"
+
+    def budgets_view(self) -> dict:
+        h = self.hierarchy()
+        teams = sorted({k.team for k in self.keys} | set(self.team_limits))
+        return {
+            "org": {"spent_usd": round(self._spend("org", None, "daily"), 6), "cap_usd": self.org.daily_usd or 0.0},
+            "teams": [{"team": t, "spent_usd": round(self._spend("team", t, "daily"), 6),
+                       "cap_usd": h.team(t).daily_usd or 0.0, "tpm": h.team(t).tpm or 0,
+                       "tpm_used": self.tpm.used(f"team:{t}")} for t in teams],
+            "keys": {lbl: lim.daily_usd for lbl, lim in self.key_limits.items()},
+            "key_default_usd": self.key_default.daily_usd,
+            "warnings": h.warnings(),
+        }  # fmt: skip
+
+    def set_key_cap(self, label: str, daily_usd: float) -> None:
+        self.key_limits[label] = Limits(max(0.0, float(daily_usd)))
+
+    # ---------- console: config files (router/configcheck.py) ----------
+
+    def set_config_text(self, name: str, text: str) -> None:
+        self.config_text[name] = text
+
+    def config(self, name: str) -> dict:
+        if name not in configcheck.CONFIG_NAMES:
+            raise KeyError(name)
+        text = self.config_text.get(name, "")
+        return {"name": name, "path": {"policies": "config/policies.yaml", "routes": "config/routes.yaml",
+                                       "mcp": "config/mcp.example.yaml"}[name],
+                "exists": bool(text), "text": text, "writable": True}  # fmt: skip
+
+    def validate_config(self, name: str, text: str) -> dict:
+        return configcheck.validate(name, text, sorted(self.routes),
+                                    sorted(self.policies.referenced_aliases()))  # fmt: skip
+
+    def apply_config(self, name: str, text: str) -> dict:
+        try:
+            loaded = configcheck.parse(name, text)
+        except configcheck.ConfigRejected as e:
+            return {"ok": False, "errors": e.errors}
+        if name == "policies":
+            self.policies = loaded
+        elif name == "mcp":
+            self.mcp = loaded
+        else:  # aliases and strategies; budgets, breaker thresholds and prices keep the demo's simulated values
+            self._set_routes({a: {"strategy": loaded.strategy(a), "targets": [f"{t.provider}/{t.model}" for t in ts]}
+                              for a, ts in loaded.aliases.items()})  # fmt: skip
+        self.config_text[name] = text
+        self._audit("admin", "config_applied", "", {"stage": name})
+        return {"ok": True, "status": "applied", "path": self.config(name)["path"]}
+
+    def dry_run(self, teams: list[str] | None = None, aliases: list[str] | None = None,
+                max_tokens: int | None = None, text: str | None = None) -> dict:  # fmt: skip
+        pol = self.policies
+        if text is not None:
+            try:
+                pol = configcheck.parse("policies", text)
+            except configcheck.ConfigRejected as e:
+                return {"ok": False, "errors": e.errors}
+        teams = teams or sorted({k.team for k in self.keys} | set(pol.teams))
+        aliases = aliases or sorted(self.routes)
+        routes = {a: [self.pool[t] for t in r["targets"]] for a, r in self.routes.items()}
+        return {"ok": True, "results": configcheck.decisions(pol, routes, teams, aliases, max_tokens)}
+
+    # ---------- console: settings ----------
+
+    def settings_view(self) -> dict:
+        return {
+            "breakers_enabled": self.breaker_config.enabled, "auto_pause": self.auto_pause, "cache": self.cache_on,
+            "semantic_teams": sorted(self.semantic_teams), "semantic_threshold": self.semantic.threshold,
+            "content": self.content, "teams": sorted({k.team for k in self.keys} | set(self.content)),
+            "breaker_config": asdict(self.breaker_config), "estimator": estimator_name(),
+        }  # fmt: skip
+
+    def set_cache(self, enabled: bool) -> None:
+        self.cache_on = bool(enabled)
+        if not self.cache_on:
+            self.exact_cache.clear()
+
+    def set_semantic_team(self, team: str, enabled: bool) -> None:
+        (self.semantic_teams.add if enabled else self.semantic_teams.discard)(team)
+
     def showback_csv(self, group_by: str = "team,model") -> str:
         dims = showback.parse_group_by(group_by)
         return showback.to_csv(showback.aggregate(self.ledger, dims), dims)
@@ -857,3 +1581,24 @@ class JsBridge:
 
     def showback_csv(self, group_by: str = "team,model") -> str:
         return self.engine.showback_csv(group_by)
+
+    # The console (demo/app.js) calls everything through api(): one method name, JSON args, JSON result.
+    API = frozenset({
+        "overview", "trace_rows", "trace", "routes_view", "providers_view", "set_provider", "reset_breakers",
+        "advance", "keys_view", "create_key", "revoke_key", "pause_key", "unpause_key", "budgets_view",
+        "set_team_cap", "set_team_tpm", "set_org_cap", "set_key_cap", "config", "set_config_text",
+        "validate_config", "apply_config", "dry_run", "settings_view", "set_cache", "set_semantic_team",
+        "set_breakers_enabled", "set_auto_pause", "set_content_policy", "governance", "mcp_view", "mcp_call",
+        "semantic_view", "showback_csv", "reset",
+    })  # fmt: skip
+    ASYNC_API = frozenset({"request", "traffic", "semantic_ask"})
+
+    def api(self, method: str, args_json: str = "{}") -> str:
+        kwargs = json.loads(args_json or "{}")
+        if method in self.ASYNC_API:
+            result = run_sync(getattr(self.engine, method)(**kwargs))
+        elif method in self.API:
+            result = getattr(self.engine, method)(**kwargs)
+        else:
+            raise ValueError(method)
+        return json.dumps(result)

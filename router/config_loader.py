@@ -37,6 +37,16 @@ class Settings(BaseSettings):
     ROUTER_MAX_BODY_BYTES: int = 1_048_576
     # MCP tool gateway config. Empty: ./config/mcp.yaml if it exists, else no MCP servers.
     ROUTER_MCP_FILE: str = ""
+    # Answer every provider call with a simulated provider (router/mock_provider.py): no keys, no network.
+    ROUTER_MOCK_PROVIDERS: bool = False
+    # Let admins replace the policies / routes / MCP files from the console (PUT /admin/config/{name}).
+    ROUTER_ALLOW_CONFIG_WRITES: bool = False
+    # When ROUTER_ADMIN_KEY is empty: read the admin key from this file, or create one there on first start.
+    ROUTER_ADMIN_KEY_FILE: str = ""
+    # Request traces kept in memory for the console (per worker).
+    ROUTER_TRACE_BUFFER: int = 500
+    # Serve the console (demo/) at /console.
+    ROUTER_CONSOLE: bool = True
 
 
 settings = Settings()
@@ -123,3 +133,24 @@ def reload_all() -> tuple[RouterConfig, policy.PolicySet]:
     mcp = parse_mcp()
     _cached, _policies, _mcp = cfg, pol, mcp
     return cfg, pol
+
+
+def ensure_admin_key() -> str | None:
+    """With ROUTER_ADMIN_KEY empty and ROUTER_ADMIN_KEY_FILE set, read the admin key from that file, creating it
+    (random, mode 0600) on first start. Returns the file path used, or None. The key itself is never logged."""
+    if settings.ROUTER_ADMIN_KEY or not settings.ROUTER_ADMIN_KEY_FILE:
+        return None
+    import os
+    import secrets
+
+    path = Path(settings.ROUTER_ADMIN_KEY_FILE)
+    if path.is_file() and path.read_text().strip():
+        settings.ROUTER_ADMIN_KEY = path.read_text().strip()
+        return str(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    key = "sk-admin-" + secrets.token_urlsafe(32)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(key + "\n")
+    settings.ROUTER_ADMIN_KEY = key
+    return str(path)

@@ -1,0 +1,549 @@
+{
+ "calibration_grid": [
+  {
+   "false_hit_rate": 0.3929,
+   "false_hit_rate_upper95": 0.5237,
+   "false_hits": 22,
+   "fpr": 0.5789,
+   "hit_rate": 0.8095,
+   "hits": 56,
+   "threshold": 0.5,
+   "true_hits": 34
+  },
+  {
+   "false_hit_rate": 0.4,
+   "false_hit_rate_upper95": 0.5319,
+   "false_hits": 22,
+   "fpr": 0.5789,
+   "hit_rate": 0.7857,
+   "hits": 55,
+   "threshold": 0.51,
+   "true_hits": 33
+  },
+  {
+   "false_hit_rate": 0.4,
+   "false_hit_rate_upper95": 0.5319,
+   "false_hits": 22,
+   "fpr": 0.5789,
+   "hit_rate": 0.7857,
+   "hits": 55,
+   "threshold": 0.52,
+   "true_hits": 33
+  },
+  {
+   "false_hit_rate": 0.4,
+   "false_hit_rate_upper95": 0.5319,
+   "false_hits": 22,
+   "fpr": 0.5789,
+   "hit_rate": 0.7857,
+   "hits": 55,
+   "threshold": 0.53,
+   "true_hits": 33
+  },
+  {
+   "false_hit_rate": 0.4,
+   "false_hit_rate_upper95": 0.5319,
+   "false_hits": 22,
+   "fpr": 0.5789,
+   "hit_rate": 0.7857,
+   "hits": 55,
+   "threshold": 0.54,
+   "true_hits": 33
+  },
+  {
+   "false_hit_rate": 0.4,
+   "false_hit_rate_upper95": 0.5319,
+   "false_hits": 22,
+   "fpr": 0.5789,
+   "hit_rate": 0.7857,
+   "hits": 55,
+   "threshold": 0.55,
+   "true_hits": 33
+  },
+  {
+   "false_hit_rate": 0.4,
+   "false_hit_rate_upper95": 0.5319,
+   "false_hits": 22,
+   "fpr": 0.5789,
+   "hit_rate": 0.7857,
+   "hits": 55,
+   "threshold": 0.56,
+   "true_hits": 33
+  },
+  {
+   "false_hit_rate": 0.3962,
+   "false_hit_rate_upper95": 0.5306,
+   "false_hits": 21,
+   "fpr": 0.5526,
+   "hit_rate": 0.7619,
+   "hits": 53,
+   "threshold": 0.57,
+   "true_hits": 32
+  },
+  {
+   "false_hit_rate": 0.3962,
+   "false_hit_rate_upper95": 0.5306,
+   "false_hits": 21,
+   "fpr": 0.5526,
+   "hit_rate": 0.7619,
+   "hits": 53,
+   "threshold": 0.58,
+   "true_hits": 32
+  },
+  {
+   "false_hit_rate": 0.3846,
+   "false_hit_rate_upper95": 0.5204,
+   "false_hits": 20,
+   "fpr": 0.5263,
+   "hit_rate": 0.7619,
+   "hits": 52,
+   "threshold": 0.59,
+   "true_hits": 32
+  },
+  {
+   "false_hit_rate": 0.3725,
+   "false_hit_rate_upper95": 0.5098,
+   "false_hits": 19,
+   "fpr": 0.5,
+   "hit_rate": 0.7619,
+   "hits": 51,
+   "threshold": 0.6,
+   "true_hits": 32
+  },
+  {
+   "false_hit_rate": 0.38,
+   "false_hit_rate_upper95": 0.5185,
+   "false_hits": 19,
+   "fpr": 0.5,
+   "hit_rate": 0.7381,
+   "hits": 50,
+   "threshold": 0.61,
+   "true_hits": 31
+  },
+  {
+   "false_hit_rate": 0.3958,
+   "false_hit_rate_upper95": 0.5369,
+   "false_hits": 19,
+   "fpr": 0.5,
+   "hit_rate": 0.6905,
+   "hits": 48,
+   "threshold": 0.62,
+   "true_hits": 29
+  },
+  {
+   "false_hit_rate": 0.3913,
+   "false_hit_rate_upper95": 0.5354,
+   "false_hits": 18,
+   "fpr": 0.4737,
+   "hit_rate": 0.6667,
+   "hits": 46,
+   "threshold": 0.63,
+   "true_hits": 28
+  },
+  {
+   "false_hit_rate": 0.3913,
+   "false_hit_rate_upper95": 0.5354,
+   "false_hits": 18,
+   "fpr": 0.4737,
+   "hit_rate": 0.6667,
+   "hits": 46,
+   "threshold": 0.64,
+   "true_hits": 28
+  },
+  {
+   "false_hit_rate": 0.3913,
+   "false_hit_rate_upper95": 0.5354,
+   "false_hits": 18,
+   "fpr": 0.4737,
+   "hit_rate": 0.6667,
+   "hits": 46,
+   "threshold": 0.65,
+   "true_hits": 28
+  },
+  {
+   "false_hit_rate": 0.3778,
+   "false_hit_rate_upper95": 0.5237,
+   "false_hits": 17,
+   "fpr": 0.4474,
+   "hit_rate": 0.6667,
+   "hits": 45,
+   "threshold": 0.66,
+   "true_hits": 28
+  },
+  {
+   "false_hit_rate": 0.3636,
+   "false_hit_rate_upper95": 0.5113,
+   "false_hits": 16,
+   "fpr": 0.4211,
+   "hit_rate": 0.6667,
+   "hits": 44,
+   "threshold": 0.67,
+   "true_hits": 28
+  },
+  {
+   "false_hit_rate": 0.3488,
+   "false_hit_rate_upper95": 0.4983,
+   "false_hits": 15,
+   "fpr": 0.3947,
+   "hit_rate": 0.6667,
+   "hits": 43,
+   "threshold": 0.68,
+   "true_hits": 28
+  },
+  {
+   "false_hit_rate": 0.3333,
+   "false_hit_rate_upper95": 0.4845,
+   "false_hits": 14,
+   "fpr": 0.3684,
+   "hit_rate": 0.6667,
+   "hits": 42,
+   "threshold": 0.69,
+   "true_hits": 28
+  },
+  {
+   "false_hit_rate": 0.35,
+   "false_hit_rate_upper95": 0.5049,
+   "false_hits": 14,
+   "fpr": 0.3684,
+   "hit_rate": 0.619,
+   "hits": 40,
+   "threshold": 0.7,
+   "true_hits": 26
+  },
+  {
+   "false_hit_rate": 0.35,
+   "false_hit_rate_upper95": 0.5049,
+   "false_hits": 14,
+   "fpr": 0.3684,
+   "hit_rate": 0.619,
+   "hits": 40,
+   "threshold": 0.71,
+   "true_hits": 26
+  },
+  {
+   "false_hit_rate": 0.3333,
+   "false_hit_rate_upper95": 0.4902,
+   "false_hits": 13,
+   "fpr": 0.3421,
+   "hit_rate": 0.619,
+   "hits": 39,
+   "threshold": 0.72,
+   "true_hits": 26
+  },
+  {
+   "false_hit_rate": 0.3421,
+   "false_hit_rate_upper95": 0.5011,
+   "false_hits": 13,
+   "fpr": 0.3421,
+   "hit_rate": 0.5952,
+   "hits": 38,
+   "threshold": 0.73,
+   "true_hits": 25
+  },
+  {
+   "false_hit_rate": 0.3514,
+   "false_hit_rate_upper95": 0.5124,
+   "false_hits": 13,
+   "fpr": 0.3421,
+   "hit_rate": 0.5714,
+   "hits": 37,
+   "threshold": 0.74,
+   "true_hits": 24
+  },
+  {
+   "false_hit_rate": 0.3514,
+   "false_hit_rate_upper95": 0.5124,
+   "false_hits": 13,
+   "fpr": 0.3421,
+   "hit_rate": 0.5714,
+   "hits": 37,
+   "threshold": 0.75,
+   "true_hits": 24
+  },
+  {
+   "false_hit_rate": 0.3611,
+   "false_hit_rate_upper95": 0.5243,
+   "false_hits": 13,
+   "fpr": 0.3421,
+   "hit_rate": 0.5476,
+   "hits": 36,
+   "threshold": 0.76,
+   "true_hits": 23
+  },
+  {
+   "false_hit_rate": 0.3429,
+   "false_hit_rate_upper95": 0.5085,
+   "false_hits": 12,
+   "fpr": 0.3158,
+   "hit_rate": 0.5476,
+   "hits": 35,
+   "threshold": 0.77,
+   "true_hits": 23
+  },
+  {
+   "false_hit_rate": 0.375,
+   "false_hit_rate_upper95": 0.5475,
+   "false_hits": 12,
+   "fpr": 0.3158,
+   "hit_rate": 0.4762,
+   "hits": 32,
+   "threshold": 0.78,
+   "true_hits": 20
+  },
+  {
+   "false_hit_rate": 0.3548,
+   "false_hit_rate_upper95": 0.5305,
+   "false_hits": 11,
+   "fpr": 0.2895,
+   "hit_rate": 0.4762,
+   "hits": 31,
+   "threshold": 0.79,
+   "true_hits": 20
+  },
+  {
+   "false_hit_rate": 0.3448,
+   "false_hit_rate_upper95": 0.5266,
+   "false_hits": 10,
+   "fpr": 0.2632,
+   "hit_rate": 0.4524,
+   "hits": 29,
+   "threshold": 0.8,
+   "true_hits": 19
+  },
+  {
+   "false_hit_rate": 0.3448,
+   "false_hit_rate_upper95": 0.5266,
+   "false_hits": 10,
+   "fpr": 0.2632,
+   "hit_rate": 0.4524,
+   "hits": 29,
+   "threshold": 0.81,
+   "true_hits": 19
+  },
+  {
+   "false_hit_rate": 0.3448,
+   "false_hit_rate_upper95": 0.5266,
+   "false_hits": 10,
+   "fpr": 0.2632,
+   "hit_rate": 0.4524,
+   "hits": 29,
+   "threshold": 0.82,
+   "true_hits": 19
+  },
+  {
+   "false_hit_rate": 0.3077,
+   "false_hit_rate_upper95": 0.4999,
+   "false_hits": 8,
+   "fpr": 0.2105,
+   "hit_rate": 0.4286,
+   "hits": 26,
+   "threshold": 0.83,
+   "true_hits": 18
+  },
+  {
+   "false_hit_rate": 0.2609,
+   "false_hit_rate_upper95": 0.4647,
+   "false_hits": 6,
+   "fpr": 0.1579,
+   "hit_rate": 0.4048,
+   "hits": 23,
+   "threshold": 0.84,
+   "true_hits": 17
+  },
+  {
+   "false_hit_rate": 0.1667,
+   "false_hit_rate_upper95": 0.3922,
+   "false_hits": 3,
+   "fpr": 0.0789,
+   "hit_rate": 0.3571,
+   "hits": 18,
+   "threshold": 0.85,
+   "true_hits": 15
+  },
+  {
+   "false_hit_rate": 0.1667,
+   "false_hit_rate_upper95": 0.3922,
+   "false_hits": 3,
+   "fpr": 0.0789,
+   "hit_rate": 0.3571,
+   "hits": 18,
+   "threshold": 0.86,
+   "true_hits": 15
+  },
+  {
+   "false_hit_rate": 0.125,
+   "false_hit_rate_upper95": 0.3602,
+   "false_hits": 2,
+   "fpr": 0.0526,
+   "hit_rate": 0.3333,
+   "hits": 16,
+   "threshold": 0.87,
+   "true_hits": 14
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2281,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.3095,
+   "hits": 13,
+   "threshold": 0.88,
+   "true_hits": 13
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2588,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.2619,
+   "hits": 11,
+   "threshold": 0.89,
+   "true_hits": 11
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2588,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.2619,
+   "hits": 11,
+   "threshold": 0.9,
+   "true_hits": 11
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2775,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.2381,
+   "hits": 10,
+   "threshold": 0.91,
+   "true_hits": 10
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2992,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.2143,
+   "hits": 9,
+   "threshold": 0.92,
+   "true_hits": 9
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2992,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.2143,
+   "hits": 9,
+   "threshold": 0.93,
+   "true_hits": 9
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2992,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.2143,
+   "hits": 9,
+   "threshold": 0.94,
+   "true_hits": 9
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2992,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.2143,
+   "hits": 9,
+   "threshold": 0.95,
+   "true_hits": 9
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2992,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.2143,
+   "hits": 9,
+   "threshold": 0.96,
+   "true_hits": 9
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.2992,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.2143,
+   "hits": 9,
+   "threshold": 0.97,
+   "true_hits": 9
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.4345,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.119,
+   "hits": 5,
+   "threshold": 0.98,
+   "true_hits": 5
+  },
+  {
+   "false_hit_rate": 0.0,
+   "false_hit_rate_upper95": 0.5615,
+   "false_hits": 0,
+   "fpr": 0.0,
+   "hit_rate": 0.0714,
+   "hits": 3,
+   "threshold": 0.99,
+   "true_hits": 3
+  }
+ ],
+ "chosen": {
+  "false_hit_rate": 0.0,
+  "false_hit_rate_upper95": 0.2281,
+  "false_hits": 0,
+  "fpr": 0.0,
+  "hit_rate": 0.3095,
+  "hits": 13,
+  "threshold": 0.88,
+  "true_hits": 13
+ },
+ "command": "python scripts/calibrate_semcache.py",
+ "embedder": "hashing-v1",
+ "holdout_at_chosen": {
+  "false_hit_rate": 0.0909,
+  "false_hit_rate_upper95": 0.3774,
+  "false_hits": 1,
+  "fpr": 0.0238,
+  "hit_rate": 0.2632,
+  "hits": 11,
+  "threshold": 0.88,
+  "true_hits": 10
+ },
+ "holdout_without_guards_at_chosen": {
+  "false_hit_rate": 0.2857,
+  "false_hit_rate_upper95": 0.5465,
+  "false_hits": 4,
+  "fpr": 0.0952,
+  "hit_rate": 0.2632,
+  "hits": 14,
+  "threshold": 0.88,
+  "true_hits": 10
+ },
+ "measured": "measured: the hashing embedder on 160 bundled fictional pairs (not production traffic)",
+ "pairs": {
+  "calibration": 80,
+  "holdout": 80,
+  "total": 160
+ },
+ "pairs_file": "evals/semcache_pairs.jsonl",
+ "positives": {
+  "calibration": 42,
+  "holdout": 38
+ },
+ "rule": "point estimate meets target",
+ "target_false_hit_rate": 0.01
+}

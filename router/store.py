@@ -129,6 +129,25 @@ CREATE TABLE IF NOT EXISTS shadow_usage (
     error TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_shadow_ts ON shadow_usage(ts);
+-- Admin holds on keys (console: Budgets & Keys). state 'paused': refused with 429 until unpaused.
+-- state 'override': an admin let an anomaly-paused key through; ignored after `until` (end of that UTC hour).
+CREATE TABLE IF NOT EXISTS key_holds (
+    key_id TEXT PRIMARY KEY,
+    state TEXT NOT NULL,
+    until TEXT,
+    actor TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+);
+-- Budget caps set from the admin API; they win over the routes file's `budgets:` section, field by field.
+CREATE TABLE IF NOT EXISTS budget_overrides (
+    scope TEXT NOT NULL,
+    name TEXT NOT NULL,
+    daily_usd REAL,
+    monthly_usd REAL,
+    tpm INTEGER,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (scope, name)
+);
 """
 )
 
@@ -518,3 +537,88 @@ def cache_stats_today() -> dict:
         "hits": int(r["hits"]),
         "hit_rate": round(int(r["hits"]) / calls, 4) if calls else 0.0,
     }
+
+
+# ---------- Key holds (admin pause / anomaly override) ----------
+
+
+def set_key_hold(key_id: str, state: str, actor: str = "", until: str | None = None) -> None:
+    if state not in ("paused", "override"):
+        raise ValueError(state)
+    with connect() as c:
+        c.execute(
+            "INSERT OR REPLACE INTO key_holds (key_id, state, until, actor, created_at) VALUES (?, ?, ?, ?, ?)",
+            (key_id, state, until, actor, now_utc()),
+        )
+
+
+def clear_key_hold(key_id: str) -> bool:
+    with connect() as c:
+        return c.execute("DELETE FROM key_holds WHERE key_id = ?", (key_id,)).rowcount > 0
+
+
+def key_hold(key_id: str) -> str | None:
+    """'paused', 'override' (until the end of the hour it was set in) or None."""
+    with connect() as c:
+        r = c.execute(
+            "SELECT state FROM key_holds WHERE key_id = ? AND (until IS NULL OR datetime(until) > datetime('now'))",
+            (key_id,),
+        ).fetchone()
+    return r["state"] if r else None
+
+
+def key_holds() -> dict[str, dict]:
+    with connect() as c:
+        rows = c.execute("SELECT * FROM key_holds WHERE until IS NULL OR datetime(until) > datetime('now')").fetchall()
+    return {r["key_id"]: {"state": r["state"], "until": r["until"], "since": r["created_at"]} for r in rows}
+
+
+def end_of_this_hour() -> str:
+    with connect() as c:
+        return c.execute(
+            "SELECT datetime('now', 'start of day', '+' || (strftime('%H', 'now') + 1) || ' hours')"
+        ).fetchone()[0]
+
+
+# ---------- Budget overrides ----------
+
+
+def set_budget_override(scope: str, name: str, daily_usd, monthly_usd, tpm) -> None:
+    with connect() as c:
+        c.execute(
+            "INSERT OR REPLACE INTO budget_overrides (scope, name, daily_usd, monthly_usd, tpm, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (scope, name, daily_usd, monthly_usd, tpm, now_utc()),
+        )
+
+
+def clear_budget_override(scope: str, name: str) -> bool:
+    with connect() as c:
+        return c.execute("DELETE FROM budget_overrides WHERE scope = ? AND name = ?", (scope, name)).rowcount > 0
+
+
+def budget_overrides() -> list[dict]:
+    with connect() as c:
+        return [dict(r) for r in c.execute("SELECT * FROM budget_overrides ORDER BY scope, name").fetchall()]
+
+
+# ---------- Console overview ----------
+
+
+def hourly_spend() -> dict:
+    """Spend per UTC hour today, and the average for each hour of the day over the previous 7 days."""
+    today = [0.0] * 24
+    baseline = [0.0] * 24
+    with connect() as c:
+        for r in c.execute(
+            "SELECT CAST(strftime('%H', ts) AS INTEGER) AS h, SUM(cost_usd) AS s FROM usage "
+            "WHERE date(ts) = date('now') GROUP BY h"
+        ):
+            today[r["h"]] = round(float(r["s"] or 0), 6)
+        for r in c.execute(
+            "SELECT CAST(strftime('%H', ts) AS INTEGER) AS h, SUM(cost_usd) AS s FROM usage "
+            "WHERE date(ts) < date('now') AND date(ts) >= date('now', '-7 days') GROUP BY h"
+        ):
+            baseline[r["h"]] = round(float(r["s"] or 0) / 7, 6)
+        hour = int(c.execute("SELECT strftime('%H', 'now')").fetchone()[0])
+    return {"today": today, "baseline_7d": baseline, "current_hour": hour}
