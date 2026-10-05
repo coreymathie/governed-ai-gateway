@@ -31,14 +31,14 @@ def test_demo_only_imports_dependency_free_router_modules():
     """Pyodide gets router/*.py and nothing else: no FastAPI, pydantic, LiteLLM or SQLite at import time."""
     allowed_stdlib = {
         "__future__", "collections", "csv", "dataclasses", "datetime", "email", "hashlib", "io", "json",
-        "fnmatch", "itertools", "logging", "math", "os", "random", "re", "time", "typing",
+        "fnmatch", "itertools", "logging", "math", "os", "random", "re", "time", "typing", "contextvars",
     }  # fmt: skip
     engine_src = (ROOT / "demo" / "engine.py").read_text()
     used = {n.module.split(".")[1] for n in ast.walk(ast.parse(engine_src)) if isinstance(n, ast.ImportFrom)
             and n.module and n.module.startswith("router.")}  # fmt: skip
     used |= {a.name for n in ast.walk(ast.parse(engine_src)) if isinstance(n, ast.ImportFrom)
              and n.module == "router" for a in n.names}  # fmt: skip
-    page = (ROOT / "demo" / "index.html").read_text()
+    page = "".join(f.read_text() for f in sorted((ROOT / "demo").glob("*.*")) if f.suffix in (".html", ".js"))
     for module in used:
         assert f'"{module}"' in page, f"demo page doesn't load router/{module}.py"
         tree = ast.parse((ROOT / "router" / f"{module}.py").read_text())
