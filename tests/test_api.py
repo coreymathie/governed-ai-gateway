@@ -93,7 +93,7 @@ def test_per_key_spend_cap(client, calls, monkeypatch):
 
 def test_auto_pause_blocks_runaway_key(client, calls, monkeypatch):
     h = _key(client, label="runaway")
-    key = h["Authorization"].split()[1]
+    key = store.get_active_key(h["Authorization"].split()[1]).id  # usage rows reference the key id
     for hrs in range(2, 50):
         ts = (datetime.now(UTC) - timedelta(hours=hrs)).strftime("%Y-%m-%d %H:%M:%S")
         store.record_call(key, "product", "smart-fast", "openai", "m", 1, 1, 0.01, ts=ts)
