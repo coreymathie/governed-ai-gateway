@@ -13,14 +13,17 @@ baseline, and flag it before it becomes an invoice problem.
 Baseline = total spend over the previous 7 days (excluding the current hour)
 divided by the number of hours that had any spend. Keys with less than 24 hours
 of history aren't judged; there's nothing to compare against yet.
+
+`classify()` and `baseline_from_hourly()` are pure functions (no database), so
+the browser demo runs the same thresholds against its simulated ledger. The
+SQLite queries below compute the same baseline in SQL.
 """
 
 from __future__ import annotations
 
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
-
-from .store import connect
 
 MIN_HISTORY_HOURS = 24
 FLAG_MULTIPLE = 3.0
@@ -40,7 +43,23 @@ class SpendSignal:
     verdict: str  # "ok" | "flagged" | "pause"
 
 
+def baseline_from_hourly(hour_totals: Iterable[float]) -> tuple[float, int]:
+    """Baseline from one spend total per active hour: (average per active hour, number of hours)."""
+    totals = list(hour_totals)
+    return (sum(totals) / len(totals) if totals else 0.0), len(totals)
+
+
+def classify(key: str, hour_spend: float, baseline_hourly: float, history_hours: int) -> SpendSignal:
+    if history_hours < MIN_HISTORY_HOURS or baseline_hourly <= 0:
+        return SpendSignal(key, hour_spend, baseline_hourly, history_hours, 0.0, "ok")
+    multiple = hour_spend / baseline_hourly
+    verdict = "pause" if multiple >= PAUSE_MULTIPLE else "flagged" if multiple >= FLAG_MULTIPLE else "ok"
+    return SpendSignal(key, hour_spend, baseline_hourly, history_hours, multiple, verdict)
+
+
 def _baseline_hourly(key: str) -> tuple[float, int]:
+    from .store import connect  # imported lazily so the pure functions above work without the database
+
     with connect() as c:
         row = c.execute(
             """
@@ -59,6 +78,8 @@ def _baseline_hourly(key: str) -> tuple[float, int]:
 
 
 def _current_hour_spend(key: str) -> float:
+    from .store import connect
+
     with connect() as c:
         row = c.execute(
             """
@@ -81,21 +102,17 @@ def evaluate(key: str, use_cache: bool = False) -> SpendSignal:
 
     hour = _current_hour_spend(key)
     baseline, hist_hours = _baseline_hourly(key)
-    if hist_hours < MIN_HISTORY_HOURS or baseline <= 0:
-        signal = SpendSignal(key, hour, baseline, hist_hours, 0.0, "ok")
-    else:
-        multiple = hour / baseline
-        verdict = "pause" if multiple >= PAUSE_MULTIPLE else "flagged" if multiple >= FLAG_MULTIPLE else "ok"
-        signal = SpendSignal(key, hour, baseline, hist_hours, multiple, verdict)
-
+    signal = classify(key, hour, baseline, hist_hours)
     _cache[key] = (time.monotonic(), signal)
     return signal
 
 
 def evaluate_all() -> list[SpendSignal]:
+    from .store import connect
+
     with connect() as c:
-        rows = c.execute("SELECT key FROM api_keys WHERE revoked_at IS NULL").fetchall()
-    return [evaluate(r["key"]) for r in rows]
+        rows = c.execute("SELECT id FROM api_keys WHERE revoked_at IS NULL").fetchall()
+    return [evaluate(r["id"]) for r in rows]  # usage rows reference keys by id
 
 
 def clear_cache() -> None:

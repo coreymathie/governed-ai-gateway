@@ -13,10 +13,10 @@ from .store import get_active_key
 _calls: dict[str, deque[float]] = defaultdict(deque)
 
 
-def _rate_limit(key: str) -> None:
+def _rate_limit(key_id: str) -> None:
     rpm = current().policies.rate_limit_rpm
     now = time.monotonic()
-    q = _calls[key]
+    q = _calls[key_id]
     while q and q[0] < now - 60.0:
         q.popleft()
     if len(q) >= rpm:
@@ -34,7 +34,7 @@ async def require_key(authorization: str | None = Header(default=None)):
     rec = get_active_key(key)
     if not rec:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "invalid or revoked key")
-    _rate_limit(key)
+    _rate_limit(rec.id)
     return rec
 
 
