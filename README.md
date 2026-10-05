@@ -1,14 +1,37 @@
-# multi-provider-llm-router
+# Governed AI Gateway
 
-[![ci](https://github.com/coreymathie/multi-provider-llm-router/actions/workflows/ci.yml/badge.svg)](https://github.com/coreymathie/multi-provider-llm-router/actions/workflows/ci.yml)
+[![ci](https://github.com/coreymathie/governed-ai-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/coreymathie/governed-ai-gateway/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
-**A governed LLM gateway.** One OpenAI-compatible endpoint over OpenAI, Anthropic, Gemini and local Ollama, with the controls a platform team needs before letting many apps spend on model APIs: ordered fallback with per-provider **circuit breakers**, opt-in **latency-aware routing**, an **org → team → key budget hierarchy**, **tokens-per-minute limits**, fraud-style **spend-anomaly detection**, **showback/chargeback export**, **policy-as-code** (YAML, optional OPA) for model allow/deny lists, data residency and request limits, **PII redaction hooks** with content logging off by default, a **hash-chained audit trail** of policy actions, a **route evaluation harness** with a CI cost/quality gate and **shadow mode**, a **semantic cache** with a measured false-hit rate (off by default), an **MCP tool gateway** with per-team tool allow-lists and velocity limits, **OpenTelemetry GenAI spans** and Prometheus metrics. Every policy is a reviewable YAML file, and every behaviour below has an offline test.
+**One OpenAI-compatible endpoint that decides, per request, who may call which model, what it may cost, and what happens when a provider fails, with a console that shows every one of those decisions.**
 
-### ▶ [Try it in your browser](https://coreymathie.github.io/multi-provider-llm-router/demo/)
+### ▶ [Open the live console](https://coreymathie.github.io/governed-ai-gateway/demo/)
 
-The demo runs this repo's actual `router/*.py` modules (breakers, fallback chain, latency ordering, token limits, budgets, anomaly thresholds, cost and showback) in your browser via Pyodide, against **simulated** providers. No API keys, no provider calls. Take a provider down and watch its breaker open, push a key to 10x its baseline and watch it pause, then download the showback CSV.
+[![The Governed AI Gateway console: spend per hour against the 7-day average, fallback rate, cache savings, anomaly flags and circuit breakers](docs/img/console.png)](https://coreymathie.github.io/governed-ai-gateway/demo/)
+
+The hosted console runs this repo's actual `router/*.py` modules (policy, budgets, breakers, fallback chain, anomaly thresholds, PII hooks, caches, MCP tool policy, showback, config validation) in your browser via Pyodide, against **simulated** providers. No API keys, no provider calls. The same console runs **live** against the real gateway: `docker compose up`, then open http://localhost:4000/console/.
+
+The gateway sits in front of OpenAI, Anthropic, Gemini and local Ollama with the controls a platform team needs before letting many apps spend on model APIs: ordered fallback with per-provider **circuit breakers**, opt-in **latency-aware routing**, an **org → team → key budget hierarchy**, **tokens-per-minute limits**, fraud-style **spend-anomaly detection** with admin pause/unpause, **showback/chargeback export**, **policy-as-code** (YAML, optional OPA) for model allow/deny lists, data residency and request limits, **PII redaction hooks** with content logging off by default, a **hash-chained audit trail**, **per-request decision traces**, a **route evaluation harness** with a CI cost/quality gate and **shadow mode**, a **semantic cache** with a measured false-hit rate (off by default), an **MCP tool gateway** with per-team tool allow-lists and velocity limits, **OpenTelemetry GenAI spans** and Prometheus metrics. Every policy is a reviewable YAML file, and every behaviour below has an offline test.
+
+## Console
+
+One static app in [demo/](demo/) with two adapters behind the same interface: `DemoAdapter` (Pyodide + [demo/engine.py](demo/engine.py)) and `LiveAdapter` (the gateway's HTTP API). The header badge says which one is running: "Demo · runs in your browser" or "Live · connected to *host*". Anything simulated is labelled so.
+
+| Screen | What it does | Live endpoints |
+|---|---|---|
+| **Overview** | Spend by team and model, requests, fallback rate, cache savings, anomaly flags, open circuits; spend per hour vs. each hour's 7-day average; guided "what to try" cards | `GET /admin/overview` |
+| **Playground** | Send a chat request as any app key and alias and see who answered, what it cost and each stage it passed; compare two routes side by side over N runs; take a simulated provider down (outage, 429s, error rate, latency) and watch breakers open, fall back and recover; semantic-cache playground (demo) | `/v1/chat/completions`, `/admin/mock/providers`, `/admin/circuits`, `/admin/circuits/reset` |
+| **Traces** | Every request, filterable by team, outcome and free text; a drawer with the full decision timeline: auth → policy/OPA → budgets → anomaly → PII hooks → exact and semantic cache → TPM → each fallback attempt with its breaker state → cost settle → response hooks → content log. Deep-linkable (`#/traces/<id>`), browser back closes it | `GET /admin/traces`, `GET /admin/traces/{id}` |
+| **Policies** | Edit `config/policies.yaml`, `routes.yaml` and the MCP file; validate with the gateway's own loaders (errors inline with line numbers); preview every team × route decision against the active policy before applying; apply and re-run a request | `GET/PUT /admin/config/{name}`, `POST /admin/config/{name}/validate`, `POST /admin/policies/dry-run` |
+| **Budgets & Keys** | Org and team caps and TPM (editable), create/revoke app keys (secret shown once), pause/unpause keys and override an anomaly pause for the hour, showback table and CSV export | `/admin/budgets/{scope}/{name}`, `/admin/keys/{id}/pause`, `/unpause`, `/admin/showback` |
+| **MCP tools** | Team × tool allow-list, try allowed, denied and velocity-limited tool calls, audited (redacted) arguments | `GET /admin/mcp`, `POST /mcp/{server}`, `GET /admin/audit?category=mcp` |
+| **Evals** | Route cost-vs-quality scorecard and CI gate example (simulated profiles), semantic-cache calibration (measured on the bundled pairs, re-runnable in the browser), test inventory | `demo/data/*.json` from [scripts/build_console_data.py](scripts/build_console_data.py) |
+| **Settings** | Admin key (kept in the tab's session storage unless you choose to remember it), roles, gateway controls (breakers, auto-pause, caches, PII hook mode per team), the files running in your browser with their hashes, guided tour | `GET /admin/policies`, `/admin/semantic-cache` |
+
+**Run it live:** `docker compose up` → http://localhost:4000/console/ . Compose builds the gateway with `ROUTER_MOCK_PROVIDERS=true` ([router/mock_provider.py](router/mock_provider.py)): every provider call is answered in-process by a **simulated** OpenAI-compatible provider, and MCP tool calls go to simulated MCP servers ([config/mcp.mock.yaml](config/mcp.mock.yaml)), so it needs no API keys and calls nothing. Costs in that mode are simulated token counts at the configured prices. The admin key is `ROUTER_ADMIN_KEY` from `.env`, or one generated on first start: `docker compose exec gateway cat /data/admin-key.txt` (never logged). Set `ROUTER_MOCK_PROVIDERS=false` and provider keys to route real traffic.
+
+`python scripts/demo_smoke.py --both` drives every screen in headless Chromium in both modes (see [Quality](#quality)). The older server-rendered dashboard is still at `/dashboard`.
 
 ---
 
@@ -248,10 +271,11 @@ Full annotated file: [config/routes.yaml](config/routes.yaml) (the budget figure
 pip install -r requirements.txt ruff
 ruff check . && ruff format --check .
 python -m pytest -q
-python scripts/demo_smoke.py            # optional: drives the browser demo in headless Chromium (needs playwright)
+python scripts/demo_smoke.py --both     # optional: every console screen in headless Chromium, demo + live (needs playwright)
+python scripts/build_console_data.py    # regenerate demo/data/*.json after changing evals, routes or tests
 ```
 
-Latest local run: **248 passed, 1 skipped** (249 tests). The skipped test checks the tiktoken estimator and only runs when tiktoken can load its `cl100k_base` encoding (it downloads it on first use). Tests stub LiteLLM's completion call, so they run offline without provider keys.
+Latest local run: **277 passed, 1 skipped (278 tests)**. Console smoke (`--both`, Pyodide served from a local copy): **114 checks passed (75 demo, 39 live)**: every screen's key interaction in both modes, no console errors, no failed or third-party requests, no horizontal scroll at 390 px or 1366 px. The skipped test checks the tiktoken estimator and only runs when tiktoken can load its `cl100k_base` encoding (it downloads it on first use). Tests stub LiteLLM's completion call, so they run offline without provider keys.
 
 | File | Tests | Covers |
 |---|---|---|
@@ -265,14 +289,18 @@ Latest local run: **248 passed, 1 skipped** (249 tests). The skipped test checks
 | `test_policy.py` | 39 | Policy schema errors, layer combination, alias/size/message limits, max_tokens reject/clamp/unset, provider and model lists, shipped regulated profile, OPA narrowing and fail-closed results, decision fingerprints; through the API: residency deny and local-only routing with no public fallback, streams, limits, body-size middleware, a fake OPA server (allow, deny, narrow, undefined, 500, garbage, down), OPA enabled without URL, engine crash, atomic reload, `/admin/policies`, cache isolation across policy changes |
 | `test_privacy.py` | 30 | Every PII detector and its false-positive guards (Luhn, never-issued SSN ranges), hook order/block/failure, config validation, redaction through the API, team block, post-response hooks, opt-in redacted content log, fail-closed hooks, streaming rules, cache/policy isolation, custom hook modules, append-only hash-chained audit, admin actions audited |
 | `test_demo_engine.py` | 19 | The browser demo's engine under CPython (including the governance panel's policy and content stages, that its rules equal `config/policies.yaml`, the semantic-cache panel and that in-browser calibration equals the script's, and the MCP panel with config equal to `config/mcp.example.yaml`), and that the modules it loads stay free of third-party imports |
+| `test_console_api.py` | 17 | Live console endpoints: simulated providers (answers, outage fallback, 502 when all down, streaming, knob validation), trace stages and order and that traces hold no prompt text, refusals naming the stage that refused, budget overrides winning over routes.yaml, admin pause/unpause and the anomaly override, config read/validate/apply (YAML and schema errors with lines, writes off by default, atomic apply changes enforcement), policy dry runs on candidate text, overview roll-up, simulated MCP server, admin key file (0600, created once), version consistency |
+| `test_demo_console.py` | 10 | The console's demo engine: same stage order and trace shape as the gateway, aliases equal `config/routes.yaml` and profiles equal `evals/sim_profiles.json`, fallback/breakers, residency and clamps, exact and semantic cache, keys/holds/revocation/budgets, runaway batch job paused then overridden, overview history, config screens using the gateway's loaders (pydantic for routes) |
+| `test_console_data.py` | 2 | `demo/data/*.json` equal what the eval scripts produce now, and say what is simulated vs. measured |
 | `test_api.py`, `test_v04_streaming_cache.py`, `test_anomaly.py`, `test_config_and_store.py` | 26 | Fallback, clean 502s, spend caps, anomaly thresholds and auto-pause, streaming with LiteLLM's real chunk objects, cache scoping and expiry, metrics, admin auth, schema migration |
 
 ## Observability
 
 - **OpenTelemetry GenAI spans.** One CLIENT span per provider attempt, named `chat {model}`, with `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens/output_tokens`, `error.type`, plus `router.cost_usd`, `router.alias`, `router.attempt`. A no-op if OpenTelemetry isn't installed; nothing is exported unless you configure an exporter. Prompts and completions are never put on spans.
 - **Prometheus** at `/metrics` (admin key): requests by outcome (ok, error, skipped, cache_hit), spend, tokens, cache savings, rejections by reason, breaker state and transitions, latency EWMA, TPM in use.
-- **Dashboard** at `/dashboard`: spend, provider error rates, breakers, budgets, anomalies, recent calls, showback CSV download.
-- **Admin API:** `/admin/circuits`, `/admin/budgets`, `/admin/showback`, `/admin/anomalies`, `/admin/usage/today`, `/admin/recent`, `/admin/keys`, `/admin/reload`, `/admin/policies`, `/admin/shadow`, `/admin/semantic-cache`, `/admin/mcp`, `/admin/audit`, `/admin/audit/verify`, `/admin/content-log`.
+- **Console** at `/console/` (see [Console](#console)) and the classic dashboard at `/dashboard`.
+- **Request traces:** every chat request gets an `x-router-trace-id` header and a trace (`GET /admin/traces`, `GET /admin/traces/{id}`): each stage's decision, a one-line summary and its wall time. Metadata only (team, key label and fingerprint, alias, deployments, statuses, tokens, cost), never prompt or completion text; a bounded in-memory buffer per worker (`ROUTER_TRACE_BUFFER`, default 500).
+- **Admin API:** `/admin/circuits`, `/admin/circuits/reset`, `/admin/budgets`, `/admin/budgets/{scope}/{name}`, `/admin/showback`, `/admin/anomalies`, `/admin/usage/today`, `/admin/recent`, `/admin/keys`, `/admin/keys/{id}/pause`, `/admin/keys/{id}/unpause`, `/admin/key-holds`, `/admin/reload`, `/admin/routes`, `/admin/policies`, `/admin/policies/dry-run`, `/admin/config`, `/admin/config/{name}` (+ `/validate`), `/admin/overview`, `/admin/traces`, `/admin/shadow`, `/admin/semantic-cache`, `/admin/mcp`, `/admin/mock/providers`, `/admin/audit`, `/admin/audit/verify`, `/admin/content-log`.
 - **Policy actions:** `router_policy_actions_total{category,action}` counts what the audit trail records; `router_shadow_requests_total{alias,candidate,outcome}` counts mirrors; `router_mcp_tool_calls_total{server,tool,decision}` counts tool calls.
 
 ## Failure modes
@@ -313,8 +341,8 @@ Latest local run: **248 passed, 1 skipped** (249 tests). The skipped test checks
 ## Quickstart
 
 ```bash
-git clone https://github.com/coreymathie/multi-provider-llm-router.git
-cd multi-provider-llm-router
+git clone https://github.com/coreymathie/governed-ai-gateway.git
+cd governed-ai-gateway
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env            # provider keys + ROUTER_ADMIN_KEY
@@ -344,7 +372,9 @@ curl -H "Authorization: Bearer $ROUTER_ADMIN_KEY" \
   "http://localhost:4000/admin/showback?group_by=team,model&format=csv" -o showback.csv
 ```
 
-Run the browser demo locally: `python -m http.server 8000` from the repo root, then open `http://localhost:8000/demo/` (Pyodide loads from jsDelivr). The hosted link needs GitHub Pages enabled for this repo (branch `main`, folder `/`).
+Or with Docker and simulated providers: `docker compose up`, then http://localhost:4000/console/ (see [Console](#console)). Without Docker, `ROUTER_MOCK_PROVIDERS=true uvicorn router.main:app --port 4000` does the same.
+
+Run the in-browser console locally: `python -m http.server 8000` from the repo root, then open `http://localhost:8000/demo/` (Pyodide loads from jsDelivr). The hosted link needs GitHub Pages enabled for this repo (branch `main`, folder `/`).
 
 ## Limitations
 
@@ -356,6 +386,9 @@ Run the browser demo locally: `python -m http.server 8000` from the repo root, t
 - PII detection is pattern-based (no names or addresses). Streams can't be combined with `post_response` hooks.
 - The audit chain makes tampering evident, not impossible: anyone who can write the SQLite file can rebuild the chain.
 - SQLite serializes writes; use a server database for heavy concurrent traffic. "Today" and "this month" are UTC.
+- Request traces, like breakers, are in memory per worker and bounded; the usage table and audit trail are the durable record. Budget overrides and key holds set from the console are in SQLite and shared, but each worker caches budget overrides until it changes them itself.
+- `PUT /admin/config/{name}` (off unless `ROUTER_ALLOW_CONFIG_WRITES=true`) rewrites the YAML file, so comments in an edited file are whatever the editor sent; it reloads only the worker that receives it.
+- The console's demo mode simulates providers, time (a virtual clock) and the hours before "now" on its overview chart; its budgets are scaled down so they can be hit. Live mode with `ROUTER_MOCK_PROVIDERS=true` simulates providers only.
 - If you outgrow this, LiteLLM's own proxy does far more, and the routes file maps over cleanly.
 
 ## Roadmap (Phase 2)

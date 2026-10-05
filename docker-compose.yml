@@ -1,0 +1,30 @@
+# docker compose up  ->  http://localhost:4000/console/
+#
+# Runs the gateway with SIMULATED providers (ROUTER_MOCK_PROVIDERS=true): no API keys, no calls to any model
+# provider. Responses, latencies and token counts are simulated; spend is those token counts at the
+# configured prices. To use real providers, set ROUTER_MOCK_PROVIDERS=false and add provider keys to .env.
+#
+# The admin key: set ROUTER_ADMIN_KEY in .env, or leave it unset and one is generated on first start into
+# the data volume (never logged). Read it with:  docker compose exec gateway cat /data/admin-key.txt
+services:
+  gateway:
+    build: .
+    image: governed-ai-gateway:0.7.0
+    ports:
+      - "127.0.0.1:4000:4000"
+    environment:
+      ROUTER_MOCK_PROVIDERS: "true"
+      ROUTER_ALLOW_CONFIG_WRITES: "true"     # lets the console's Policies screen apply edits (admin key required)
+      ROUTER_ADMIN_KEY: ${ROUTER_ADMIN_KEY:-}
+      ROUTER_ADMIN_KEY_FILE: /data/admin-key.txt
+      ROUTER_DB_PATH: /data/router.db
+      ROUTER_MCP_FILE: ./config/mcp.mock.yaml
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - gateway-data:/data
+    restart: unless-stopped
+
+volumes:
+  gateway-data:

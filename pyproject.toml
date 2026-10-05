@@ -1,7 +1,7 @@
 [project]
-name = "multi-provider-llm-router"
-version = "0.6.0"
-description = "OpenAI-compatible LLM gateway across OpenAI, Anthropic, Gemini, and Ollama with fallback, spend caps, and spend-anomaly detection"
+name = "governed-ai-gateway"
+version = "0.7.0"
+description = "Governed AI Gateway: an OpenAI-compatible LLM gateway with policy-as-code, budgets, fallback and circuit breakers, spend-anomaly detection, request traces and a product console"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }

@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.7.0] — 2026-10
+
+Renamed: the project is now **governed-ai-gateway** ("Governed AI Gateway"); repository, badges and Pages URLs changed. Python package and import paths (`router`) are unchanged.
+
+Added
+- **Console** (`demo/`): a product console with Overview, Playground (chat, route comparison, provider fault injection, semantic cache), Traces (filterable list and decision-timeline drawer, deep-linkable), Policies (edit, validate, preview decisions, apply), Budgets & Keys (caps, keys, pause/unpause, anomaly override, showback CSV), MCP tools, Evals and Settings, with a guided tour. One codebase, two modes: **demo** (the gateway's `router/*.py` in Pyodide with simulated providers, GitHub Pages) and **live** (served by the gateway at `/console/`, auto-detected through `/console/api-mode`, header badge shows which). Replaces the single-page demo at the same URL.
+- **Request traces** (`router/traces.py`): every chat request records each stage (auth, policy/OPA, budgets, anomaly, request hooks, exact and semantic cache, TPM, every fallback attempt, settle, response hooks, content log) with decision, summary and wall time; `x-router-trace-id` header; `GET /admin/traces`, `GET /admin/traces/{id}`; bounded per-worker buffer (`ROUTER_TRACE_BUFFER`); metadata only.
+- **Simulated providers** (`router/mock_provider.py`, `ROUTER_MOCK_PROVIDERS=true`): OpenAI-shaped responses and streams answered in-process, with per-provider outage, 429, error-rate and latency knobs (`GET/PUT /admin/mock/providers`), plus simulated MCP servers at `/mock/mcp/{server}` (`config/mcp.mock.yaml`).
+- **`docker compose up`** (`Dockerfile`, `docker-compose.yml`): gateway + console with simulated providers and no API keys; admin key from `ROUTER_ADMIN_KEY` or generated once into `ROUTER_ADMIN_KEY_FILE` (mode 0600, never logged).
+- **Config from the API** (`router/configcheck.py`, `router/console.py`): `GET /admin/config`, `GET /admin/config/{name}`, `POST /admin/config/{name}/validate` (the gateway's own loaders; errors with line numbers), `PUT /admin/config/{name}` (off unless `ROUTER_ALLOW_CONFIG_WRITES=true`; atomic write, reload, previous file restored on failure; audited), `POST /admin/policies/dry-run` (team × alias decisions for the active or a candidate policy).
+- **Budget overrides** stored in SQLite and winning over `routes.yaml` field by field: `PUT/DELETE /admin/budgets/{org|team|key}/{name}`; listed in `GET /admin/budgets`; audited.
+- **Key holds**: `POST /admin/keys/{id}/pause` (429 until unpaused), `POST /admin/keys/{id}/unpause` (lifts a pause; on an anomaly-paused key, an override until the end of the UTC hour), `GET /admin/key-holds`; audited.
+- `GET /admin/overview` (today's spend by team and model, hourly spend vs. the 7-day average per hour, cache, anomalies, breakers, trace stats), `GET /admin/routes`, `POST /admin/circuits/reset`, public `GET /console/api-mode`.
+- `scripts/build_console_data.py` writes the Evals screen's data (`demo/data/*.json`) from the repo's eval code; `tests/test_console_data.py` fails when it is stale.
+- `scripts/demo_smoke.py` rewritten: every console screen in demo mode and live mode (uvicorn on a free port), desktop and 390 px screenshots with `--screenshots`; CI runs the live smoke (and the demo smoke, allowed to fail on CDN problems).
+- Tests: `test_console_api.py`, `test_demo_console.py`, `test_console_data.py`.
+
+Changed
+- `router/__init__.py` defines `__version__`; the FastAPI title is `governed-ai-gateway`; the OpenTelemetry tracer name is `governed-ai-gateway`.
+- The classic `/dashboard` links to the console.
+
 ## [0.6.0] — 2026-10
 
 Added
