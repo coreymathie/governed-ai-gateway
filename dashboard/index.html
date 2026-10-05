@@ -6,17 +6,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root {
-    --bg: #0b0f14; --panel: #121821; --fg: #e6edf3; --muted: #8b98a5;
-    --accent: #4fb3ff; --danger: #ff6b6b; --ok: #4ade80; --border: #1f2a37;
+    --bg: #120E24; --panel: #1A1532; --fg: #ECE9F7; --muted: #A69FC4;
+    --accent: #A78BFA; --danger: #F87171; --ok: #4ADE80; --border: #2C2452; --warn: #FB923C;
   }
   :root:not([data-theme="dark"]) {
     --bg: #ffffff; --panel: #f6f8fa; --fg: #1f2328; --muted: #656d76;
-    --accent: #0969da; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de;
+    --accent: #6d28d9; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de; --warn: #c2410c;
   }
   @media (prefers-color-scheme: light) {
     :root:not([data-theme="dark"]) {
       --bg: #ffffff; --panel: #f6f8fa; --fg: #1f2328; --muted: #656d76;
-      --accent: #0969da; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de;
+      --accent: #6d28d9; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de; --warn: #c2410c;
     }
   }
   * { box-sizing: border-box; }
@@ -44,7 +44,10 @@
   .muted { color: var(--muted); font-size: 12px; }
   .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
           background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
-  .pill.err { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
+  .pill.err, .pill.open { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
+  .pill.half_open { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
+  .pill.closed { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); }
+  .tablewrap { overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -75,8 +78,29 @@
 </div>
 
 <div class="card" style="margin-bottom: 16px;">
+  <h2>Circuit breakers (per provider deployment)</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Deployment</th><th>State</th><th>Errors in window</th><th>Probe in</th><th>Latency EWMA</th><th>Last reason</th></tr></thead>
+    <tbody id="circuitBody"></tbody>
+  </table></div>
+</div>
+
+<div class="card" style="margin-bottom: 16px;">
+  <h2>Budgets (org &rarr; team; UTC day and month)</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Scope</th><th>Today</th><th>Daily cap</th><th>Month</th><th>Monthly cap</th><th>TPM limit</th></tr></thead>
+    <tbody id="budgetBody"></tbody>
+  </table></div>
+  <div class="muted" id="budgetWarn" style="margin-top:8px"></div>
+</div>
+
+<div class="card" style="margin-bottom: 16px;">
   <h2>Spend by team (today)</h2>
   <table><thead><tr><th>Team</th><th>Spend</th></tr></thead><tbody id="teamBody"></tbody></table>
+  <div class="row" style="margin-top:10px">
+    <button onclick="downloadShowback()">Download showback CSV (month to date)</button>
+    <span class="muted">cost, tokens, cost per 1K requests and per 1K tokens by team, key, provider, model</span>
+  </div>
 </div>
 
 <div class="card" style="margin-bottom: 16px;">
@@ -84,6 +108,14 @@
   <table><thead><tr><th>Label</th><th>Team</th><th>Spend</th></tr></thead><tbody id="keyBody"></tbody></table>
 </div>
 
+<div class="card" style="margin-bottom: 16px;">
+  <h2>Policy audit trail <span id="auditChain" class="pill" style="margin-left:6px">chain —</span></h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Time</th><th>Category</th><th>Action</th><th>Team</th><th>Subject</th><th>Detail (counts and decisions only)</th></tr></thead>
+    <tbody id="auditBody"></tbody>
+  </table></div>
+  <div class="muted" style="margin-top:8px">Append-only and hash-chained (<code>/admin/audit/verify</code>). Prompt and completion text is never stored here.</div>
+</div>
 <div class="card">
   <h2>Recent calls</h2>
   <table>
@@ -107,12 +139,43 @@ async function call(path) {
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
+async function downloadShowback() {
+  const r = await fetch(BASE + "/admin/showback?format=csv", { headers: { "Authorization": "Bearer " + getKey() } });
+  if (!r.ok) { alert(await r.text()); return; }
+  const url = URL.createObjectURL(await r.blob());
+  const a = Object.assign(document.createElement("a"), { href: url, download: "showback.csv" });
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+const cap = (v) => v == null ? '<span class="muted">none</span>' : "$" + Number(v).toFixed(2);
+function budgetRow(name, b) {
+  return `<tr><td>${esc(name)}</td><td>$${b.daily.spent_usd.toFixed(4)}${b.daily.used_pct != null ? ` <span class="muted">${b.daily.used_pct}%</span>` : ""}</td>
+    <td>${cap(b.daily.cap_usd)}</td><td>$${b.monthly.spent_usd.toFixed(4)}</td><td>${cap(b.monthly.cap_usd)}</td>
+    <td>${b.tpm ? b.tpm.toLocaleString() : '<span class="muted">none</span>'}</td></tr>`;
+}
 async function refresh() {
   if (!getKey()) return;
   try {
-    const [usage, calls, anomalies] = await Promise.all([
+    const [usage, calls, anomalies, circuits, budgets, auditRows, chain] = await Promise.all([
       call("/admin/usage/today"), call("/admin/recent?limit=50"), call("/admin/anomalies"),
+      call("/admin/circuits"), call("/admin/budgets"), call("/admin/audit?limit=30&exclude_allow=true"), call("/admin/audit/verify"),
     ]);
+    $("auditChain").textContent = chain.ok ? `chain ok · ${chain.rows} rows` : `chain broken at row ${chain.first_bad_id}`;
+    $("auditChain").className = chain.ok ? "pill closed" : "pill err";
+    $("auditBody").innerHTML = auditRows.map(a => `<tr>
+      <td>${new Date(a.ts.replace(" ", "T") + "Z").toLocaleTimeString()}</td><td>${esc(a.category)}</td>
+      <td><span class="pill ${/deny|block|error|limited|cap/.test(a.action) ? "err" : ""}">${esc(a.action)}</span></td>
+      <td>${esc(a.team)}</td><td>${esc(a.subject)}</td>
+      <td class="muted">${esc(JSON.stringify(a.detail))}</td></tr>`).join("")
+      || '<tr><td colspan="6" class="muted">no policy actions yet</td></tr>';
+    const ewma = Object.fromEntries(circuits.latency.filter(l => l.kind === "latency").map(l => [l.deployment, l.ewma_s]));
+    $("circuitBody").innerHTML = circuits.breakers.map(b => `<tr><td>${esc(b.deployment)}</td>
+      <td><span class="pill ${esc(b.state)}">${esc(b.state.replace("_", "-"))}</span></td>
+      <td>${b.window_errors}/${b.window_requests}</td><td>${b.retry_in_s ? b.retry_in_s.toFixed(0) + " s" : "—"}</td>
+      <td>${ewma[b.deployment] != null ? (ewma[b.deployment] * 1000).toFixed(0) + " ms" : "—"}</td>
+      <td class="muted">${esc(b.reason)}</td></tr>`).join("") || '<tr><td colspan="6" class="muted">no provider calls yet</td></tr>';
+    $("budgetBody").innerHTML = budgetRow("org", budgets.org) +
+      Object.entries(budgets.teams).map(([t, b]) => budgetRow("team " + t, b)).join("");
+    $("budgetWarn").textContent = (budgets.warnings || []).join(" · ");
     $("totalSpend").textContent = "$" + usage.total_spend_usd.toFixed(4);
     $("totalCalls").textContent = usage.calls_today;
     const cache = usage.cache || { saved_usd: 0, hits: 0, hit_rate: 0 };
