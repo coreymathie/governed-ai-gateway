@@ -1,0 +1,40 @@
+# Policy-as-code: evaluated before budgets, cache and any provider call (router/policy.py).
+# Loaded from ./config/policies.yaml, or the file named by ROUTER_POLICIES_FILE.
+# An invalid file stops startup; a bad POST /admin/reload keeps the previous policy.
+#
+# Layers combine so the most restrictive wins: defaults -> teams.<team> -> routes.<alias>.
+# Allow-lists intersect, deny-lists union, ceilings take the smallest value, `reject`
+# beats `clamp`, required hooks union. Deployments a rule removes are never tried, so
+# fallback can't reach an excluded provider; if none are left the request gets 403.
+version: 1
+
+defaults:
+  max_tokens_ceiling: 4096      # also applied when a request doesn't set max_tokens
+  max_tokens_mode: clamp        # clamp | reject (400)
+  max_request_bytes: 262144     # UTF-8 size of the serialized messages (413 above it)
+  max_messages: 200
+
+teams:
+  # Data residency: keys created with team "regulated" can only reach local models,
+  # and their prompts always pass through the PII redaction hook.
+  regulated:
+    allowed_providers: [ollama]
+    required_hooks: [pii_redact]
+    max_tokens_ceiling: 2048
+
+  # Example of model allow/deny lists for a lower-trust team.
+  contractors:
+    allow_aliases: [smart-fast, cheap-batch, local-first]
+    deny_models: ["anthropic/claude-sonnet-*", "openai/gpt-4.1"]
+
+routes:
+  heavy-reasoning:
+    max_tokens_mode: reject     # over the ceiling is a caller bug here, not something to clamp
+
+# Optional Open Policy Agent check after the local policy. Used when OPA_URL is set;
+# with enabled: true and no OPA_URL, every request is refused (fail closed).
+# Example policy: policies/router.rego (path router/decision).
+opa:
+  enabled: false
+  path: router/decision
+  timeout_s: 0.5
