@@ -1,0 +1,166 @@
+{
+ "case_count": 40,
+ "cases_source": "evals/sample_cases.jsonl",
+ "command": "python scripts/eval_routes.py",
+ "measured": "simulated: invented model profiles (evals/sim_profiles.json), deterministic",
+ "provider": "simulated",
+ "routes": {
+  "cheap-batch": {
+   "summary": {
+    "cases": 40,
+    "cost_per_1k_requests_usd": 0.0039,
+    "errors": 0,
+    "fallbacks": 1,
+    "judge_mean": null,
+    "latency_p50_s": 0.3051,
+    "latency_p95_s": 0.3542,
+    "quality": 0.775,
+    "quality_by_tag": {
+     "classification": 0.75,
+     "extraction": 0.75,
+     "format": 0.8333,
+     "math": 0.7,
+     "reasoning": 0.75,
+     "summary": 1.0
+    },
+    "scored": 40,
+    "served_by": {
+     "gemini/gemini-2.5-flash": 1,
+     "openai/gpt-4.1-nano": 39
+    },
+    "tokens": 942,
+    "total_cost_usd": 0.000155
+   },
+   "targets": [
+    "openai/gpt-4.1-nano",
+    "gemini/gemini-2.5-flash"
+   ]
+  },
+  "fast-chat": {
+   "summary": {
+    "cases": 40,
+    "cost_per_1k_requests_usd": 0.03,
+    "errors": 0,
+    "fallbacks": 1,
+    "judge_mean": null,
+    "latency_p50_s": 0.6591,
+    "latency_p95_s": 0.7454,
+    "quality": 0.975,
+    "quality_by_tag": {
+     "classification": 0.875,
+     "extraction": 1.0,
+     "format": 1.0,
+     "math": 1.0,
+     "reasoning": 1.0,
+     "summary": 1.0
+    },
+    "scored": 40,
+    "served_by": {
+     "anthropic/claude-haiku-4-5": 39,
+     "openai/gpt-4.1-mini": 1
+    },
+    "tokens": 852,
+    "total_cost_usd": 0.0012
+   },
+   "targets": [
+    "anthropic/claude-haiku-4-5",
+    "openai/gpt-4.1-mini",
+    "gemini/gemini-2.5-flash"
+   ]
+  },
+  "heavy-reasoning": {
+   "summary": {
+    "cases": 40,
+    "cost_per_1k_requests_usd": 0.0947,
+    "errors": 0,
+    "fallbacks": 0,
+    "judge_mean": null,
+    "latency_p50_s": 1.4111,
+    "latency_p95_s": 1.6556,
+    "quality": 0.95,
+    "quality_by_tag": {
+     "classification": 1.0,
+     "extraction": 0.875,
+     "format": 1.0,
+     "math": 1.0,
+     "reasoning": 1.0,
+     "summary": 0.5
+    },
+    "scored": 40,
+    "served_by": {
+     "anthropic/claude-sonnet-4-5": 40
+    },
+    "tokens": 863,
+    "total_cost_usd": 0.003789
+   },
+   "targets": [
+    "anthropic/claude-sonnet-4-5",
+    "openai/gpt-4.1"
+   ]
+  },
+  "local-first": {
+   "summary": {
+    "cases": 40,
+    "cost_per_1k_requests_usd": 0.0012,
+    "errors": 0,
+    "fallbacks": 0,
+    "judge_mean": null,
+    "latency_p50_s": 1.2426,
+    "latency_p95_s": 1.5005,
+    "quality": 0.65,
+    "quality_by_tag": {
+     "classification": 0.625,
+     "extraction": 0.5,
+     "format": 1.0,
+     "math": 0.6,
+     "reasoning": 0.625,
+     "summary": 0.5
+    },
+    "scored": 40,
+    "served_by": {
+     "ollama/llama3.1:8b": 40
+    },
+    "tokens": 1006,
+    "total_cost_usd": 5e-05
+   },
+   "targets": [
+    "ollama/llama3.1:8b",
+    "anthropic/claude-haiku-4-5"
+   ]
+  },
+  "smart-fast": {
+   "summary": {
+    "cases": 40,
+    "cost_per_1k_requests_usd": 0.03,
+    "errors": 0,
+    "fallbacks": 1,
+    "judge_mean": null,
+    "latency_p50_s": 0.6591,
+    "latency_p95_s": 0.7454,
+    "quality": 0.975,
+    "quality_by_tag": {
+     "classification": 0.875,
+     "extraction": 1.0,
+     "format": 1.0,
+     "math": 1.0,
+     "reasoning": 1.0,
+     "summary": 1.0
+    },
+    "scored": 40,
+    "served_by": {
+     "anthropic/claude-haiku-4-5": 39,
+     "openai/gpt-4.1-mini": 1
+    },
+    "tokens": 852,
+    "total_cost_usd": 0.0012
+   },
+   "targets": [
+    "anthropic/claude-haiku-4-5",
+    "openai/gpt-4.1-mini",
+    "ollama/llama3.1:8b"
+   ]
+  }
+ },
+ "routes_file": "config/routes.yaml",
+ "seed": "eval-v1"
+}
