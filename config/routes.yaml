@@ -1,6 +1,12 @@
 # Model aliases: your code calls these, the router picks the real provider.
-# Entries are tried in order; on error/timeout/429 the next is used.
+# Entries are tried in order; on error/timeout/429 the next is used, and a
+# deployment whose circuit breaker is open is skipped (see `resilience`).
 # `provider` must be one of: openai, anthropic, gemini, ollama
+#
+# Two forms per alias:
+#   alias: [targets...]                                  -> configured order (default)
+#   alias: { strategy: latency, targets: [targets...] }  -> fastest healthy target first,
+#                                                           configured order breaks near-ties
 
 aliases:
   smart-fast:
@@ -20,10 +26,26 @@ aliases:
     - { provider: ollama,    model: llama3.1:8b,       timeout_s: 60 }
     - { provider: anthropic, model: claude-haiku-4-5,  timeout_s: 20 }
 
+  # Same deployments as smart-fast, ordered by observed latency (EWMA).
+  fast-chat:
+    strategy: latency
+    targets:
+      - { provider: anthropic, model: claude-haiku-4-5, timeout_s: 20 }
+      - { provider: openai,    model: gpt-4.1-mini,     timeout_s: 20 }
+      - { provider: gemini,    model: gemini-2.5-flash, timeout_s: 20 }
+
 policies:
-  # Hard caps enforced before any provider call
+  # Default caps, checked before any provider call against spend already
+  # recorded (UTC day / month). 0 = no cap. Override per team or key below.
   per_key_daily_usd: 50.0
   per_team_daily_usd: 500.0
+  per_key_monthly_usd: 0
+  per_team_monthly_usd: 0
+  # Tokens per minute. Each request reserves an estimate (prompt + max_tokens,
+  # or default_output_tokens_estimate) that is corrected to real usage afterwards.
+  per_key_tpm: 0
+  per_team_tpm: 0
+  default_output_tokens_estimate: 256
   rate_limit_rpm: 120
   # Block a key whose spend this hour reaches 10x its 7-day hourly baseline.
   # Off by default: turn it on once keys have a week of history.
@@ -32,3 +54,71 @@ policies:
   # Cache entries are scoped per team. Set cache_ttl_seconds: 0 to turn it off.
   cache_ttl_seconds: 3600
   cache_max_temperature: 0.0
+
+# Org -> team -> key budget hierarchy. Unset fields inherit the policies above.
+budgets:
+  org: {}                       # e.g. { daily_usd: 2000, monthly_usd: 40000 }
+  teams: {}                     # e.g. { data: { daily_usd: 200, tpm: 400000 } }
+  keys: {}                      # by key label, e.g. { nightly-batch: { monthly_usd: 300 } }
+
+resilience:
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5        # consecutive failures that open a breaker
+    error_rate_threshold: 0.5   # ...or this error rate
+    min_requests: 10            # ...once the window has this many calls
+    window_seconds: 60
+    cooldown_seconds: 30        # open -> half-open
+    half_open_max_probes: 1
+    success_threshold: 1        # probe successes that close it again
+    max_retry_after_seconds: 300  # a provider's Retry-After (429/503) is honoured up to this
+  latency:
+    alpha: 0.3                  # EWMA weight of the newest sample
+    min_samples: 3              # warm-up per deployment before it's ranked
+    tolerance: 0.10             # within 10% of the fastest counts as a tie
+
+# Optional price overrides, USD per 1M tokens. They win over LiteLLM's catalog
+# (negotiated rates) and over the $0 default for local models (GPU chargeback).
+prices: {}
+#  "ollama/llama3.1:8b": { input_usd_per_1m: 0.05, output_usd_per_1m: 0.05 }
+
+# Content hooks (router/pii.py) and content logging (router/privacy.py).
+# Hooks: pii_redact (replace emails, phones, SSNs, Luhn-valid cards and API-key-like
+# secrets with [REDACTED:KIND]), pii_block (422 if any are found), pii_detect (audit
+# only). Layers are unioned: default + routes.<alias> + teams.<team>. Custom hooks:
+# register them in a module listed in ROUTER_HOOK_MODULES.
+# Content logging is OFF unless a team sets log_content: true; stored text is then
+# redacted with every detector. Usage rows, logs, spans and the audit trail never
+# hold prompt or completion text.
+privacy:
+  kinds: [secret, email, card, ssn, phone]
+  default: { pre_request: [], post_response: [] }
+  routes: {}                    # e.g. { smart-fast: { pre_request: [pii_redact] } }
+  teams: {}                     # e.g. { support: { pre_request: [pii_redact], post_response: [pii_redact], log_content: true } }
+  content_log_max_chars: 4000
+
+# Shadow mode (router/shadow.py): mirror a sampled share of an alias's live traffic
+# to a candidate alias in the background, never returned to the client. Mirrors are
+# admitted by the candidate's policy, use their own circuit breakers, and are billed to
+# the separate shadow_usage ledger (billing: ledger) or not recorded (billing: suppress;
+# the provider still charges). Compare at GET /admin/shadow.
+shadow: {}
+#  smart-fast: { candidate: cheap-batch, percent: 10, billing: ledger, max_daily_usd: 5 }
+
+# Semantic cache (router/semcache.py): serve a cached answer when a new prompt's last
+# user turn is similar enough to a cached one. OFF by default. On the bundled
+# fictional pairs the offline hashing embedder at 0.88 had a 9.1% false-hit rate
+# on held-out pairs (1 of 11 hits), so calibrate on your own labelled traffic first:
+#   python scripts/calibrate_semcache.py --pairs your_pairs.jsonl --target 0.01
+# Entries are partitioned by team, alias, policy decision, content hooks, earlier
+# turns and generation parameters, and live in this worker's memory only.
+semantic_cache:
+  enabled: false
+  threshold: 0.88
+  ttl_seconds: 3600
+  max_entries_per_partition: 1000
+  max_temperature: 0.0
+  embedder: hashing            # or: provider (with embedding_model: openai/text-embedding-3-small)
+  guards: { numbers: true, negation: true }
+  teams: []                    # empty = every team when enabled; otherwise only these teams
+  team_thresholds: {}          # per-team calibrated thresholds

@@ -1,0 +1,36 @@
+# MCP tool gateway (router/mcp_gateway.py, router/mcp_policy.py). Copy to config/mcp.yaml
+# (loaded automatically) or point ROUTER_MCP_FILE at it. Clients call
+#   POST /mcp/<server>   with their gateway key as a bearer token and one JSON-RPC message.
+#
+# Default deny: a team can only list and call the tools an entry below allows.
+# Supported: initialize, ping, notifications/*, tools/list (filtered), tools/call.
+# Upstream servers must speak MCP's Streamable HTTP transport (JSON or SSE replies).
+version: 1
+
+servers:
+  tickets:
+    url: http://127.0.0.1:9101/mcp
+    timeout_s: 10
+    headers_from_env: { Authorization: MCP_TICKETS_AUTH }   # e.g. "Bearer ..." in the environment
+  files:
+    url: http://127.0.0.1:9102/mcp
+    timeout_s: 5
+
+defaults:
+  per_minute: 60                  # calls per key per tool, sliding 60 s
+  team_per_minute: 0              # calls per team per tool (0 = no limit)
+  max_identical_per_minute: 5     # same tool and same arguments from one key: agent-loop guard
+  per_day: 0                      # calls per team per tool per UTC day (0 = no cap)
+  cost_usd: 0.0                   # price per call; recorded in usage, showback and daily_usd
+  daily_usd: 0.0                  # spend cap per team per tool per UTC day (0 = no cap)
+  redact_args: true               # audit log keeps PII-redacted argument values (false: keys only)
+  forward_redacted: false         # true: the upstream server receives redacted arguments too
+
+teams:
+  support:
+    - { server: tickets, tool: "search_*" }
+    - { server: tickets, tool: get_ticket }
+    - { server: tickets, tool: close_ticket, per_minute: 5, per_day: 200 }
+  data:
+    - { server: files, tool: read_file, per_minute: 30, cost_usd: 0.001, daily_usd: 2.0 }
+  # Nothing here allows files/delete_file, so no team can call it, or see it in tools/list.
