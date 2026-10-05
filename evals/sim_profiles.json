@@ -1,0 +1,13 @@
+{
+  "_comment": "Simulation profiles for scripts/eval_routes.py --provider sim. These are invented knobs, not measurements of any real model: quality is the probability a deployment answers a case correctly, prices are USD per 1M tokens.",
+  "profiles": {
+    "anthropic/claude-haiku-4-5": {"quality": 0.90, "latency_ms": 650, "error_rate": 0.02, "price_in_per_1m": 1.00, "price_out_per_1m": 5.00},
+    "anthropic/claude-sonnet-4-5": {"quality": 0.96, "latency_ms": 1400, "error_rate": 0.01, "price_in_per_1m": 3.00, "price_out_per_1m": 15.00},
+    "openai/gpt-4.1": {"quality": 0.95, "latency_ms": 1200, "error_rate": 0.01, "price_in_per_1m": 2.00, "price_out_per_1m": 8.00},
+    "openai/gpt-4.1-mini": {"quality": 0.88, "latency_ms": 480, "error_rate": 0.02, "price_in_per_1m": 0.40, "price_out_per_1m": 1.60},
+    "openai/gpt-4.1-nano": {"quality": 0.72, "latency_ms": 300, "error_rate": 0.02, "price_in_per_1m": 0.10, "price_out_per_1m": 0.40},
+    "gemini/gemini-2.5-flash": {"quality": 0.86, "latency_ms": 520, "error_rate": 0.02, "price_in_per_1m": 0.30, "price_out_per_1m": 2.50},
+    "ollama/llama3.1:8b": {"quality": 0.70, "latency_ms": 1300, "error_rate": 0.00, "price_in_per_1m": 0.05, "price_out_per_1m": 0.05},
+    "ollama/qwen2.5:14b": {"quality": 0.78, "latency_ms": 2100, "error_rate": 0.00, "price_in_per_1m": 0.08, "price_out_per_1m": 0.08}
+  }
+}

@@ -1,0 +1,162 @@
+# Labelled pairs for semantic-cache calibration (scripts/calibrate_semcache.py). Fictional and generic.
+# same=true: one cached answer serves both. same=false: reusing the answer would be wrong.
+{"id": "s001", "a": "How do I reset my password?", "b": "how do i reset my password", "same": true}
+{"id": "s002", "a": "What are your opening hours on Saturday?", "b": "What are your opening hours on Saturday", "same": true}
+{"id": "s003", "a": "Can I change the delivery address for my order?", "b": "Can I change the delivery address on my order?", "same": true}
+{"id": "s004", "a": "How do I export my invoices as CSV?", "b": "How can I export my invoices as CSV?", "same": true}
+{"id": "s005", "a": "Where can I download the mobile app?", "b": "Where do I download the mobile app?", "same": true}
+{"id": "s006", "a": "How do I cancel my subscription?", "b": "How do I cancel my subscription please?", "same": true}
+{"id": "s007", "a": "Is there a student discount?", "b": "Is there a student discount available?", "same": true}
+{"id": "s008", "a": "What payment methods do you accept?", "b": "Which payment methods do you accept?", "same": true}
+{"id": "s009", "a": "How long does standard shipping take?", "b": "How long does standard shipping usually take?", "same": true}
+{"id": "s010", "a": "How do I enable two-factor authentication?", "b": "How do I turn on two-factor authentication?", "same": true}
+{"id": "s011", "a": "Can I get a refund for a damaged item?", "b": "Can I get a refund for an item that arrived damaged?", "same": true}
+{"id": "s012", "a": "How do I add a new user to my workspace?", "b": "How can I add a new user to my workspace?", "same": true}
+{"id": "s013", "a": "What is the return policy for sale items?", "b": "What's the return policy for sale items?", "same": true}
+{"id": "s014", "a": "Does the Copperleaf kettle work on induction hobs?", "b": "Does the Copperleaf kettle work with induction hobs?", "same": true}
+{"id": "s015", "a": "How do I update my billing email?", "b": "How do I change my billing email?", "same": true}
+{"id": "s016", "a": "Summarize the key points of the onboarding guide.", "b": "Summarise the key points of the onboarding guide.", "same": true}
+{"id": "s017", "a": "Translate 'good morning' into Spanish.", "b": "Translate good morning into Spanish", "same": true}
+{"id": "s018", "a": "What does error code E42 mean on the Nimbus router?", "b": "What does the error code E42 mean on a Nimbus router?", "same": true}
+{"id": "s019", "a": "How do I connect the printer to Wi-Fi?", "b": "How do I connect my printer to the Wi-Fi?", "same": true}
+{"id": "s020", "a": "Can I pause my plan instead of cancelling?", "b": "Can I pause my plan rather than cancel it?", "same": true}
+{"id": "s021", "a": "Where is my order confirmation email?", "b": "Where's my order confirmation email?", "same": true}
+{"id": "s022", "a": "How do I rotate an API key in the dashboard?", "b": "How can I rotate an API key from the dashboard?", "same": true}
+{"id": "s023", "a": "What is the warranty period for the Larkspur blender?", "b": "What's the warranty period on the Larkspur blender?", "same": true}
+{"id": "s024", "a": "How do I merge two customer accounts?", "b": "How can I merge two customer accounts?", "same": true}
+{"id": "s025", "a": "Explain what a circuit breaker does in a service mesh.", "b": "Explain what a circuit breaker does in a service mesh?", "same": true}
+{"id": "s026", "a": "How do I set up automatic backups?", "b": "How do I set up automated backups?", "same": true}
+{"id": "s027", "a": "Is the Riverton store wheelchair accessible?", "b": "Is the Riverton store accessible by wheelchair?", "same": true}
+{"id": "s028", "a": "How do I share a folder with my team?", "b": "How do I share a folder with the team?", "same": true}
+{"id": "s029", "a": "What file formats can I upload?", "b": "Which file formats can I upload?", "same": true}
+{"id": "s030", "a": "How do I download last month's statement?", "b": "How can I download last month's statement?", "same": true}
+{"id": "s031", "a": "How can I get my money back for a broken lamp?", "b": "I want a refund for a broken lamp, how?", "same": true}
+{"id": "s032", "a": "What time do you close on Sundays?", "b": "When do you close on Sunday?", "same": true}
+{"id": "s033", "a": "How do I sign out of all devices?", "b": "How do I log out of all my devices?", "same": true}
+{"id": "s034", "a": "Can I use the API without a paid plan?", "b": "Is the API available without a paid plan?", "same": true}
+{"id": "s035", "a": "How do I change the language of the app?", "b": "How can I switch the app language?", "same": true}
+{"id": "s036", "a": "My invoice shows the wrong company name, how do I fix it?", "b": "How do I fix the wrong company name on my invoice?", "same": true}
+{"id": "s037", "a": "Where can I see my order history?", "b": "Where do I find my order history?", "same": true}
+{"id": "s038", "a": "How do I delete my account permanently?", "b": "How can I permanently delete my account?", "same": true}
+{"id": "s039", "a": "Do you ship to Canada?", "b": "Is shipping to Canada available?", "same": true}
+{"id": "s040", "a": "Can I book a table for a large group?", "b": "Can large groups book a table?", "same": true}
+{"id": "s041", "a": "How do I recover a deleted file?", "b": "How can a deleted file be recovered?", "same": true}
+{"id": "s042", "a": "Why is my upload stuck at 99 percent?", "b": "My upload is stuck at 99 percent, why?", "same": true}
+{"id": "s043", "a": "How do I invite a guest to the meeting?", "b": "How can I invite guests to a meeting?", "same": true}
+{"id": "s044", "a": "Which browsers are supported?", "b": "What browsers do you support?", "same": true}
+{"id": "s045", "a": "Can I transfer my license to a new laptop?", "b": "How do I move my license to a new laptop?", "same": true}
+{"id": "s046", "a": "How do I report a bug?", "b": "Where can I report a bug?", "same": true}
+{"id": "s047", "a": "What's included in the premium plan?", "b": "What does the premium plan include?", "same": true}
+{"id": "s048", "a": "How do I turn off email notifications?", "b": "How can I disable email notifications?", "same": true}
+{"id": "s049", "a": "How do I change my profile picture?", "b": "How can I update my profile picture?", "same": true}
+{"id": "s050", "a": "Is my data encrypted at rest?", "b": "Do you encrypt my data at rest?", "same": true}
+{"id": "s051", "a": "How do I reset my password?", "b": "I forgot my login credentials, what now?", "same": true}
+{"id": "s052", "a": "What are your opening hours?", "b": "When are you open?", "same": true}
+{"id": "s053", "a": "How do I cancel my subscription?", "b": "I want to stop being billed every month.", "same": true}
+{"id": "s054", "a": "Do you ship internationally?", "b": "Can you send orders abroad?", "same": true}
+{"id": "s055", "a": "How do I contact support?", "b": "Who can I talk to about a problem?", "same": true}
+{"id": "s056", "a": "Is there a free trial?", "b": "Can I try it before paying?", "same": true}
+{"id": "s057", "a": "How do I change my email address?", "b": "My contact address is outdated; how do I update it?", "same": true}
+{"id": "s058", "a": "The app keeps crashing on startup.", "b": "It closes immediately every time I open it.", "same": true}
+{"id": "s059", "a": "How much does the basic plan cost?", "b": "What's the price of the entry-level tier?", "same": true}
+{"id": "s060", "a": "Can I get an invoice for my purchase?", "b": "I need a receipt for accounting.", "same": true}
+{"id": "s061", "a": "How do I speed up my slow computer?", "b": "My laptop has become sluggish, any tips?", "same": true}
+{"id": "s062", "a": "Where is my package?", "b": "My parcel hasn't arrived yet, can you check?", "same": true}
+{"id": "s063", "a": "Explain recursion simply.", "b": "What is a function calling itself, in plain words?", "same": true}
+{"id": "s064", "a": "Write a polite reminder about an unpaid bill.", "b": "Draft a courteous note asking a client to settle an overdue payment.", "same": true}
+{"id": "s065", "a": "What is the capital of Australia?", "b": "Which city is Australia's capital?", "same": true}
+{"id": "s066", "a": "Give me tips for a job interview.", "b": "How should I prepare to be interviewed for a position?", "same": true}
+{"id": "s067", "a": "How do I make my password stronger?", "b": "What makes a good secure passphrase?", "same": true}
+{"id": "s068", "a": "What's the weather like in Riverton today?", "b": "Is it raining in Riverton right now?", "same": true}
+{"id": "s069", "a": "Recommend a beginner-friendly programming language.", "b": "Which coding language should a novice start with?", "same": true}
+{"id": "s070", "a": "How do I back up my phone?", "b": "How can I save a copy of everything on my mobile?", "same": true}
+{"id": "s071", "a": "For order 5521, can I change the size?", "b": "Can I change the size for order 5521?", "same": true}
+{"id": "s072", "a": "In the Nimbus app, how do I add a widget?", "b": "How do I add a widget in the Nimbus app?", "same": true}
+{"id": "s073", "a": "Before checkout, can I apply two coupons?", "b": "Can I apply two coupons before checkout?", "same": true}
+{"id": "s074", "a": "On weekends, is phone support available?", "b": "Is phone support available on weekends?", "same": true}
+{"id": "s075", "a": "When the light blinks red, what does it mean?", "b": "What does it mean when the light blinks red?", "same": true}
+{"id": "s076", "a": "For the Bluefin project, who is the owner?", "b": "Who is the owner of the Bluefin project?", "same": true}
+{"id": "s077", "a": "If I upgrade mid-month, how am I charged?", "b": "How am I charged if I upgrade mid-month?", "same": true}
+{"id": "s078", "a": "After a refund, when do I get the money?", "b": "When do I get the money after a refund?", "same": true}
+{"id": "s079", "a": "To export data, which permission do I need?", "b": "Which permission do I need to export data?", "same": true}
+{"id": "s080", "a": "Without internet, does the app work?", "b": "Does the app work without internet?", "same": true}
+{"id": "d001", "a": "How do I reset my password?", "b": "How do I reset my router?", "same": false}
+{"id": "d002", "a": "What are your opening hours on Saturday?", "b": "What are your opening hours on Monday?", "same": false}
+{"id": "d003", "a": "Does the Copperleaf kettle work on induction hobs?", "b": "Does the Larkspur kettle work on induction hobs?", "same": false}
+{"id": "d004", "a": "What does error code E42 mean on the Nimbus router?", "b": "What does error code E17 mean on the Nimbus router?", "same": false}
+{"id": "d005", "a": "Is the Riverton store wheelchair accessible?", "b": "Is the Ashford store wheelchair accessible?", "same": false}
+{"id": "d006", "a": "Translate 'good morning' into Spanish.", "b": "Translate 'good morning' into German.", "same": false}
+{"id": "d007", "a": "How do I export my invoices as CSV?", "b": "How do I export my invoices as PDF?", "same": false}
+{"id": "d008", "a": "Do you ship to Canada?", "b": "Do you ship to Mexico?", "same": false}
+{"id": "d009", "a": "What is the capital of Australia?", "b": "What is the capital of Austria?", "same": false}
+{"id": "d010", "a": "Who is the owner of the Bluefin project?", "b": "Who is the owner of the Redwing project?", "same": false}
+{"id": "d011", "a": "How do I connect the printer to Wi-Fi?", "b": "How do I connect the speaker to Wi-Fi?", "same": false}
+{"id": "d012", "a": "What is the warranty period for the Larkspur blender?", "b": "What is the warranty period for the Larkspur toaster?", "same": false}
+{"id": "d013", "a": "How do I add a new user to my workspace?", "b": "How do I remove a user from my workspace?", "same": false}
+{"id": "d014", "a": "How do I enable two-factor authentication?", "b": "How do I disable two-factor authentication?", "same": false}
+{"id": "d015", "a": "How do I share a folder with my team?", "b": "How do I share a folder with a client?", "same": false}
+{"id": "d016", "a": "Which browsers are supported?", "b": "Which operating systems are supported?", "same": false}
+{"id": "d017", "a": "What payment methods do you accept?", "b": "What currencies do you accept?", "same": false}
+{"id": "d018", "a": "Recommend a beginner-friendly programming language.", "b": "Recommend a beginner-friendly spoken language.", "same": false}
+{"id": "d019", "a": "How do I update my billing email?", "b": "How do I update my billing address?", "same": false}
+{"id": "d020", "a": "Summarize the key points of the onboarding guide.", "b": "Summarize the key points of the security policy.", "same": false}
+{"id": "d021", "a": "Where can I download the mobile app?", "b": "Where can I download the desktop app?", "same": false}
+{"id": "d022", "a": "How do I merge two customer accounts?", "b": "How do I split one customer account into two?", "same": false}
+{"id": "d023", "a": "How do I change the language of the app?", "b": "How do I change the currency of the app?", "same": false}
+{"id": "d024", "a": "What's included in the premium plan?", "b": "What's included in the basic plan?", "same": false}
+{"id": "d025", "a": "How do I turn off email notifications?", "b": "How do I turn off push notifications?", "same": false}
+{"id": "d026", "a": "Convert 5 km to miles.", "b": "Convert 7 km to miles.", "same": false}
+{"id": "d027", "a": "What is 15% of 260?", "b": "What is 15% of 620?", "same": false}
+{"id": "d028", "a": "Can I change the size for order 5521?", "b": "Can I change the size for order 5512?", "same": false}
+{"id": "d029", "a": "Is the 2025 model compatible with the charger?", "b": "Is the 2023 model compatible with the charger?", "same": false}
+{"id": "d030", "a": "Book a table for 4 people at 7pm.", "b": "Book a table for 6 people at 7pm.", "same": false}
+{"id": "d031", "a": "What happens if I upgrade on day 10 of the month?", "b": "What happens if I upgrade on day 25 of the month?", "same": false}
+{"id": "d032", "a": "Set a timer for 20 minutes.", "b": "Set a timer for 2 minutes.", "same": false}
+{"id": "d033", "a": "How many days is the 30 day trial?", "b": "How many days is the 14 day trial?", "same": false}
+{"id": "d034", "a": "Ship 3 units to the Riverton warehouse.", "b": "Ship 30 units to the Riverton warehouse.", "same": false}
+{"id": "d035", "a": "Round 7.4682 to two decimal places.", "b": "Round 7.4682 to three decimal places.", "same": false}
+{"id": "d036", "a": "What error does status 404 mean?", "b": "What error does status 500 mean?", "same": false}
+{"id": "d037", "a": "Is version 2.1 still supported?", "b": "Is version 3.1 still supported?", "same": false}
+{"id": "d038", "a": "Refund 12 dollars to my card.", "b": "Refund 120 dollars to my card.", "same": false}
+{"id": "d039", "a": "Schedule the report for 9am.", "b": "Schedule the report for 6am.", "same": false}
+{"id": "d040", "a": "What is 17 times 23?", "b": "What is 17 times 32?", "same": false}
+{"id": "d041", "a": "Does the app work offline?", "b": "Why does the app not work offline?", "same": false}
+{"id": "d042", "a": "Can I cancel my order?", "b": "Why can't I cancel my order?", "same": false}
+{"id": "d043", "a": "Is the store open on holidays?", "b": "Is the store never open on holidays?", "same": false}
+{"id": "d044", "a": "Should I restart the device after updating?", "b": "Should I not restart the device after updating?", "same": false}
+{"id": "d045", "a": "The payment went through.", "b": "The payment did not go through.", "same": false}
+{"id": "d046", "a": "I received the confirmation email.", "b": "I never received the confirmation email.", "same": false}
+{"id": "d047", "a": "Does the plan include phone support?", "b": "Does the plan come without phone support?", "same": false}
+{"id": "d048", "a": "Is my data shared with third parties?", "b": "Is my data not shared with third parties?", "same": false}
+{"id": "d049", "a": "The light is blinking.", "b": "The light is not blinking.", "same": false}
+{"id": "d050", "a": "Can guests edit the document?", "b": "Why can't guests edit the document?", "same": false}
+{"id": "d051", "a": "How do I cancel my subscription?", "b": "How do I restart my subscription?", "same": false}
+{"id": "d052", "a": "How do I delete my account permanently?", "b": "How do I recover my account after deleting it?", "same": false}
+{"id": "d053", "a": "Can I get a refund for a damaged item?", "b": "Can I get a replacement for a damaged item?", "same": false}
+{"id": "d054", "a": "How do I sign out of all devices?", "b": "How do I sign in on all devices?", "same": false}
+{"id": "d055", "a": "Where is my order confirmation email?", "b": "Where is my order cancellation email?", "same": false}
+{"id": "d056", "a": "How do I upload a file?", "b": "How do I download a file?", "same": false}
+{"id": "d057", "a": "Explain what a circuit breaker does in a service mesh.", "b": "Explain what a load balancer does in a service mesh.", "same": false}
+{"id": "d058", "a": "How do I increase my storage limit?", "b": "How do I check my storage limit?", "same": false}
+{"id": "d059", "a": "Write a polite reminder about an unpaid bill.", "b": "Write a polite thank-you for a paid bill.", "same": false}
+{"id": "d060", "a": "How do I make my password stronger?", "b": "How do I make my password shorter?", "same": false}
+{"id": "d061", "a": "Is my data encrypted at rest?", "b": "Is my data encrypted in transit?", "same": false}
+{"id": "d062", "a": "What is the return policy for sale items?", "b": "What is the shipping policy for sale items?", "same": false}
+{"id": "d063", "a": "Can I pause my plan instead of cancelling?", "b": "Can I upgrade my plan instead of cancelling?", "same": false}
+{"id": "d064", "a": "How do I invite a guest to the meeting?", "b": "How do I remove a guest from the meeting?", "same": false}
+{"id": "d065", "a": "Why is my upload stuck at 99 percent?", "b": "Why is my download stuck at 99 percent?", "same": false}
+{"id": "d066", "a": "How do I rotate an API key in the dashboard?", "b": "How do I revoke an API key in the dashboard?", "same": false}
+{"id": "d067", "a": "How long does standard shipping take?", "b": "How much does standard shipping cost?", "same": false}
+{"id": "d068", "a": "Can I transfer my license to a new laptop?", "b": "Can I transfer my license to a colleague?", "same": false}
+{"id": "d069", "a": "How do I set up automatic backups?", "b": "How do I restore from automatic backups?", "same": false}
+{"id": "d070", "a": "Who can I talk to about a problem?", "b": "Who can I talk to about a partnership?", "same": false}
+{"id": "d071", "a": "What is the capital of Australia?", "b": "How do I reset my password?", "same": false}
+{"id": "d072", "a": "Give me tips for a job interview.", "b": "Give me tips for growing tomatoes.", "same": false}
+{"id": "d073", "a": "Explain recursion simply.", "b": "Explain inflation simply.", "same": false}
+{"id": "d074", "a": "How do I back up my phone?", "b": "How do I clean my phone screen?", "same": false}
+{"id": "d075", "a": "Is there a free trial?", "b": "Is there a parking lot?", "same": false}
+{"id": "d076", "a": "What's the weather like in Riverton today?", "b": "What's the population of Riverton?", "same": false}
+{"id": "d077", "a": "How do I speed up my slow computer?", "b": "How do I speed up my bread dough rising?", "same": false}
+{"id": "d078", "a": "Draft a courteous note asking a client to settle an overdue payment.", "b": "Draft a courteous note inviting a client to a launch event.", "same": false}
+{"id": "d079", "a": "Which city is Australia's capital?", "b": "Which city hosts the Riverton marathon?", "same": false}
+{"id": "d080", "a": "My parcel hasn't arrived yet, can you check?", "b": "My parcel arrived damaged, what now?", "same": false}

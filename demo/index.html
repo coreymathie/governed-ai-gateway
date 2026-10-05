@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LLM Gateway Simulator</title>
+<meta name="description" content="Run the multi-provider-llm-router's real routing, circuit-breaker, budget, anomaly and cost code in your browser against simulated providers." />
+<style>
+  :root {
+    --bg: #120E24; --card: #1A1532; --card-2: #221C40; --border: #2C2452;
+    --fg: #ECE9F7; --muted: #A69FC4; --accent: #A78BFA; --accent-ink: #120E24;
+    --warn: #FB923C; --ok: #4ADE80; --bad: #F87171;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); }
+  body { font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; padding: 16px; max-width: 1400px; margin: 0 auto; }
+  a { color: var(--accent); }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 12px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  p { margin: 0 0 8px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .mono { font-family: var(--mono); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 0; }
+  .grid { display: grid; gap: 12px; margin-bottom: 12px; }
+  .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .g2 { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .g2e { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 1000px) { .g3, .g2, .g2e { grid-template-columns: minmax(0, 1fr); } }
+  header { margin-bottom: 14px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 6px; }
+  .badge { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); }
+  .badge.real { border-color: color-mix(in srgb, var(--accent) 60%, transparent); color: var(--accent); }
+  .status { font-size: 12px; color: var(--muted); }
+  .status.err { color: var(--bad); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .spread { justify-content: space-between; }
+  button, select, input[type=number] {
+    font: inherit; color: var(--fg); background: var(--card-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 12px;
+  }
+  input[type=number] { width: 90px; padding: 4px 8px; font-family: var(--mono); font-size: 12px; }
+  button { cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.warn { border-color: var(--warn); color: var(--warn); }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; padding: 6px 12px; background: transparent; }
+  .seg button[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  label.switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+  label.switch input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+  @media (max-width: 700px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .kpi { background: var(--card-2); border-radius: 8px; padding: 8px 10px; }
+  .kpi .v { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .kpi .l { font-size: 11px; color: var(--muted); }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .pill.closed, .pill.ok { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+  .pill.half_open, .pill.flagged { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
+  .pill.open, .pill.pause, .pill.bad { background: color-mix(in srgb, var(--bad) 20%, transparent); color: var(--bad); }
+  .pill.skip { background: transparent; border: 1px dashed var(--muted); color: var(--muted); }
+  .pill.neutral { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+  .prov { border-top: 3px solid var(--border); }
+  .prov.closed { border-top-color: var(--ok); }
+  .prov.half_open { border-top-color: var(--warn); }
+  .prov.open { border-top-color: var(--bad); }
+  .prov h3 { margin: 0; font-size: 15px; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 10px 0; }
+  .stats div { background: var(--card-2); border-radius: 6px; padding: 6px 8px; }
+  .stats b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .stats span { font-size: 11px; color: var(--muted); }
+  .ctl { display: grid; grid-template-columns: 92px minmax(0, 1fr) 64px; gap: 6px; align-items: center; margin: 6px 0; font-size: 12px; }
+  .ctl input[type=range] { width: 100%; accent-color: var(--accent); }
+  .ctl output { font-family: var(--mono); text-align: right; }
+  .reason { font-size: 11px; color: var(--muted); min-height: 16px; }
+  .tablewrap { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; position: sticky; top: 0; background: var(--card); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  .path { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .arrow { color: var(--muted); }
+  .bar { height: 8px; background: var(--card-2); border-radius: 999px; overflow: hidden; margin: 4px 0 2px; }
+  .bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+  .bar > i.warn { background: var(--warn); } .bar > i.bad { background: var(--bad); }
+  .budget { margin-bottom: 12px; }
+  .budget .row { font-size: 12px; }
+  .note { font-size: 12px; color: var(--muted); border-left: 2px solid var(--accent); padding-left: 10px; margin-top: 10px; }
+  .loading { display: grid; place-items: center; min-height: 160px; color: var(--muted); }
+  footer { margin-top: 18px; font-size: 12px; color: var(--muted); }
+  footer li { font-family: var(--mono); }
+  .sr { position: absolute; left: -9999px; }
+  textarea { width: 100%; font: 12px/1.5 var(--mono); color: var(--fg); background: var(--card-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px; resize: vertical; }
+  pre.box { white-space: pre-wrap; word-break: break-word; font: 12px/1.5 var(--mono); background: var(--card-2); border-radius: 8px; padding: 8px 10px; margin: 4px 0 10px; min-height: 34px; }
+  .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 8px; }
+  .trace { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 6px 0; }
+  .trace .pill { white-space: normal; overflow-wrap: anywhere; }
+  h3.sub { font-size: 12px; margin: 10px 0 6px; color: var(--muted); font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <div class="row spread">
+    <div>
+      <h1>LLM gateway simulator</h1>
+      <p class="muted">Ordered fallback, circuit breakers, latency routing, TPM limits, org&nbsp;→&nbsp;team&nbsp;→&nbsp;key budgets, spend-anomaly pause, showback, policy-as-code and PII redaction hooks for <a href="https://github.com/coreymathie/multi-provider-llm-router">multi-provider-llm-router</a>.</p>
+    </div>
+  </div>
+  <div class="badges">
+    <span class="badge real">Real code: the repo's router/*.py, running in your browser via Pyodide</span>
+    <span class="badge">Providers, prices and traffic are simulated</span>
+    <span class="badge">No API keys</span>
+    <span class="badge">No provider calls: after loading, nothing leaves your browser</span>
+  </div>
+  <div id="status" class="status" role="status" aria-live="polite">Loading Python (Pyodide)…</div>
+</header>
+
+<section class="card" style="margin-bottom:12px">
+  <div class="row spread">
+    <div class="row">
+      <span class="small muted">Route <span class="mono">smart-fast</span></span>
+      <div class="seg" role="group" aria-label="Route strategy">
+        <button data-strategy="ordered" aria-pressed="true">ordered</button>
+        <button data-strategy="latency" aria-pressed="false">latency</button>
+      </div>
+      <label class="switch small"><input type="checkbox" id="breakersOn" checked /> circuit breakers</label>
+      <label class="switch small"><input type="checkbox" id="pauseOn" checked /> anomaly auto-pause</label>
+    </div>
+    <div class="row">
+      <label class="small muted" for="keySel">as key</label>
+      <select id="keySel"><option value="">random mix</option></select>
+      <button class="primary" id="btnSend" disabled>Send 1 request</button>
+      <button id="btnBurst" disabled>Run burst (40)</button>
+      <button class="warn" id="btnSpike" disabled title="Sends nightly-batch traffic far above its baseline">Anomaly spike</button>
+      <button id="btnWait" disabled title="Advance the simulated clock">Wait 15 s</button>
+      <button id="btnReset" disabled>Reset</button>
+    </div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="v" id="kClock">0.0 s</div><div class="l">simulated clock</div></div>
+    <div class="kpi"><div class="v" id="kReq">0</div><div class="l">requests</div></div>
+    <div class="kpi"><div class="v" id="kOk">0</div><div class="l">served</div></div>
+    <div class="kpi"><div class="v" id="kFb">0</div><div class="l">served after fallback</div></div>
+    <div class="kpi"><div class="v" id="kRej">0</div><div class="l">rejected before any provider call</div></div>
+    <div class="kpi"><div class="v" id="kSpend">$0</div><div class="l">simulated spend today</div></div>
+  </div>
+  <p class="note" id="hint">Try this: switch Anthropic to <b>outage</b> and run a burst. The first requests each wait out a 3 s timeout before falling back; after 3 failures the breaker opens and later requests skip it instantly. Then press <b>Wait 15 s</b> and send one request to see the half-open probe.</p>
+</section>
+
+<section class="grid g3" id="providers"><div class="card loading">Starting Python…</div></section>
+
+<section class="grid g2">
+  <div class="card">
+    <div class="row spread"><h2>Requests (newest first)</h2><span class="small muted" id="estimator"></span></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>Key</th><th>Route taken</th><th class="num">Latency</th><th class="num">Tokens est → real</th><th class="num">Cost</th></tr></thead>
+        <tbody id="events"><tr><td colspan="6" class="muted">No requests yet.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Circuit breaker transitions</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th class="num">t</th><th>Deployment</th><th>Change</th><th>Why</th></tr></thead>
+        <tbody id="transitions"><tr><td colspan="4" class="muted">All breakers closed.</td></tr></tbody>
+      </table>
+    </div>
+    <p class="note">Breaker settings in this demo: open after 3 consecutive failures (or ≥50% errors over 8+ calls in 30 s), half-open after 10 s, one probe at a time, close on the first probe success. A 429's Retry-After opens it for that long.</p>
+  </div>
+</section>
+
+<section class="grid g2e">
+  <div class="card">
+    <h2>Budgets: spend today vs. daily caps, tokens per minute</h2>
+    <div id="budgets"></div>
+    <p class="note">Checked before any provider call, broadest scope first: org, then team, then key. Caps compare against spend already recorded, so concurrent in-flight requests can overshoot a cap by their own cost. Edit the numbers to change caps.</p>
+  </div>
+  <div class="card">
+    <h2>Spend anomalies: this hour vs. 7-day baseline</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Key</th><th>Team</th><th class="num">This hour</th><th class="num">Baseline / hr</th><th class="num">Multiple</th><th>Verdict</th></tr></thead>
+        <tbody id="anomalies"></tbody>
+      </table>
+    </div>
+    <p class="note">The 7-day history behind each baseline is <b>simulated</b> (generated per key). The thresholds and the verdict come from <span class="mono">router/anomaly.py</span>: flagged at 3x, paused at 10x. Press <b>Anomaly spike</b> to push <span class="mono">nightly-batch</span> through both.</p>
+  </div>
+</section>
+
+<section class="card" id="govCard" style="margin-bottom:12px">
+  <div class="row spread">
+    <h2>Governance: one prompt through policy and content hooks</h2>
+    <div class="row">
+      <label class="small muted" for="govTeam">team</label>
+      <select id="govTeam"></select>
+      <label class="small muted" for="govAlias">route</label>
+      <select id="govAlias"></select>
+      <label class="small muted" for="govMaxTok">max_tokens</label>
+      <input type="number" id="govMaxTok" min="1" step="1" value="8000" />
+      <label class="small muted" for="govMode">PII hooks</label>
+      <select id="govMode">
+        <option value="off">off</option>
+        <option value="detect">detect (audit only)</option>
+        <option value="redact">redact</option>
+        <option value="block">block</option>
+      </select>
+      <label class="switch small"><input type="checkbox" id="govLog" /> content log (redacted)</label>
+      <button class="primary" id="btnPrompt" disabled>Send prompt</button>
+    </div>
+  </div>
+  <div class="grid g2e" style="margin:10px 0 0">
+    <div>
+      <label class="lbl" for="govText">Prompt (fictional data)</label>
+      <textarea id="govText" rows="4"></textarea>
+      <div class="lbl">Stages</div>
+      <div class="trace" id="govTrace"><span class="small muted">Send a prompt to see each stage.</span></div>
+      <div class="lbl">What the provider receives</div>
+      <pre class="box" id="govSent">–</pre>
+      <div class="lbl">What the client receives</div>
+      <pre class="box" id="govResp">–</pre>
+    </div>
+    <div>
+      <h3 class="sub">Audit trail (policy actions, newest first)</h3>
+      <div class="tablewrap" style="max-height:220px">
+        <table>
+          <thead><tr><th class="num">t</th><th>Team</th><th>Action</th><th>Stage / rule</th><th>Detail</th></tr></thead>
+          <tbody id="govAudit"><tr><td colspan="5" class="muted">No policy actions yet.</td></tr></tbody>
+        </table>
+      </div>
+      <h3 class="sub">Content log (teams that opted in)</h3>
+      <div id="govLogRows" class="small muted">Empty: content logging is off unless a team opts in.</div>
+    </div>
+  </div>
+  <p class="note">The policy stage is <span class="mono">router/policy.py</span> evaluating the same rules as <span class="mono">config/policies.yaml</span>: team <b>regulated</b> may only use local models (data residency) and always gets <span class="mono">pii_redact</span>, so on <span class="mono">public-only</span> it is refused with 403 and on <span class="mono">smart-fast</span> the public providers are removed from the route (try an Ollama outage: the request fails rather than falling back to a public API). Team <b>contractors</b> has an alias allow-list. <span class="mono">max_tokens</span> is clamped to 4096 (2048 for regulated). The optional OPA check is not part of the demo.</p>
+  <p class="note">Detection comes from <span class="mono">router/pii.py</span>: emails, phone numbers, SSNs, Luhn-valid card numbers and API-key-like secrets, by pattern. It does not find names or addresses (the sample's customer name passes through), so it reduces exposure rather than guaranteeing it. Content logging is off by default; when a team opts in, what is stored is redacted with every detector. Audit entries carry counts, never the matched values.</p>
+</section>
+
+<section class="card" id="semCard" style="margin-bottom:12px">
+  <div class="row spread">
+    <h2>Semantic cache: reuse an answer when a prompt means the same thing</h2>
+    <div class="row">
+      <label class="small muted" for="semTeam">team</label>
+      <select id="semTeam"><option>product</option><option>support</option><option>regulated</option></select>
+      <label class="small muted" for="semThr">threshold</label>
+      <input type="range" id="semThr" min="0.70" max="0.99" step="0.01" value="0.88" style="width:120px" />
+      <output id="semThrOut" class="mono small">0.88</output>
+    </div>
+  </div>
+  <div class="grid g2e" style="margin:10px 0 0">
+    <div>
+      <label class="lbl" for="semText">Prompt</label>
+      <div class="row"><input type="text" id="semText" style="flex:1;min-width:0;font:inherit;color:var(--fg);background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:7px 10px" />
+        <button class="primary" id="btnSem" disabled>Ask</button></div>
+      <div class="lbl">Try in order</div>
+      <div class="trace" id="semExamples"></div>
+      <div class="lbl">Result</div>
+      <div id="semResult" class="small muted">Ask something, then ask it again in other words.</div>
+      <h3 class="sub">Lookups (newest first)</h3>
+      <div class="tablewrap" style="max-height:220px">
+        <table>
+          <thead><tr><th>Team</th><th>Prompt</th><th>Result</th><th class="num">Similarity</th><th>Nearest cached prompt</th></tr></thead>
+          <tbody id="semLog"><tr><td colspan="5" class="muted">No lookups yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <h3 class="sub">Threshold calibration on the bundled pairs (measured in your browser)</h3>
+      <div class="row"><button id="btnCal" disabled>Run calibration</button><span class="small muted">evals/semcache_pairs.jsonl · target: ≤1% of hits wrong</span></div>
+      <div id="calOut" class="small" style="margin-top:8px"><span class="muted">Picks a threshold on half the pairs, then measures it on the other half.</span></div>
+      <h3 class="sub">Cached entries</h3>
+      <div id="semEntries" class="small muted">Empty.</div>
+    </div>
+  </div>
+  <p class="note">Same code as the gateway: <span class="mono">router/semcache.py</span> with its offline hashing embedder (word and character n-grams, no model). A hit needs similarity at or above the threshold <b>and</b> the same numbers and negations in both prompts; entries are partitioned by team and policy decision, so another team never sees them. The embedder measures wording overlap, not meaning: "rotate" vs. "revoke" an API key scores 0.88 and is a wrong hit the guards don't catch. That is why the gateway ships with the semantic cache <b>off</b> and the calibration here is reported as-is. The 160 pairs are short, fictional and hand-written; they are not a prediction for real traffic.</p>
+</section>
+
+<section class="card" id="mcpCard" style="margin-bottom:12px">
+  <div class="row spread">
+    <h2>MCP tool gateway: which agent may call which tool, how fast</h2>
+    <div class="row">
+      <label class="small muted" for="mcpTeam">team</label><select id="mcpTeam"></select>
+      <label class="small muted" for="mcpServer">server</label><select id="mcpServer"></select>
+      <label class="small muted" for="mcpTool">tool</label><select id="mcpTool"></select>
+      <button class="primary" id="btnMcp" disabled>Call tool</button>
+      <button id="btnMcpBurst" disabled title="Six identical calls in a row">Call ×6</button>
+    </div>
+  </div>
+  <div class="grid g2e" style="margin:10px 0 0">
+    <div>
+      <label class="lbl" for="mcpArgs">Arguments (JSON, fictional)</label>
+      <textarea id="mcpArgs" rows="3"></textarea>
+      <div class="lbl">tools/list for this team (what the upstream server offers; struck through = hidden by the gateway)</div>
+      <div class="trace" id="mcpTools"></div>
+      <div class="lbl">Last call</div>
+      <div id="mcpResult" class="small muted">Call a tool to see the decision.</div>
+    </div>
+    <div>
+      <h3 class="sub">Tool calls (newest first)</h3>
+      <div class="tablewrap" style="max-height:260px">
+        <table>
+          <thead><tr><th class="num">t</th><th>Team</th><th>Tool</th><th>Decision</th><th>Arguments as audited</th></tr></thead>
+          <tbody id="mcpLog"><tr><td colspan="5" class="muted">No tool calls yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <p class="note">Policy from <span class="mono">router/mcp_policy.py</span> with the same config as <span class="mono">config/mcp.example.yaml</span>: default deny, per-team tool allow-lists (globs), per-key and per-team calls per minute, an identical-call limit that stops agent loops (five identical calls a minute here), daily count and spend caps, and PII-redacted arguments in the audit log. The MCP servers are simulated; in the gateway, <span class="mono">router/mcp_gateway.py</span> proxies JSON-RPC over HTTP (initialize, tools/list, tools/call) to real servers and records allowed calls in usage and showback.</p>
+</section>
+
+<section class="card">
+  <div class="row spread">
+    <h2>Showback / chargeback</h2>
+    <div class="row">
+      <label class="small muted" for="groupBy">group by</label>
+      <select id="groupBy">
+        <option value="team,model">team, model</option>
+        <option value="team">team</option>
+        <option value="team,key">team, key</option>
+        <option value="provider,model">provider, model</option>
+      </select>
+      <button id="btnCsv" disabled>Download CSV</button>
+    </div>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead id="sbHead"></thead>
+      <tbody id="showback"><tr><td class="muted">No usage yet.</td></tr></tbody>
+    </table>
+  </div>
+  <p class="note">Same roll-up as the gateway's <span class="mono">GET /admin/showback</span> (router/showback.py): requests, failed attempts, tokens, cost, cost per 1K requests and per 1K tokens, share of cost. Prices are simulated and editable on each provider card; they are not provider list prices.</p>
+</section>
+
+<footer>
+  <p><b>What runs here.</b> These files are fetched from this repository and executed unmodified in Pyodide (Python compiled to WebAssembly):</p>
+  <ul id="modules"><li>loading…</li></ul>
+  <p><span class="mono">demo/engine.py</span> supplies the simulated providers, request mix, synthetic baselines and a virtual clock, then calls that code in the same order as <span class="mono">router/routing.py</span>: budgets → anomaly pause → TPM reservation → fallback chain with breakers → settle tokens → record cost. The FastAPI app, LiteLLM and the SQLite store are not loaded in the browser.</p>
+  <p>Pyodide itself is loaded from the jsDelivr CDN. Source: <a href="https://github.com/coreymathie/multi-provider-llm-router">github.com/coreymathie/multi-provider-llm-router</a></p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+"use strict";
+const PYODIDE_INDEX = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const ROUTER_MODULES = ["breaker", "fallback", "latency", "tokens", "budgets", "anomaly", "costs", "showback", "pii", "policy", "semcache", "mcp_policy"];
+const REPO = "https://github.com/coreymathie/multi-provider-llm-router/blob/main/";
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const usd = (v, d = 4) => "$" + Number(v || 0).toFixed(d);
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+let bridge = null, busy = false, last = null;
+
+function setStatus(text, err = false) { const s = $("status"); s.textContent = text; s.className = "status" + (err ? " err" : ""); }
+
+async function sha256(text) {
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).slice(0, 6).map(b => b.toString(16).padStart(2, "0")).join("");
+  } catch { return "n/a"; }
+}
+
+async function fetchText(path) {
+  const r = await fetch(path, { cache: "no-cache" });
+  if (!r.ok) throw new Error(`could not fetch ${path} (HTTP ${r.status})`);
+  return r.text();
+}
+
+async function boot() {
+  if (typeof loadPyodide !== "function") {
+    setStatus("Could not load Pyodide from cdn.jsdelivr.net (blocked or offline). The same code runs in CI: see tests/test_demo_engine.py.", true);
+    $("providers").innerHTML = '<div class="card">Python runtime unavailable. Check your network or content blocker and reload.</div>';
+    return;
+  }
+  try {
+    const t0 = performance.now();
+    const py = await loadPyodide({ indexURL: PYODIDE_INDEX });
+    setStatus("Fetching router/*.py from this repository…");
+    py.FS.mkdirTree("/home/pyodide/router");
+    py.FS.writeFile("/home/pyodide/router/__init__.py", "");  // empty in the repo too
+    const listed = [];
+    for (const m of ROUTER_MODULES) {
+      const src = await fetchText(`../router/${m}.py`);
+      py.FS.writeFile(`/home/pyodide/router/${m}.py`, src);
+      listed.push({ path: `router/${m}.py`, lines: src.split("\n").length, sha: await sha256(src) });
+    }
+    const engine = await fetchText("./engine.py");
+    py.FS.writeFile("/home/pyodide/demo_engine.py", engine);
+    listed.push({ path: "demo/engine.py", lines: engine.split("\n").length, sha: await sha256(engine), sim: true });
+    py.runPython("import demo_engine\nbridge = demo_engine.JsBridge()");
+    bridge = py.globals.get("bridge");
+    const ver = py.runPython("import sys; sys.version.split()[0]");
+    $("modules").innerHTML = listed.map(f =>
+      `<li><a href="${REPO}${f.path}">${esc(f.path)}</a> · ${f.lines} lines · sha256 ${f.sha}…${f.sim ? " (simulation harness)" : ""}</li>`).join("");
+    setStatus(`Ready. Python ${ver} in Pyodide 0.26.4, loaded in ${((performance.now() - t0) / 1000).toFixed(1)} s. Everything below runs locally.`);
+    window.__demoReady = true;
+    const snap = snapshot();
+    $("keySel").innerHTML = '<option value="">random mix</option>' + snap.keys.map(k => `<option value="${esc(k.label)}">${esc(k.label)} (${esc(k.team)})</option>`).join("");
+    const gov = JSON.parse(bridge.governance());
+    $("govText").value = gov.sample_prompt;
+    $("govTeam").innerHTML = Object.keys(gov.content).map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+    $("govAlias").innerHTML = Object.entries(gov.routes).map(([a, d]) => `<option value="${esc(a)}">${esc(a)} (${esc(d)})</option>`).join("");
+    syncGovControls(gov);
+    const sem = JSON.parse(bridge.semantic_view());
+    $("semExamples").innerHTML = sem.examples.map((t, i) => `<button class="pill neutral" data-ex="${i}" style="border:0;cursor:pointer">${esc(t)}</button>`).join("");
+    $("semExamples").querySelectorAll("[data-ex]").forEach(b => b.onclick = () => { $("semText").value = sem.examples[Number(b.dataset.ex)]; });
+    $("semText").value = sem.examples[0];
+    const mcp = JSON.parse(bridge.mcp_view());
+    mcpDefaults = mcp.default_args;
+    $("mcpTeam").innerHTML = mcp.teams.map(t => `<option ${t === "support" ? "selected" : ""}>${esc(t)}</option>`).join("");
+    $("mcpServer").innerHTML = Object.keys(mcp.servers).map(sv => `<option>${esc(sv)}</option>`).join("");
+    syncMcpTools();
+    render(snap);
+    enable(true);
+  } catch (e) {
+    console.error(e);
+    setStatus("Failed to start: " + e.message, true);
+  }
+}
+
+function snapshot() { return JSON.parse(bridge.snapshot()); }
+function enable(on) { for (const id of ["btnSend", "btnBurst", "btnSpike", "btnWait", "btnReset", "btnCsv", "btnPrompt", "btnSem", "btnCal", "btnMcp", "btnMcpBurst"]) $(id).disabled = !on; }
+
+async function run(fn) {
+  if (!bridge || busy) return;
+  busy = true; enable(false);
+  try { await fn(); } catch (e) { console.error(e); setStatus("Error: " + e.message, true); }
+  finally { busy = false; enable(true); render(snapshot()); }
+}
+
+function send(key = "", gap = 0.25) { return JSON.parse(bridge.send(key, gap)); }
+
+$("btnSend").onclick = () => run(async () => { send($("keySel").value, 1.0); });
+$("btnBurst").onclick = () => run(async () => {
+  for (let i = 0; i < 40; i++) { send($("keySel").value, 0.25); if (i % 2) { render(snapshot()); await sleep(40); } }
+});
+$("btnSpike").onclick = () => run(async () => {
+  let rejected = 0;
+  for (let i = 0; i < 40 && rejected < 3; i++) {
+    const ev = send("nightly-batch", 0.1);
+    if (ev.outcome === "rejected") rejected++;
+    render(snapshot()); await sleep(70);
+  }
+});
+$("btnWait").onclick = () => run(async () => { bridge.call("advance", 15); });
+$("btnReset").onclick = () => run(async () => {
+  bridge.call("reset");
+  document.querySelectorAll("[data-strategy]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.strategy === "ordered")));
+  $("breakersOn").checked = true; $("pauseOn").checked = true;
+  syncGovControls(JSON.parse(bridge.governance()));
+  for (const id of ["govSent", "govResp"]) $(id).textContent = "–";
+  $("govTrace").innerHTML = '<span class="small muted">Send a prompt to see each stage.</span>';
+});
+document.querySelectorAll("[data-strategy]").forEach(b => b.onclick = () => run(async () => {
+  bridge.call("set_strategy", b.dataset.strategy);
+  document.querySelectorAll("[data-strategy]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+}));
+$("breakersOn").onchange = (e) => run(async () => bridge.call("set_breakers_enabled", e.target.checked));
+$("pauseOn").onchange = (e) => run(async () => bridge.call("set_auto_pause", e.target.checked));
+$("groupBy").onchange = () => bridge && renderShowback();
+function syncGovControls(gov) {
+  const c = gov.content[$("govTeam").value] || { mode: "off", log_content: false };
+  $("govMode").value = c.mode; $("govLog").checked = !!c.log_content;
+}
+$("govTeam").onchange = () => bridge && syncGovControls(JSON.parse(bridge.governance()));
+const setContent = () => run(async () => bridge.call("set_content_policy", $("govTeam").value, $("govMode").value, $("govLog").checked));
+$("govMode").onchange = setContent;
+$("govLog").onchange = setContent;
+$("semThr").oninput = () => { $("semThrOut").textContent = Number($("semThr").value).toFixed(2); };
+$("btnSem").onclick = () => run(async () => renderSemResult(JSON.parse(bridge.semantic_ask($("semTeam").value, $("semText").value, Number($("semThr").value)))));
+$("semText").onkeydown = (e) => { if (e.key === "Enter") $("btnSem").click(); };
+$("btnCal").onclick = () => run(async () => {
+  $("calOut").textContent = "Running…";
+  const text = await fetchText("../evals/semcache_pairs.jsonl");
+  renderCalibration(JSON.parse(bridge.calibrate(text, 0.01)));
+});
+let mcpDefaults = {};
+function syncMcpTools() {
+  const v = JSON.parse(bridge.mcp_view());
+  const tools = v.servers[$("mcpServer").value] || [];
+  const cur = $("mcpTool").value;
+  $("mcpTool").innerHTML = tools.map(t => `<option ${t === cur ? "selected" : ""}>${esc(t)}</option>`).join("");
+  $("mcpArgs").value = JSON.stringify(mcpDefaults[$("mcpTool").value] || {});
+  renderMcp(v);
+}
+$("mcpServer").onchange = syncMcpTools;
+$("mcpTeam").onchange = syncMcpTools;
+$("mcpTool").onchange = () => { $("mcpArgs").value = JSON.stringify(mcpDefaults[$("mcpTool").value] || {}); };
+function mcpCall() {
+  let args = $("mcpArgs").value;
+  try { JSON.parse(args || "{}"); } catch { throw new Error("arguments must be JSON"); }
+  return JSON.parse(bridge.mcp_call($("mcpTeam").value, $("mcpServer").value, $("mcpTool").value, args));
+}
+$("btnMcp").onclick = () => run(async () => renderMcpResult(mcpCall()));
+$("btnMcpBurst").onclick = () => run(async () => { for (let i = 0; i < 6; i++) { renderMcpResult(mcpCall()); renderMcp(); await sleep(60); } });
+$("btnPrompt").onclick = () => run(async () => renderPrompt(JSON.parse(
+  bridge.prompt($("govTeam").value, $("govText").value, $("govAlias").value, Number($("govMaxTok").value) || 0))));
+$("btnCsv").onclick = () => {
+  if (!bridge) return;
+  const csv = bridge.showback_csv($("groupBy").value);
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: "showback_simulated.csv" });
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+};
+
+function updateDeployment(id, changes) {
+  if (!bridge) return;
+  bridge.update_deployment(id, JSON.stringify(changes));
+  if (!busy) render(snapshot());
+}
+
+// ---------- rendering ----------
+
+const STATE_LABEL = { closed: "closed", half_open: "half-open", open: "open" };
+
+function providerCard(d) {
+  const b = d.breaker, st = b.state;
+  const wait = st === "open" ? `probe allowed in ${b.retry_in_s.toFixed(1)} s (simulated)` : (st === "half_open" ? "next request is a probe" : "");
+  const id = esc(d.id);
+  return `<article class="card prov ${st}" data-dep="${id}">
+    <div class="row spread"><div><h3>${esc(d.label)}</h3><div class="small muted mono">${esc(d.model)}</div></div>
+      <span class="pill ${st}" data-role="breaker">${STATE_LABEL[st]}</span></div>
+    <div class="reason" data-role="reason">${esc(wait || b.reason || "")}</div>
+    <div class="stats">
+      <div><b data-role="ewma">${d.ewma_ms != null ? d.ewma_ms + " ms" : "–"}</b><span>EWMA latency</span></div>
+      <div><b data-role="served">${d.served}</b><span>served</span></div>
+      <div><b data-role="failed">${d.failed}</b><span>failed</span></div>
+      <div><b data-role="skipped">${d.skipped}</b><span>skipped (open)</span></div>
+    </div>
+    <div class="ctl"><label for="lat-${id}">latency</label><input type="range" id="lat-${id}" min="50" max="3000" step="50" value="${d.latency_ms}" data-field="latency_ms" /><output>${d.latency_ms} ms</output></div>
+    <div class="ctl"><label for="err-${id}">error rate</label><input type="range" id="err-${id}" min="0" max="1" step="0.05" value="${d.error_rate}" data-field="error_rate" /><output>${Math.round(d.error_rate * 100)}%</output></div>
+    <div class="row small" style="margin:6px 0">
+      <label class="switch"><input type="checkbox" data-field="outage" ${d.outage ? "checked" : ""} /> outage (times out after ${d.timeout_s} s)</label>
+      <label class="switch"><input type="checkbox" data-field="rate_limited" ${d.rate_limited ? "checked" : ""} /> 429 + Retry-After 8 s</label>
+    </div>
+    <div class="row small muted">$ / 1K tokens: in <input type="number" min="0" step="0.0001" value="${d.price_in_1k}" data-field="price_in_1k" aria-label="input price per 1K tokens" />
+      out <input type="number" min="0" step="0.0001" value="${d.price_out_1k}" data-field="price_out_1k" aria-label="output price per 1K tokens" /></div>
+    <div class="small muted" data-role="window">window: ${b.window_errors}/${b.window_requests} errors · ${b.consecutive_failures} consecutive</div>
+  </article>`;
+}
+
+function wireProviders() {
+  document.querySelectorAll("#providers [data-dep]").forEach(card => {
+    const id = card.dataset.dep;
+    card.querySelectorAll("[data-field]").forEach(inp => {
+      const field = inp.dataset.field;
+      const handler = () => {
+        let v = inp.type === "checkbox" ? inp.checked : Number(inp.value);
+        if (inp.type === "range") inp.nextElementSibling.textContent = field === "error_rate" ? Math.round(v * 100) + "%" : v + " ms";
+        updateDeployment(id, { [field]: v });
+      };
+      inp.addEventListener(inp.type === "range" ? "input" : "change", handler);
+    });
+  });
+}
+
+function renderProviders(s) {
+  const host = $("providers");
+  if (!host.querySelector("[data-dep]")) { host.innerHTML = s.deployments.map(providerCard).join(""); wireProviders(); return; }
+  for (const d of s.deployments) {
+    const card = host.querySelector(`[data-dep="${CSS.escape(d.id)}"]`);
+    const st = d.breaker.state, b = d.breaker;
+    card.className = `card prov ${st}`;
+    const pill = card.querySelector('[data-role="breaker"]'); pill.className = `pill ${st}`; pill.textContent = STATE_LABEL[st];
+    const wait = st === "open" ? `probe allowed in ${b.retry_in_s.toFixed(1)} s (simulated)` : (st === "half_open" ? "next request is a probe" : "");
+    card.querySelector('[data-role="reason"]').textContent = wait || b.reason || "";
+    card.querySelector('[data-role="ewma"]').textContent = d.ewma_ms != null ? d.ewma_ms + " ms" : "–";
+    card.querySelector('[data-role="served"]').textContent = d.served;
+    card.querySelector('[data-role="failed"]').textContent = d.failed;
+    card.querySelector('[data-role="skipped"]').textContent = d.skipped;
+    card.querySelector('[data-role="window"]').textContent = `window: ${b.window_errors}/${b.window_requests} errors · ${b.consecutive_failures} consecutive`;
+    for (const inp of card.querySelectorAll("[data-field]")) {
+      if (document.activeElement === inp) continue;
+      const v = d[inp.dataset.field];
+      if (inp.type === "checkbox") inp.checked = !!v; else if (String(inp.value) !== String(v)) inp.value = v;
+      if (inp.type === "range") inp.nextElementSibling.textContent = inp.dataset.field === "error_rate" ? Math.round(v * 100) + "%" : v + " ms";
+    }
+  }
+}
+
+function pathHtml(e) {
+  if (!e.path || !e.path.length) return `<span class="pill bad">${esc(e.status)}</span> <span class="small">${esc(e.message || "")}</span>`;
+  const parts = e.path.map(a => {
+    const name = esc(a.deployment.split("/")[0]);
+    if (a.outcome === "ok") return `<span class="pill ok" title="${esc(a.deployment)}">${name} ✓</span>`;
+    if (a.outcome === "skipped") return `<span class="pill skip" title="circuit ${esc(a.breaker_state)}">${name} skipped</span>`;
+    return `<span class="pill bad" title="${esc(a.error)}">${name} ✕ ${a.status ? esc(a.status) : "timeout"}</span>`;
+  });
+  let html = `<span class="path">${parts.join('<span class="arrow">→</span>')}</span>`;
+  if (e.outcome === "rejected") html += ` <span class="small muted">${esc(e.status)}: ${esc(e.message)}</span>`;
+  return html;
+}
+
+function renderEvents(s) {
+  $("events").innerHTML = s.events.map(e => `<tr>
+    <td class="num">${e.n}</td>
+    <td>${esc(e.key)}<div class="small muted">${esc(e.team)}</div></td>
+    <td>${pathHtml(e)}</td>
+    <td class="num">${e.latency_ms ? e.latency_ms + " ms" : "–"}</td>
+    <td class="num">${e.tokens ? `${e.estimated_tokens} → ${e.tokens}` : "–"}</td>
+    <td class="num">${e.cost_usd != null ? usd(e.cost_usd, 5) : "–"}</td></tr>`).join("")
+    || '<tr><td colspan="6" class="muted">No requests yet.</td></tr>';
+}
+
+function renderTransitions(s) {
+  $("transitions").innerHTML = s.transitions.map(t => `<tr>
+    <td class="num">${t.at.toFixed(1)}s</td><td class="mono small">${esc(t.deployment)}</td>
+    <td><span class="pill ${t.from}">${STATE_LABEL[t.from]}</span> → <span class="pill ${t.to}">${STATE_LABEL[t.to]}</span></td>
+    <td class="small">${esc(t.reason)}</td></tr>`).join("")
+    || '<tr><td colspan="4" class="muted">All breakers closed.</td></tr>';
+}
+
+function barClass(pct) { return pct >= 100 ? "bad" : pct >= 80 ? "warn" : ""; }
+
+function budgetRow(name, spent, cap, editable, team) {
+  const pct = cap ? Math.min(100, 100 * spent / cap) : 0;
+  const capInput = editable
+    ? `<input type="number" min="0" step="0.01" value="${cap}" data-cap="${esc(team)}" aria-label="${esc(name)} daily cap" />`
+    : `<span class="mono">${usd(cap, 2)}</span>`;
+  return `<div class="row spread"><span>${esc(name)}</span><span class="mono">${usd(spent)} / ${capInput}</span></div>
+    <div class="bar"><i class="${barClass(pct)}" style="width:${pct}%"></i></div>`;
+}
+
+function renderBudgets(s) {
+  const host = $("budgets");
+  const focused = document.activeElement && host.contains(document.activeElement);
+  if (focused) return;  // don't clobber an input the user is editing
+  let html = `<div class="budget">${budgetRow("Org", s.org.spent_usd, s.org.cap_usd, true, "__org")}</div>`;
+  for (const t of s.teams) {
+    const tpmPct = t.tpm_limit ? Math.min(100, 100 * t.tpm_used / t.tpm_limit) : 0;
+    html += `<div class="budget">${budgetRow("Team " + t.team, t.spent_usd, t.cap_usd, true, t.team)}
+      <div class="row spread small muted"><span>tokens in last 60 s</span><span class="mono">${t.tpm_used.toLocaleString()} / <input type="number" min="0" step="1000" value="${t.tpm_limit}" data-tpm="${esc(t.team)}" aria-label="team ${esc(t.team)} TPM limit" /></span></div>
+      <div class="bar"><i class="${barClass(tpmPct)}" style="width:${tpmPct}%"></i></div></div>`;
+  }
+  host.innerHTML = html;
+  host.querySelectorAll("[data-cap]").forEach(inp => inp.onchange = () => {
+    const v = Number(inp.value);
+    if (inp.dataset.cap === "__org") bridge.call("set_org_cap", v); else bridge.call("set_team_cap", inp.dataset.cap, v);
+    inp.blur(); render(snapshot());
+  });
+  host.querySelectorAll("[data-tpm]").forEach(inp => inp.onchange = () => {
+    bridge.call("set_team_tpm", inp.dataset.tpm, Math.round(Number(inp.value))); inp.blur(); render(snapshot());
+  });
+}
+
+function renderAnomalies(s) {
+  $("anomalies").innerHTML = s.keys.map(k => `<tr>
+    <td>${esc(k.label)}</td><td>${esc(k.team)}</td>
+    <td class="num">${usd(k.hour_spend_usd)}</td><td class="num">${usd(k.baseline_hourly_usd)}</td>
+    <td class="num">${k.multiple ? k.multiple.toFixed(1) + "x" : "–"}</td>
+    <td><span class="pill ${k.verdict}">${k.verdict}</span></td></tr>`).join("");
+}
+
+const SB_COLS = { team: ["team"], key: ["key_label"], model: ["model"], provider: ["provider"] };
+const SB_LABEL = { key_label: "key", failed_attempts: "failed attempts", input_tokens: "in tokens", output_tokens: "out tokens",
+  cost_usd: "cost", cost_per_1k_requests: "$ / 1K req", cost_per_1k_tokens: "$ / 1K tok", share_of_cost: "share" };
+function renderShowback() {
+  // Same router/showback.py aggregation the CSV download and GET /admin/showback use.
+  const sb = JSON.parse(bridge.showback($("groupBy").value));
+  if (!sb.rows.length) { $("sbHead").innerHTML = ""; $("showback").innerHTML = '<tr><td class="muted">No usage yet.</td></tr>'; return; }
+  const dimCols = sb.columns.flatMap(d => SB_COLS[d]);
+  const cols = [...dimCols, "requests", "failed_attempts", "input_tokens", "output_tokens", "cost_usd", "cost_per_1k_requests", "cost_per_1k_tokens", "share_of_cost"];
+  const fmt = (c, v) => c === "share_of_cost" ? (100 * v).toFixed(1) + "%"
+    : c === "cost_usd" ? usd(v, 5) : c.startsWith("cost_per") ? usd(v, 4)
+    : typeof v === "number" ? v.toLocaleString() : v;
+  $("sbHead").innerHTML = "<tr>" + cols.map(c => `<th class="${dimCols.includes(c) ? "" : "num"}">${esc(SB_LABEL[c] || c)}</th>`).join("") + "</tr>";
+  $("showback").innerHTML = sb.rows.map(r => "<tr>" + cols.map(c =>
+    `<td class="${dimCols.includes(c) ? "" : "num"}">${esc(fmt(c, r[c]))}</td>`).join("") + "</tr>").join("");
+}
+
+const GOV_PILL = { off: "skip", detect: "neutral", redact: "ok", block: "bad" };
+function renderPrompt(r) {
+  const parts = r.trace.map(t => {
+    let counts = t.findings && Object.keys(t.findings).length ? " · " + Object.entries(t.findings).map(([k, v]) => `${k} ${v}`).join(", ") : "";
+    if (t.stage === "policy") {
+      const removed = (t.removed || []).map(x => x.deployment.split("/")[0]);
+      counts = (removed.length ? ` · removed ${removed.join(", ")}` : "") + (t.max_tokens ? ` · max_tokens ${t.max_tokens}` : "");
+    }
+    const cls = t.stage === "policy" ? (t.outcome === "allow" ? "ok" : "bad")
+      : t.stage === "provider" ? (t.outcome.includes("failed") ? "bad" : "ok")
+      : t.outcome.includes("required") ? "ok" : (GOV_PILL[t.outcome] || "neutral");
+    return `<span class="pill ${cls}" title="${esc(t.stage)}">${esc(t.stage)}: ${esc(t.outcome)}${esc(counts)}</span>`;
+  });
+  if (r.status !== 200) parts.push(`<span class="pill bad">${esc(r.status)}: ${esc(r.message)}</span>`);
+  $("govTrace").innerHTML = parts.join('<span class="arrow">→</span>');
+  $("govSent").textContent = r.sent ?? "(nothing was sent)";
+  $("govResp").textContent = r.response ?? (r.status === 200 ? "–" : `${r.status}: ${r.message}`);
+}
+
+function renderGovernance() {
+  const g = JSON.parse(bridge.governance());
+  $("govAudit").innerHTML = g.audit.map(a => `<tr>
+    <td class="num">${a.t.toFixed(1)}s</td><td>${esc(a.team)}</td>
+    <td><span class="pill ${a.action === "block" || a.action === "deny" ? "bad" : a.action === "redact" ? "ok" : "neutral"}">${esc(a.action)}</span></td>
+    <td class="small mono">${esc([a.stage, a.hook].filter(Boolean).join(" / ") || (a.rules ? a.category + ": " + a.rules.join(",") : a.category))}</td>
+    <td class="small">${esc(Object.entries(a.findings || {}).map(([k, v]) => `${k} ${v}`).join(", ") || a.reason || (a.removed && a.removed.length ? "removed " + a.removed.join(", ") : ""))}</td></tr>`).join("")
+    || '<tr><td colspan="5" class="muted">No policy actions yet.</td></tr>';
+  $("govLogRows").innerHTML = g.content_log.length ? g.content_log.map(c =>
+    `<div class="lbl">${esc(c.team)} · t=${c.t.toFixed(1)}s</div><pre class="box">${esc(c.request)}\n→ ${esc(c.response)}</pre>`).join("")
+    : "Empty: content logging is off unless a team opts in.";
+}
+
+const MCP_PILL = { allow: "ok", deny: "bad", rate_limited: "flagged", cap_reached: "flagged", upstream_error: "bad" };
+function mcpPill(d) { return `<span class="pill ${MCP_PILL[d] || "neutral"}">${esc(d.replace("_", " "))}</span>`; }
+function renderMcpResult(r) {
+  $("mcpResult").innerHTML = `${mcpPill(r.decision)} <span class="mono">${esc(r.tool)}</span> · ${esc(r.team)}` +
+    (r.reason ? `<div>${esc(r.reason)}${r.retry_after ? ` · Retry-After ${r.retry_after}s` : ""}</div>` : `<div class="mono">${esc(r.result)}</div>`);
+}
+function renderMcp(v) {
+  v = v || JSON.parse(bridge.mcp_view());
+  const team = $("mcpTeam").value, server = $("mcpServer").value;
+  const visible = ((v.allowed[team] || {})[server]) || [];
+  $("mcpTools").innerHTML = (v.servers[server] || []).map(t => visible.includes(t)
+    ? `<span class="pill ok">${esc(t)}</span>` : `<span class="pill skip" style="text-decoration:line-through">${esc(t)}</span>`).join("");
+  $("mcpLog").innerHTML = v.log.map(r => `<tr><td class="num">${r.t.toFixed(1)}s</td><td>${esc(r.team)}</td><td class="mono small">${esc(r.tool)}</td>
+    <td>${mcpPill(r.decision)}</td><td class="small mono">${esc(JSON.stringify(r.args))}</td></tr>`).join("")
+    || '<tr><td colspan="5" class="muted">No tool calls yet.</td></tr>';
+}
+const pct = (v) => (100 * v).toFixed(1) + "%";
+function semPill(r) {
+  if (r.result === "hit") return '<span class="pill ok">hit</span>';
+  if (r.reason.startsWith("guard")) return `<span class="pill flagged">miss: ${esc(r.reason)}</span>`;
+  return `<span class="pill skip">miss: ${esc(r.reason.replace("_", " "))}</span>`;
+}
+function renderSemResult(r) {
+  const what = r.result === "hit" ? `served from cache at $0 (saved ${usd(r.saved_usd, 6)})` : (r.answer ? `sent to ${esc(r.served_by)} (${usd(r.cost_usd, 6)}) and cached` : "provider error");
+  $("semResult").innerHTML = `${semPill(r)} similarity <b class="mono">${r.similarity.toFixed(3)}</b> vs threshold ${r.threshold.toFixed(2)} · ${what}` +
+    (r.nearest ? `<div class="muted">nearest cached prompt: “${esc(r.nearest)}”</div>` : "") + `<div class="mono">${esc(r.answer || "")}</div>`;
+}
+function renderSemantic() {
+  const v = JSON.parse(bridge.semantic_view());
+  $("semLog").innerHTML = v.log.map(r => `<tr><td>${esc(r.team)}</td><td class="small">${esc(r.text)}</td><td>${semPill(r)}</td>
+    <td class="num">${r.similarity.toFixed(3)}</td><td class="small muted">${esc(r.nearest || "–")}</td></tr>`).join("")
+    || '<tr><td colspan="5" class="muted">No lookups yet.</td></tr>';
+  $("semEntries").innerHTML = v.entries.length ? v.entries.map(e => `<div><span class="pill neutral">${esc(e.team)}</span> ${esc(e.text)} <span class="muted">· ${e.hits} hit(s)</span></div>`).join("") : "Empty.";
+}
+function renderCalibration(c) {
+  if (!c.chosen) { $("calOut").textContent = "No threshold meets the target on the calibration half."; return; }
+  const h = c.holdout_at_chosen, g = c.holdout_without_guards_at_chosen, k = c.chosen;
+  $("calOut").innerHTML = `<table><tbody>
+    <tr><td>pairs</td><td class="num">${c.pairs.total} (${c.pairs.calibration} calibration, ${c.pairs.holdout} held out)</td></tr>
+    <tr><td>chosen threshold</td><td class="num"><b id="calThr">${k.threshold.toFixed(2)}</b></td></tr>
+    <tr><td>calibration half: hit rate / false-hit rate</td><td class="num">${pct(k.hit_rate)} / ${pct(k.false_hit_rate)} (${k.false_hits} of ${k.hits} hits)</td></tr>
+    <tr><td>held-out half: hit rate / false-hit rate</td><td class="num" id="calHold">${pct(h.hit_rate)} / ${pct(h.false_hit_rate)} (${h.false_hits} of ${h.hits} hits)</td></tr>
+    <tr><td>held-out, guards off: false-hit rate</td><td class="num">${pct(g.false_hit_rate)} (${g.false_hits} of ${g.hits} hits)</td></tr>
+    <tr><td>95% upper bound, held-out false-hit rate</td><td class="num">${pct(h.false_hit_rate_upper95)}</td></tr>
+  </tbody></table><div class="muted" style="margin-top:6px">The held-out false-hit rate misses the 1% target: a dozen hits can't certify 1%. Calibrate on pairs labelled from your own traffic, with a stronger embedder, before turning it on.</div>`;
+}
+
+function render(s) {
+  last = s;
+  $("kClock").textContent = s.clock_s.toFixed(1) + " s";
+  $("kReq").textContent = s.stats.requests;
+  $("kOk").textContent = s.stats.ok;
+  $("kFb").textContent = s.stats.fallbacks;
+  $("kRej").textContent = Object.values(s.stats.rejected).reduce((a, b) => a + b, 0);
+  $("kRej").title = Object.entries(s.stats.rejected).map(([k, v]) => `${k}: ${v}`).join(", ");
+  $("kSpend").textContent = usd(s.org.spent_usd, 3);
+  $("estimator").textContent = "token estimator: " + s.estimator;
+  renderProviders(s); renderEvents(s); renderTransitions(s); renderBudgets(s); renderAnomalies(s); renderShowback(); renderGovernance(); renderSemantic(); renderMcp();
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -1,5 +1,63 @@
 # Changelog
 
+## [0.6.0] — 2026-10
+
+Added
+- **PII redaction and content hooks** (`router/pii.py`, `router/privacy.py`): `pre_request` hooks over message contents before any provider call and `post_response` hooks over completions, configured per route and team under `privacy:` (layers union). Built-ins `pii_redact`, `pii_block` (422), `pii_detect`; detectors for emails, phone numbers, SSNs, Luhn-valid card numbers and API-key-like secrets. Custom hooks via `register_hook()` in modules listed in `ROUTER_HOOK_MODULES`. A failing hook fails the request closed (503). Headers `x-router-content-hooks`, `x-router-redactions` (counts only).
+- **Content logging policy**: off by default; a team opts in with `privacy.teams.<team>.log_content: true`, and stored prompts/completions are redacted with every detector and truncated. `GET /admin/content-log`.
+- **Audit trail** (`router/audit.py`): append-only `audit_log` table (UPDATE/DELETE refused by triggers), hash-chained, with `GET /admin/audit` and `GET /admin/audit/verify`. Records content-hook actions, content-log writes, and admin key creation/revocation and reloads. `router_policy_actions_total` metric. Dashboard card with chain status.
+- **Policy-as-code** (`config/policies.yaml`, `router/policy.py`, `router/admission.py`): schema-validated, evaluated before budgets/cache/providers. Per default/team/route: alias allow/deny lists, provider allow-list (data residency), model allow/deny globs, `max_tokens` ceiling (reject or clamp; unset requests get the ceiling), `max_request_bytes`, `max_messages`, required content hooks. Most restrictive layer wins. Deployments a rule removes are never tried (no fallback to an excluded provider). Decisions in `x-router-policy*` headers and the audit trail; `GET /admin/policies`.
+- **Optional OPA** (`router/opa.py`, `OPA_URL`): metadata-only input, can narrow but never widen the route, fails closed (503) on timeout/error/undefined/malformed results. Example `policies/router.rego` with `opa test` cases.
+- **Route evaluation harness** (`router/evals.py`, `scripts/eval_routes.py`): replays a JSONL case set (40 fictional cases bundled in `evals/sample_cases.jsonl`) through routes with the gateway's fallback chain and pricing; exact/contains/regex scoring plus an optional judge hook; cost-vs-quality report in Markdown and JSON. Deterministic simulated provider by default (`evals/sim_profiles.json`, invented profiles); real providers only when every key is present.
+- **CI gate** `scripts/eval_gate.py`: exit 1 when quality drops or cost rises beyond limits between two routes files or two reports.
+- **Shadow mode** (`shadow:` in routes.yaml, `router/shadow.py`): background mirror of a sampled share of an alias's traffic to a candidate alias; never returned; policy-admitted; separate breakers; separate `shadow_usage` ledger or `billing: suppress`; `max_daily_usd`; `GET /admin/shadow` agreement/cost/latency comparison; `router_shadow_requests_total`.
+- **Semantic cache** (`router/semcache.py`, `semantic_cache:` in routes.yaml), **off by default**: offline hashing embedder or a provider embedding model; number and negation guards; partitions by team, alias, policy decision, content hooks, earlier messages and parameters; per-team opt-in and thresholds; TTL and LRU; `x-router-cache: semantic-hit`, `x-router-semantic-*` headers, `router_semantic_cache_total`, `GET /admin/semantic-cache`.
+- **Calibration** `scripts/calibrate_semcache.py` on 160 bundled fictional pairs: threshold picked on one half (0.88; 0/13 wrong hits), measured on the other: hit rate 26.3%, false-hit rate 9.1% (1 of 11 hits), which misses the 1% target; 28.6% without guards. ADR 0005.
+- **MCP tool gateway** (`POST /mcp/{server}`, `router/mcp_gateway.py`, `router/mcp_policy.py`, `config/mcp.example.yaml`): JSON-RPC proxy for `initialize`, `ping`, `notifications/*`, `tools/list` (filtered) and `tools/call` over Streamable HTTP (JSON or SSE replies); default-deny per-team tool allow-lists; per-key and per-team velocity and an identical-call loop guard; daily count and spend caps from the usage table; PII-redacted arguments in the audit log (optionally upstream); allowed calls recorded in usage/showback (`provider: mcp`); fail closed on upstream errors or missing credentials; `GET /admin/mcp`; `router_mcp_tool_calls_total`. ADR 0006 documents the scope.
+- **Demo**: semantic-cache panel (hits, number guard, team isolation, the known rotate/revoke false hit, in-browser calibration) and MCP panel (allowed, denied, velocity-limited tool calls with redacted arguments).
+- **Request body limit** `ROUTER_MAX_BODY_BYTES` (default 1 MiB): 413 before parsing, chunked bodies included.
+- `GET /admin/audit?exclude_allow=true` hides routine policy allows (the dashboard uses it).
+- **Demo**: the governance panel adds the policy stage (a regulated team refused on a public-only route, public providers removed on a mixed route, alias allow-list, max_tokens clamp), using `router/policy.py` with the same rules as `config/policies.yaml`.
+- **Demo**: governance panel showing what a provider receives with redaction off / detect / redact / block, the audit trail and the redacted content log, using `router/pii.py` in Pyodide.
+- **App keys hashed at rest** (`router/store.py`): rows keep an id, a display prefix, a fingerprint, a salt and HMAC-SHA256(`ROUTER_KEY_PEPPER`, salt + key); the key is returned once at creation. Lookups compare in constant time. Usage rows reference the key id.
+- `scripts/demo_smoke.py`: headless Chromium check of every demo panel (`--pyodide-dir` serves a local Pyodide copy).
+
+Behaviour changes (check before upgrading)
+- **`config/policies.yaml` is loaded by default when present.** The shipped file sets a 4096 `max_tokens` ceiling (clamp), so requests without `max_tokens` are now sent with 4096 and TPM reservations use it; `heavy-reasoning` rejects over-ceiling requests with 400; team `regulated` is local-only; team `contractors` has alias and model lists. Point `ROUTER_POLICIES_FILE` at an empty file to opt out.
+- **Bodies over 1 MiB get 413** (`ROUTER_MAX_BODY_BYTES`, 0 disables).
+- **An invalid policies file, or a `ROUTER_POLICIES_FILE` that doesn't exist, stops startup.** `POST /admin/reload` now reloads routes and policies together.
+- Every request that reaches policy evaluation writes an audit row.
+- **Keys are migrated on startup**: 0.5.x databases have their plaintext keys hashed and usage rows re-pointed to key ids. `GET /admin/keys` no longer returns secrets; `DELETE /admin/keys/{id}` accepts a key id (or the key itself) and returns 404 for unknown keys. Back up the database before upgrading.
+
+Changed
+- The response-cache key includes a fingerprint of the policy decision and the content hooks in force, so existing cache entries miss once after upgrading.
+- `stream: true` returns 400 when a `post_response` hook applies.
+- CI lints the whole repository (`ruff check .`).
+
+## [0.5.0] — 2026-10
+
+Added
+- **Circuit breakers per provider deployment** (`router/breaker.py`): closed → open on consecutive failures, error rate in a sliding window, or a 429/503 `Retry-After`; half-open with limited probes after a cooldown; closed on probe success. Only provider-health errors count (connection, timeout, 401/403/408/429, 5xx). Open deployments are skipped and fall through; if every target is open the gateway returns 503 + `Retry-After` without calling a provider.
+- **Latency-aware routing** (`strategy: latency` per alias, `router/latency.py`): EWMA of observed latency (TTFT for streams), configured order breaks near-ties, bounded warm-up for unmeasured deployments. Default ordering is unchanged.
+- **Provider-independent fallback chain** (`router/fallback.py`) shared by the gateway and the browser demo.
+- **Tokens-per-minute limits** per key and per team (`router/tokens.py`): estimate reserved before the call (tiktoken `cl100k_base` when available, else a documented chars/4 heuristic), corrected to provider-reported usage after, released on failure. 429 + `Retry-After`.
+- **Budget hierarchy** org → team → key, daily and monthly (`router/budgets.py`, `budgets:` in routes.yaml), with per-team and per-key-label overrides and config warnings when a child cap exceeds the org cap.
+- **Showback / chargeback export**: `GET /admin/showback` (JSON or CSV, admin-only) grouped by team, key, alias, provider and/or model, with cost per 1K requests, cost per 1K tokens and share of cost. Keys appear as label + fingerprint. CSV cells are escaped against formula injection.
+- **OpenTelemetry GenAI spans** per provider attempt (`router/telemetry.py`), a no-op without OpenTelemetry.
+- **Prometheus metrics**: `router_tokens_total`, `router_rejections_total`, `router_circuit_state`, `router_circuit_transitions_total`, `router_provider_latency_ewma_seconds`, `router_tpm_in_use`; `skipped` outcome on `router_requests_total`.
+- **Admin endpoints** `/admin/circuits` and `/admin/budgets`; dashboard panels for breakers, budgets and a showback CSV download.
+- **Response headers** `x-router-strategy`, `x-router-attempts`, `x-router-fallback-from`, `x-router-circuit-skipped` (also on 502/503).
+- **Price overrides** (`prices:`, USD per 1M tokens) that take precedence over LiteLLM's catalog, including for local models.
+- **Browser demo** (`demo/`): the repo's breaker, fallback, latency, token, budget, anomaly, cost and showback modules running in Pyodide against simulated providers.
+- **Docs**: ADRs 0001–0004, `docs/threat-model.md` (STRIDE + OWASP LLM Top 10 2025), `docs/controls.md` (NIST AI RMF / AI 600-1, FinOps for AI).
+- 85 new tests (111 total).
+
+Changed
+- `anomaly.py` exposes pure `classify()` / `baseline_from_hourly()` and imports the store lazily; thresholds and behaviour are unchanged.
+- The routes file accepts `alias: {strategy, targets}` alongside the existing list form.
+- The dashboard's dark palette.
+- CI lints `demo/` too; `requirements.txt` adds opentelemetry-api/sdk so span tests run in CI.
+
 ## [0.4.0] — 2026-10
 
 Added
