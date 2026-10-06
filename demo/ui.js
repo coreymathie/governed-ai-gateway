@@ -89,15 +89,25 @@ function niceMax(v) {
   return 10 * p;
 }
 
+/** Fewest decimals (min `floor`) that print every tick exactly, so 0.025 is not shown as 0.03. */
+function tickDigits(ticks, floor = 0) {
+  for (let d = floor; d < 6; d++) if (ticks.every((t) => Math.abs(Number(t.toFixed(d)) - t) < 1e-9)) return d;
+  return 6;
+}
+
+/** Narrow viewports get a smaller viewBox (and larger text) so chart labels stay readable when scaled down. */
+export const compactCharts = () => window.matchMedia("(max-width: 560px)").matches;
+
 /** Hourly spend bars for today with the 7-day average per hour as a line. */
-export function hourlyChart({ today, baseline, currentHour, simulatedBefore = null }) {
-  const W = 720, H = 240, L = 54, R = 10, T = 12, B = 30;
+export function hourlyChart({ today, baseline, currentHour, simulatedBefore = null, compact = false }) {
+  const W = compact ? 420 : 720, H = 240, L = compact ? 60 : 54, R = 10, T = 12, B = 30;
   const max = niceMax(Math.max(...today, ...baseline, 0.000001) * 1.08);
   const bw = (W - L - R) / 24;
   const y = (v) => T + (H - T - B) * (1 - v / max);
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * max);
-  const fmt = (v) => (max < 0.1 ? "$" + v.toFixed(3) : max < 10 ? "$" + v.toFixed(2) : "$" + Math.round(v));
-  let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Spend per hour today compared with the 7-day average for each hour">`;
+  const digits = tickDigits(ticks, max < 0.1 ? 3 : max < 10 ? 2 : 0);
+  const fmt = (v) => "$" + v.toFixed(digits);
+  let svg = `<svg class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Spend per hour today compared with the 7-day average for each hour">`;
   svg += `<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#a78bfa" opacity="0.45"/><line x1="0" y1="0" x2="0" y2="6" stroke="#0e0a1d" stroke-width="2" opacity="0.5"/></pattern></defs>`;
   for (const t of ticks) svg += `<line class="grid-line" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${fmt(t)}</text>`;
   today.forEach((v, h) => {
@@ -109,7 +119,7 @@ export function hourlyChart({ today, baseline, currentHour, simulatedBefore = nu
   });
   const pts = baseline.map((v, h) => `${L + h * bw + bw / 2},${y(v)}`).join(" ");
   svg += `<polyline points="${pts}" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="5 4"/>`;
-  for (let h = 0; h < 24; h += 3) svg += `<text x="${L + h * bw + bw / 2}" y="${H - 10}" text-anchor="middle">${String(h).padStart(2, "0")}:00</text>`;
+  for (let h = 0; h < 24; h += compact ? 6 : 3) svg += `<text x="${L + h * bw + bw / 2}" y="${H - 10}" text-anchor="middle">${String(h).padStart(2, "0")}:00</text>`;
   svg += `<line x1="${L + currentHour * bw + bw / 2}" x2="${L + currentHour * bw + bw / 2}" y1="${T}" y2="${H - B}" stroke="#a78bfa" stroke-width="1" opacity="0.5"/>`;
   return svg + "</svg>";
 }
@@ -128,26 +138,42 @@ export function hbars(items, { format = usd, color = "var(--chart-1)" } = {}) {
 }
 
 /** Quality vs cost scatter for route evals. points: [{name, x: cost, y: quality}] */
-export function scatter(points, { xLabel = "Cost per 1K requests (USD)", yLabel = "Quality" } = {}) {
-  const W = 560, H = 260, L = 50, R = 20, T = 14, B = 40;
+export function scatter(points, { xLabel = "Cost per 1K requests (USD)", yLabel = "Quality", compact = false } = {}) {
+  const W = compact ? 400 : 560, H = compact ? 280 : 260, L = compact ? 56 : 58, R = 20, T = 14, B = compact ? 44 : 40;
   const xs = points.map((p) => p.x);
   const xmax = niceMax(Math.max(...xs) * 1.1);
   const ymin = Math.max(0, Math.floor(Math.min(...points.map((p) => p.y)) * 10) / 10 - 0.1);
   const x = (v) => L + (W - L - R) * (v / xmax);
   const y = (v) => T + (H - T - B) * (1 - (v - ymin) / (1 - ymin));
   const colors = ["#a78bfa", "#60a5fa", "#4ade80", "#fbbf24", "#f472b6", "#f87171"];
-  let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Route quality against cost">`;
+  let svg = `<svg class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Route quality against cost">`;
+  const yt = [0, 1, 2, 3, 4].map((i) => ymin + ((1 - ymin) * i) / 4), xt = [0, 1, 2, 3, 4].map((i) => (xmax * i) / 4);
+  const labelled = (i) => !compact || i % 2 === 0; // compact: label every other tick so the text fits
+  const yd = tickDigits(yt.filter((_, i) => labelled(i)), 2), xd = tickDigits(xt.filter((_, i) => labelled(i)), 2);
   for (let i = 0; i <= 4; i++) {
-    const yv = ymin + ((1 - ymin) * i) / 4;
-    svg += `<line class="grid-line" x1="${L}" x2="${W - R}" y1="${y(yv)}" y2="${y(yv)}"/><text x="${L - 6}" y="${y(yv) + 4}" text-anchor="end">${yv.toFixed(2)}</text>`;
-    const xv = (xmax * i) / 4;
-    svg += `<text x="${x(xv)}" y="${H - B + 16}" text-anchor="middle">$${xv.toFixed(xv < 0.1 ? 3 : 2)}</text>`;
+    svg += `<line class="grid-line" x1="${L}" x2="${W - R}" y1="${y(yt[i])}" y2="${y(yt[i])}"/>`;
+    if (!labelled(i)) continue;
+    svg += `<text x="${L - 6}" y="${y(yt[i]) + 4}" text-anchor="end">${yt[i].toFixed(yd)}</text>`;
+    svg += `<text x="${x(xt[i])}" y="${H - B + 16}" text-anchor="middle">$${xt[i].toFixed(xd)}</text>`;
   }
   svg += `<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">${esc(xLabel)}</text>`;
   svg += `<text x="12" y="${(T + H - B) / 2}" text-anchor="middle" transform="rotate(-90 12 ${(T + H - B) / 2})">${esc(yLabel)}</text>`;
+  // Compact charts are tighter, so labels take the first spot (right, left, above-right, below-right) that stays
+  // inside the plot and clears every dot and earlier label.
+  const fs = 13, boxes = points.map((p) => ({ x0: x(p.x) - 8, x1: x(p.x) + 8, y0: y(p.y) - 8, y1: y(p.y) + 8 }));
+  const hit = (a) => a.x0 < 0 || a.x1 > W || a.y0 < 0 || boxes.some((b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1);
   points.forEach((p, i) => {
     const c = colors[i % colors.length];
     svg += `<circle cx="${x(p.x)}" cy="${y(p.y)}" r="7" fill="${c}" stroke="#0e0a1d" stroke-width="2"><title>${esc(p.name)}: quality ${p.y}, ${usd(p.x, 4)} per 1K requests</title></circle>`;
+    if (compact) {
+      const w = p.name.length * fs * 0.56, px = x(p.x), py = y(p.y);
+      const spots = [[px + 11, py, "start"], [px - 11, py, "end"], [px + 6, py - 15, "start"], [px + 6, py + 15, "start"]];
+      const box = ([tx, ty, anchor]) => ({ x0: anchor === "end" ? tx - w : tx, x1: anchor === "end" ? tx : tx + w, y0: ty - fs / 2 - 1, y1: ty + fs / 2 + 1 });
+      const [tx, ty, anchor] = spots.find((sp) => !hit(box(sp))) || spots[0];
+      boxes.push(box([tx, ty, anchor]));
+      svg += `<text x="${tx}" y="${ty + 4}" text-anchor="${anchor}" style="fill:${c};font-weight:600">${esc(p.name)}</text>`;
+      return;
+    }
     const right = x(p.x) > W - 150;
     svg += `<text x="${x(p.x) + (right ? -11 : 11)}" y="${y(p.y) + 4 + (i % 2 ? 10 : -4)}" text-anchor="${right ? "end" : "start"}" style="fill:${c};font-weight:600">${esc(p.name)}</text>`;
   });
@@ -155,13 +181,13 @@ export function scatter(points, { xLabel = "Cost per 1K requests (USD)", yLabel 
 }
 
 /** Two lines over a threshold grid (semantic-cache calibration). */
-export function curves(grid, chosen) {
-  const W = 560, H = 230, L = 46, R = 16, T = 12, B = 34;
+export function curves(grid, chosen, { compact = false } = {}) {
+  const W = compact ? 400 : 560, H = 230, L = compact ? 50 : 46, R = 16, T = 12, B = 34;
   const xs = grid.map((g) => g.threshold);
   const xmin = Math.min(...xs), xmax = Math.max(...xs);
   const x = (v) => L + (W - L - R) * ((v - xmin) / (xmax - xmin || 1));
   const y = (v) => T + (H - T - B) * (1 - v);
-  let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Hit rate and false-hit rate by similarity threshold">`;
+  let svg = `<svg class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Hit rate and false-hit rate by similarity threshold">`;
   for (const t of [0, 0.25, 0.5, 0.75, 1]) svg += `<line class="grid-line" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${Math.round(t * 100)}%</text>`;
   for (let v = Math.ceil(xmin * 10) / 10; v <= xmax + 1e-9; v += 0.1) svg += `<text x="${x(v)}" y="${H - 12}" text-anchor="middle">${v.toFixed(1)}</text>`;
   const line = (key, color, dash = "") =>

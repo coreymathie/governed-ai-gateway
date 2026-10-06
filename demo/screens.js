@@ -2,7 +2,7 @@
 // Each screen renders into the view with render(view, ctx) and may return a cleanup function.
 import { SAMPLE_PROMPTS, fetchJson, store } from "./adapters.js";
 import {
-  $, $$, busy, curves, download, empty, errorState, esc, hbars, hourlyChart, int, loading, measuredTag, ms, pct,
+  $, $$, busy, compactCharts, curves, download, empty, errorState, esc, hbars, hourlyChart, int, loading, measuredTag, ms, pct,
   realTag, scatter, simTag, stageChips, statusPill, toast, usd,
 } from "./ui.js";
 
@@ -47,7 +47,7 @@ const overview = {
           <div class="card-head"><div><h2 id="hourlyTitle">Spend per hour vs. 7-day average</h2>
             <p>${demo ? `Hours before ${String(ov.hourly.current_hour).padStart(2, "0")}:00 are simulated history; the highlighted hour is this session's real engine ledger.` : "UTC hours today; the dashed line is the average for that hour over the previous 7 days."}</p></div>
             ${demo ? simTag("simulated history") : ""}</div>
-          ${hourlyChart({ today: ov.hourly.today, baseline: ov.hourly.baseline_7d, currentHour: ov.hourly.current_hour, simulatedBefore: demo ? ov.hourly.history_simulated_before : null })}
+          ${hourlyChart({ today: ov.hourly.today, baseline: ov.hourly.baseline_7d, currentHour: ov.hourly.current_hour, simulatedBefore: demo ? ov.hourly.history_simulated_before : null, compact: compactCharts() })}
           <div class="legend"><span><i style="background:#a78bfa"></i>This hour</span>${demo ? '<span><i style="background:repeating-linear-gradient(45deg,#a78bfa 0 3px,#3b2f6b 3px 6px)"></i>Earlier today (simulated)</span>' : '<span><i style="background:#7c6bd6"></i>Earlier today</span>'}<span><i style="background:#fbbf24"></i>7-day average for the hour</span></div>
         </section>
         <section class="card" aria-labelledby="riskTitle">
@@ -102,12 +102,15 @@ const overview = {
 // Playground
 // =============================================================================================
 
+// "provider/model" ids: allow a line break after the provider, never inside a hyphenated model name.
+const breakAfterSlash = (id) => String(id).split("/").map((p) => `<span class="nw">${esc(p)}</span>`).join("/<wbr>");
+
 function resultCard(r) {
   if (!r) return "";
   const meta = `
     <div class="result-meta">
       <div><b>${statusPill(r.status, r.ok ? (r.cache && r.cache !== "miss" ? "cache_hit" : "ok") : null)}</b><span>status</span></div>
-      <div><b title="${esc(r.served_by || "")}">${esc(r.served_by || "–")}</b><span>served by${r.fell_back ? " (after fallback)" : ""}</span></div>
+      <div><b title="${esc(r.served_by || "")}">${breakAfterSlash(r.served_by || "–")}</b><span>served by${r.fell_back ? " (after fallback)" : ""}</span></div>
       <div><b>${ms(r.latency_ms)}</b><span>latency${r.simulated ? " (simulated)" : ""}</span></div>
       <div><b>${r.cost_usd == null ? "–" : usd(r.cost_usd)}</b><span>${r.saved_usd ? `saved ${usd(r.saved_usd)} by cache` : `cost · ${int(r.tokens)} tokens`}</span></div>
     </div>`;
@@ -304,7 +307,7 @@ async function renderCache(box, A) {
   const view = await A.semanticView();
   const teams = (await A.teams()).filter((t) => ["product", "support", "data"].includes(t));
   box.innerHTML = `<div class="grid g2"><section class="card"><div class="card-head"><div><h2>Ask through the semantic cache</h2><p><code>router/semcache.py</code>: hashing embedder, number and negation guards, partitions per team and policy.</p></div>${realTag()}</div>
-    <div class="form-grid"><label class="field">Team<select id="smTeam">${teams.map((t) => opt(t, t, t === "product")).join("")}</select></label>
+    <div class="form-grid"><label class="field wide">Team<select id="smTeam">${teams.map((t) => opt(t, t, t === "product")).join("")}</select></label>
     <label class="field wide">Threshold <output id="smThrOut">${view.threshold}</output><input id="smThr" type="range" min="0.7" max="0.99" step="0.01" value="${view.threshold}"/></label>
     <label class="field full">Question<input id="smText" type="text" value="${esc(view.examples[0])}"/></label></div>
     <div class="chips" style="margin-top:10px">${view.examples.map((t, i) => `<button class="sm ghost" data-ex="${i}">${esc(t)}</button>`).join("")}</div>
@@ -357,10 +360,10 @@ const tracesScreen = {
         }
         const total = rows.length;
         rows = rows.slice(0, shown);
-        body.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Trace</th><th>Key · team</th><th>Alias</th><th>Status</th><th>Served by</th><th class="num">Attempts</th><th class="num">Latency</th><th class="num">Cost</th></tr></thead><tbody>
-          ${rows.map((t) => `<tr class="click" tabindex="0" data-id="${esc(t.id)}"><td><code>${esc(t.id)}</code><span class="sub">${esc(t.ts)}</span></td>
-            <td>${esc(t.key)}<span class="sub">${esc(t.team)}</span></td><td>${esc(t.alias)}</td><td>${statusPill(t.status, t.outcome)}${t.reason && t.status >= 400 ? `<span class="sub" title="${esc(t.reason)}">${esc(t.reason.slice(0, 48))}${t.reason.length > 48 ? "…" : ""}</span>` : ""}</td>
-            <td>${t.served_by ? `<code>${esc(t.served_by)}</code>` : '<span class="faint">–</span>'}${t.fell_back ? '<span class="sub">after fallback</span>' : ""}</td>
+        body.innerHTML = `<div class="table-wrap"><table class="dense"><thead><tr><th>Trace</th><th>Key · team</th><th>Alias</th><th>Status</th><th>Served by</th><th class="num">Attempts</th><th class="num">Latency</th><th class="num">Cost</th></tr></thead><tbody>
+          ${rows.map((t) => `<tr class="click" tabindex="0" data-id="${esc(t.id)}"><td class="nw"><code>${esc(t.id)}</code><span class="sub">${esc(t.ts)}</span></td>
+            <td class="nw">${esc(t.key)}<span class="sub">${esc(t.team)}</span></td><td class="nw">${esc(t.alias)}</td><td>${statusPill(t.status, t.outcome)}${t.reason && t.status >= 400 ? `<span class="sub" title="${esc(t.reason)}">${esc(t.reason.slice(0, 48))}${t.reason.length > 48 ? "…" : ""}</span>` : ""}</td>
+            <td>${t.served_by ? `<code>${breakAfterSlash(t.served_by)}</code>` : '<span class="faint">–</span>'}${t.fell_back ? '<span class="sub">after fallback</span>' : ""}</td>
             <td class="num">${int(t.attempts)}</td><td class="num">${ms(t.latency_ms)}</td><td class="num">${t.saved_usd ? `<span title="saved ${usd(t.saved_usd)}">$0</span>` : usd(t.cost_usd)}</td></tr>`).join("")}
           </tbody></table></div><div class="row" style="margin-top:8px"><span class="small faint">Showing ${rows.length} of ${total} traces${A.simulated ? " · simulated providers" : ""}. Click a row for its timeline.</span>${total > rows.length ? '<button class="sm" id="trMore">Show 50 more</button>' : ""}</div>`;
         if ($("#trMore")) $("#trMore").onclick = () => { shown += 50; load(); };
@@ -540,8 +543,8 @@ const budgetsScreen = {
           <div class="budget" style="margin-bottom:14px"><div class="row spread small"><b>Org</b><span class="num">${usd(b.org.spent_usd)} of ${b.org.cap_usd ? usd(b.org.cap_usd, 2) : "no cap"}</span></div>${bar(b.org.spent_usd, b.org.cap_usd)}</div>
           ${b.teams.length ? b.teams.map((t) => `<div class="budget" style="margin-bottom:14px" data-team="${esc(t.team)}">
             <div class="row spread small"><b>${esc(t.team)}</b><span class="num">${usd(t.spent_usd)} of ${t.cap_usd ? usd(t.cap_usd) : "no cap"}${t.tpm ? ` · TPM ${int(t.tpm_used)}/${int(t.tpm)}` : ""}</span></div>${bar(t.spent_usd, t.cap_usd)}
-            <div class="row" style="margin-top:6px"><label class="small muted" for="cap-${esc(t.team)}">Daily cap $</label><input id="cap-${esc(t.team)}" type="number" min="0" step="0.01" value="${t.cap_usd || ""}" style="width:110px" data-cap/>
-            <label class="small muted" for="tpm-${esc(t.team)}">TPM</label><input id="tpm-${esc(t.team)}" type="number" min="0" step="1000" value="${t.tpm || ""}" style="width:110px" data-tpm/><button class="sm" data-save>Save</button></div></div>`).join("") : empty("No teams yet", "Teams appear when a key is created for them.")}
+            <div class="row" style="margin-top:6px"><span class="row nw"><label class="small muted" for="cap-${esc(t.team)}">Daily cap $</label><input id="cap-${esc(t.team)}" type="number" min="0" step="0.01" value="${t.cap_usd || ""}" style="width:110px" data-cap/></span>
+            <span class="row nw"><label class="small muted" for="tpm-${esc(t.team)}">TPM</label><input id="tpm-${esc(t.team)}" type="number" min="0" step="1000" value="${t.tpm || ""}" style="width:110px" data-tpm/></span><button class="sm" data-save>Save</button></div></div>`).join("") : empty("No teams yet", "Teams appear when a key is created for them.")}
           ${(b.warnings || []).map((w) => `<div class="note warn">${esc(w)}</div>`).join("")}`;
         $$("[data-team]", el).forEach((row) => {
           $("[data-save]", row).onclick = (e) => busy(e.currentTarget, async () => {
@@ -572,10 +575,10 @@ const budgetsScreen = {
           <button class="primary" id="nkCreate" style="align-self:flex-end">Create key</button></div>
           <div id="nkSecret">${lastSecret ? lastSecret : ""}</div>
           ${keys.length ? `<div class="table-wrap"><table><thead><tr><th>Label</th><th>Team</th><th>Fingerprint</th><th class="num">Spend today</th><th>Anomaly</th><th>State</th><th class="right">Actions</th></tr></thead><tbody>
-            ${keys.map((k) => `<tr data-key="${esc(k.id)}"><td>${esc(k.label)}${k.is_admin ? ' <span class="pill info">admin</span>' : ""}<span class="sub"><code>${esc(k.key_prefix)}…</code></span></td><td>${esc(k.team)}</td><td><code>${esc(k.fingerprint)}</code></td>
+            ${keys.map((k) => `<tr data-key="${esc(k.id)}"><td class="nw">${esc(k.label)}${k.is_admin ? ' <span class="pill info">admin</span>' : ""}<span class="sub"><code>${esc(k.key_prefix)}…</code></span></td><td>${esc(k.team)}</td><td><code>${esc(k.fingerprint)}</code></td>
               <td class="num">${usd(k.spent_today_usd)}</td><td><span class="pill ${esc(k.verdict)}">${esc(k.verdict)}</span>${k.multiple ? `<span class="sub">${Number(k.multiple).toFixed(1)}× baseline</span>` : ""}</td>
               <td>${k.revoked_at ? '<span class="pill neutral">revoked</span>' : k.hold ? `<span class="pill ${esc(k.hold)}">${esc(k.hold)}</span>` : '<span class="pill ok">active</span>'}</td>
-              <td class="right">${k.revoked_at ? "" : `<div class="row" style="justify-content:flex-end">${k.hold === "paused" || k.verdict === "pause" ? `<button class="sm" data-act="unpause">Unpause</button>` : `<button class="sm" data-act="pause">Pause</button>`}<button class="sm danger" data-act="revoke">Revoke</button></div>`}</td></tr>`).join("")}
+              <td class="right">${k.revoked_at ? "" : `<div class="row" style="justify-content:flex-end;flex-wrap:nowrap">${k.hold === "paused" || k.verdict === "pause" ? `<button class="sm" data-act="unpause">Unpause</button>` : `<button class="sm" data-act="pause">Pause</button>`}<button class="sm danger" data-act="revoke">Revoke</button></div>`}</td></tr>`).join("")}
           </tbody></table></div>` : empty("No keys yet", "Create the first app key above.")}`;
         $("#nkCreate").onclick = (e) => busy(e.currentTarget, async () => {
           const label = $("#nkLabel").value.trim(), team = $("#nkTeam").value.trim();
@@ -604,6 +607,7 @@ const budgetsScreen = {
         });
       } catch (e) { el.innerHTML = errorState(e); an.innerHTML = ""; }
     };
+    const SHOWBACK_COLS = { team: "Team", model: "Model", provider: "Provider", key_label: "Key", key_fp: "Fingerprint" };
     const GROUPS = [["team", "Team"], ["team,model", "Team × model"], ["key", "Key"], ["provider,model", "Provider × model"]];
     let group = "team,model";
     const paintShowback = async () => {
@@ -613,8 +617,8 @@ const budgetsScreen = {
         const cols = sb.columns;
         el.innerHTML = `<div class="card-head"><div><h2>Showback</h2><p>Cost and unit metrics for chargeback (<code>router/showback.py</code>)${sb.period ? `, ${esc(sb.period.start)} to ${esc(sb.period.end)} UTC` : ", this session"}.</p></div>
           <div class="row"><div class="seg" role="group" aria-label="Group by">${GROUPS.map(([g, l]) => `<button data-g="${g}" aria-pressed="${g === group}">${l}</button>`).join("")}</div><button id="sbCsv">Download CSV</button></div></div>
-          ${sb.rows.length ? `<div class="table-wrap"><table><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}<th class="num">Requests</th><th class="num">Cache hits</th><th class="num">Failed</th><th class="num">Tokens</th><th class="num">Cost</th><th class="num">Saved</th><th class="num">$/1K req</th><th class="num">Share</th></tr></thead><tbody>
-            ${sb.rows.slice(0, 50).map((r) => `<tr>${cols.map((c) => `<td>${c === "key_fp" ? `<code>${esc(r[c])}</code>` : esc(r[c])}</td>`).join("")}<td class="num">${int(r.requests)}</td><td class="num">${int(r.cache_hits)}</td><td class="num">${int(r.failed_attempts)}</td><td class="num">${int(r.input_tokens + r.output_tokens)}</td><td class="num">${usd(r.cost_usd)}</td><td class="num">${usd(r.saved_usd)}</td><td class="num">${usd(r.cost_per_1k_requests)}</td><td class="num">${pct(r.share_of_cost)}</td></tr>`).join("")}
+          ${sb.rows.length ? `<div class="table-wrap"><table class="dense"><thead><tr>${cols.map((c) => `<th>${esc(SHOWBACK_COLS[c] || c)}</th>`).join("")}<th class="num">Requests</th><th class="num">Cache hits</th><th class="num">Failed</th><th class="num">Tokens</th><th class="num">Cost</th><th class="num">Saved</th><th class="num">$/1K req</th><th class="num">Share</th></tr></thead><tbody>
+            ${sb.rows.slice(0, 50).map((r) => `<tr>${cols.map((c) => `<td class="nw">${c === "key_fp" ? `<code>${esc(r[c])}</code>` : esc(r[c])}</td>`).join("")}<td class="num">${int(r.requests)}</td><td class="num">${int(r.cache_hits)}</td><td class="num">${int(r.failed_attempts)}</td><td class="num">${int(r.input_tokens + r.output_tokens)}</td><td class="num">${usd(r.cost_usd)}</td><td class="num">${usd(r.saved_usd)}</td><td class="num">${usd(r.cost_per_1k_requests)}</td><td class="num">${pct(r.share_of_cost)}</td></tr>`).join("")}
           </tbody></table></div>` : empty("No usage yet", "Showback fills in as requests are served.")}`;
         $$("[data-g]", el).forEach((b) => (b.onclick = () => { group = b.dataset.g; paintShowback(); }));
         $("#sbCsv").onclick = (e) => busy(e.currentTarget, async () => {
@@ -667,7 +671,7 @@ const mcpScreen = {
         </section></div>
         <section class="card" style="margin-top:16px"><div class="card-head"><h2>Tool calls</h2><span class="small muted">newest first · arguments as audited (redacted)</span></div>
           ${v.log.length ? `<div class="table-wrap" id="mcLog"><table><thead><tr><th>When</th><th>Team</th><th>Tool</th><th>Decision</th><th>Reason</th><th>Arguments</th></tr></thead><tbody>
-          ${v.log.map((r) => `<tr><td class="small">${esc(r.time || "")}</td><td>${esc(r.team)}</td><td><code>${esc(r.tool)}</code></td><td><span class="pill ${r.decision === "allow" ? "ok" : r.decision === "rate_limited" || r.decision === "cap_reached" ? "warn" : "bad"}">${esc(r.decision)}</span></td><td class="small">${esc(r.reason || "")}</td><td class="small"><code>${esc(r.args ? JSON.stringify(r.args) : "")}</code></td></tr>`).join("")}
+          ${v.log.map((r) => `<tr><td class="small">${esc(r.time || "")}</td><td>${esc(r.team)}</td><td><code>${esc(r.tool)}</code></td><td><span class="pill ${r.decision === "allow" ? "ok" : r.decision === "rate_limited" || r.decision === "cap_reached" ? "warn" : "bad"}">${esc(r.decision)}</span></td><td class="small">${esc(r.reason || "")}</td><td class="small"><code style="overflow-wrap:anywhere">${esc(r.args ? JSON.stringify(r.args) : "")}</code></td></tr>`).join("")}
           </tbody></table></div>` : empty("No tool calls yet", "Call an allowed tool, a denied one, then burst one past its per-minute limit.")}
         </section>`;
       const setArgs = () => { const t = $("#mcTool").value.split("/")[1]; $("#mcArgs").value = JSON.stringify(MCP_ARGS[t] || {}); };
@@ -711,17 +715,17 @@ const evalsScreen = {
     const h = cal.holdout_at_chosen, g = cal.holdout_without_guards_at_chosen;
     body.innerHTML = `
       <section class="card"><div class="card-head"><div><h2>Route evaluation: cost vs. quality</h2><p>${esc(routes.cases_source)} (${rows[0] ? rows[0].cases : 0} fictional cases) replayed through every alias with the gateway's fallback chain and pricing. <code>${esc(routes.command)}</code></p></div>${simTag("simulated: invented model profiles")}</div>
-        <div class="grid g2"><div>${scatter(Object.values(rows.reduce((acc, r) => {
+        <div class="grid g2 stack-md"><div>${scatter(Object.values(rows.reduce((acc, r) => {
           const k = `${r.cost_per_1k_requests_usd}|${r.quality}`;
           acc[k] = acc[k] ? { ...acc[k], name: `${acc[k].name} · ${r.alias}` } : { name: r.alias, x: r.cost_per_1k_requests_usd, y: r.quality };
           return acc;
-        }, {})))}</div>
+        }, {})), { compact: compactCharts() })}</div>
         <div class="table-wrap"><table><thead><tr><th>Route</th><th class="num">Quality</th><th class="num">$/1K req</th><th class="num">p50</th><th class="num">p95</th><th class="num">Fallbacks</th></tr></thead><tbody>
           ${rows.sort((a, b) => b.quality - a.quality).map((r) => `<tr><td><b>${esc(r.alias)}</b><span class="sub">${esc(r.targets.join(" → "))}</span></td><td class="num">${r.quality.toFixed(3)}</td><td class="num">${usd(r.cost_per_1k_requests_usd, 4)}</td><td class="num">${ms(r.latency_p50_s * 1000)}</td><td class="num">${ms(r.latency_p95_s * 1000)}</td><td class="num">${r.fallbacks}</td></tr>`).join("")}
         </tbody></table></div></div>
         <p class="small muted" style="margin-top:8px">Simulated numbers describe the configured profiles in <code>evals/sim_profiles.json</code>, not real models. Run <code>scripts/eval_routes.py --provider real</code> with keys for a measured report.</p>
       </section>
-      <div class="grid g2" style="margin-top:16px">
+      <div class="grid g2 stack-md" style="margin-top:16px">
         <section class="card"><div class="card-head"><div><h2>CI gate example</h2><p>${esc(gate.question)}</p></div>${simTag()}</div>
           <div class="row" style="margin-bottom:10px"><span class="pill ${gate.ok ? "ok" : "bad"}" id="gateResult">${gate.ok ? "PASS" : "FAIL"}</span><span class="small muted">limits: quality drop ≤ ${gate.limits.max_quality_drop}, cost increase ≤ ${pct(gate.limits.max_cost_increase, 0)}</span></div>
           <div class="table-wrap"><table><thead><tr><th></th><th class="num">Quality</th><th class="num">Cost (40 cases)</th></tr></thead><tbody>
@@ -736,7 +740,7 @@ const evalsScreen = {
         </section>
       </div>
       <section class="card" style="margin-top:16px"><div class="card-head"><div><h2>Semantic cache calibration</h2><p>${esc(cal.pairs.total)} labelled pairs (fictional), threshold chosen on ${esc(cal.pairs.calibration)}, reported on ${esc(cal.pairs.holdout)} held out. Target false-hit rate ${pct(cal.target_false_hit_rate)}. <code>${esc(cal.command)}</code></p></div>${measuredTag("measured on bundled pairs")}</div>
-        <div class="grid g2"><div>${curves(cal.calibration_grid, cal.chosen && cal.chosen.threshold)}<div class="legend"><span><i style="background:#a78bfa"></i>hit rate</span><span><i style="background:#f87171"></i>false-hit rate</span><span><i style="background:#fbbf24"></i>chosen threshold</span></div></div>
+        <div class="grid g2"><div>${curves(cal.calibration_grid, cal.chosen && cal.chosen.threshold, { compact: compactCharts() })}<div class="legend"><span><i style="background:#a78bfa"></i>hit rate</span><span><i style="background:#f87171"></i>false-hit rate</span><span><i style="background:#fbbf24"></i>chosen threshold</span></div></div>
         <div>
           <div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))">
             <div class="kpi"><div class="l">Chosen threshold</div><div class="v" id="calThr">${cal.chosen ? cal.chosen.threshold : "none"}</div><div class="s">${esc(cal.rule)}</div></div>
@@ -799,7 +803,7 @@ const settingsScreen = {
       <div class="table-wrap"><table><thead><tr><th>Credential</th><th>Can</th></tr></thead><tbody>
       <tr><td><b>Admin key</b><span class="sub">ROUTER_ADMIN_KEY or an admin-flagged key</span></td><td class="small">Every <code>/admin/*</code> endpoint: keys, budgets, config, traces, showback, audit; <code>/metrics</code>.</td></tr>
       <tr><td><b>App key</b><span class="sub">POST /admin/keys</span></td><td class="small"><code>/v1/chat/completions</code>, <code>/v1/models</code> and <code>/mcp/{server}</code> as its team; subject to that team's policy, budgets and tool allow-list.</td></tr>
-      <tr><td><b>No key</b></td><td class="small"><code>/health</code>, <code>/console/</code> static files, <code>/console/api-mode</code>.</td></tr>
+      <tr><td><b>No key</b></td><td class="small"><code>/health</code>, <code>/console/</code> static files, <code class="nw">/console/api-mode</code>.</td></tr>
       </tbody></table></div>`;
     const gw = $("#stGateway");
     try {
