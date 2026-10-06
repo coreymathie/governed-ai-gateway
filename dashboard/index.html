@@ -1,26 +1,30 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <title>Governed AI Gateway — Dashboard</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Cpath d='M9 11h14M9 16h9M9 21h14' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E" />
 <style>
+  /* Follows the system theme (dark when there is no preference); the Theme button overrides it for the tab. */
   :root {
     --bg: #120E24; --panel: #1A1532; --fg: #ECE9F7; --muted: #A69FC4;
     --accent: #A78BFA; --danger: #F87171; --ok: #4ADE80; --border: #2C2452; --warn: #FB923C;
     --on-accent: #120E24;
+    color-scheme: dark;
   }
-  :root:not([data-theme="dark"]) {
+  :root[data-theme="light"] {
     --bg: #ffffff; --panel: #f6f8fa; --fg: #1f2328; --muted: #656d76;
     --accent: #6d28d9; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de; --warn: #c2410c;
     --on-accent: #ffffff;
+    color-scheme: light;
   }
   @media (prefers-color-scheme: light) {
     :root:not([data-theme="dark"]) {
       --bg: #ffffff; --panel: #f6f8fa; --fg: #1f2328; --muted: #656d76;
       --accent: #6d28d9; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de; --warn: #c2410c;
       --on-accent: #ffffff;
+      color-scheme: light;
     }
   }
   * { box-sizing: border-box; }
@@ -55,17 +59,26 @@
   .pill.half_open { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
   .pill.closed { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); }
   .tablewrap { overflow-x: auto; }
+  /* Until data loads: a prompt (or the error) under the header, the key field highlighted, the empty cards dimmed. */
+  .notice { display: none; margin: -8px 0 20px; padding: 10px 14px; border-radius: 8px;
+            border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+  body.needs-key .notice, body.load-error .notice { display: block; }
+  body.load-error .notice { border-color: color-mix(in srgb, var(--danger) 45%, transparent); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+  body.needs-key #adminKey { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+  body.key-rejected #adminKey { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent); }
+  body:not(.loaded) .card { opacity: .5; }
 </style>
 </head>
 <body>
 <header>
   <h1>Governed AI Gateway <small style="font-size:13px;font-weight:400">classic dashboard · <a href="/console/">open the console</a></small></h1>
   <div class="row">
-    <input id="adminKey" type="password" placeholder="admin key" />
+    <input id="adminKey" type="password" placeholder="admin key" aria-describedby="notice" onkeydown="if (event.key === 'Enter') save()" />
     <button class="primary" onclick="save()">Save</button>
     <button onclick="toggleTheme()">Theme</button>
   </div>
 </header>
+<p class="notice" id="notice" role="status"></p>
 
 <div class="grid">
   <div class="card"><h2>Spend today (all keys)</h2><div class="stat" id="totalSpend">—</div></div>
@@ -137,13 +150,27 @@ const esc = (t) => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&
 const BASE = location.origin;
 function toggleTheme() {
   const r = document.documentElement;
-  r.setAttribute("data-theme", r.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  const dark = r.dataset.theme ? r.dataset.theme === "dark" : !matchMedia("(prefers-color-scheme: light)").matches;
+  r.setAttribute("data-theme", dark ? "light" : "dark");
+}
+function setState(state, msg = "", rejected = false) {
+  const b = document.body;
+  b.classList.toggle("needs-key", state === "needs-key");
+  b.classList.toggle("load-error", state === "error");
+  b.classList.toggle("key-rejected", rejected);
+  b.classList.toggle("loaded", state === "loaded");
+  $("notice").textContent = msg;
 }
 function getKey() { try { return sessionStorage.getItem("adminKey") || ""; } catch { return ""; } }
 function save() { try { sessionStorage.setItem("adminKey", $("adminKey").value); } catch {}  refresh(); }
 async function call(path) {
   const r = await fetch(BASE + path, { headers: { "Authorization": "Bearer " + getKey() } });
-  if (!r.ok) throw new Error(await r.text());
+  if (!r.ok) {
+    const text = await r.text();
+    let detail = text;
+    try { detail = JSON.parse(text).detail || text; } catch {}
+    throw Object.assign(new Error(String(detail).slice(0, 200)), { status: r.status });
+  }
   return r.json();
 }
 async function downloadShowback() {
@@ -160,7 +187,7 @@ function budgetRow(name, b) {
     <td>${b.tpm ? b.tpm.toLocaleString() : '<span class="muted">none</span>'}</td></tr>`;
 }
 async function refresh() {
-  if (!getKey()) return;
+  if (!getKey()) { setState("needs-key", "Enter your admin key to load spend, keys and policies."); return; }
   try {
     const [usage, calls, anomalies, circuits, budgets, auditRows, chain] = await Promise.all([
       call("/admin/usage/today"), call("/admin/recent?limit=50"), call("/admin/anomalies"),
@@ -218,11 +245,15 @@ async function refresh() {
         <td>$${c.cost_usd.toFixed(5)}${c.cached ? ` <span class="muted">saved $${c.saved_usd.toFixed(5)}</span>` : ""}</td>
         <td class="err">${esc(c.error || "")}</td>
       </tr>`).join("") || '<tr><td colspan="6" class="muted">no calls yet</td></tr>';
+    setState("loaded");
   } catch (e) {
-    $("teamBody").innerHTML = `<tr><td colspan="2" class="muted">${esc(e.message)}</td></tr>`;
+    const rejected = e.status === 401 || e.status === 403;
+    setState("error", rejected ? `Admin key not accepted (HTTP ${e.status}). Check it and save again.`
+      : `Could not load the dashboard${e.status ? ` (HTTP ${e.status})` : ""}: ${e.message}`, rejected);
   }
 }
 $("adminKey").value = getKey();
+if (!getKey()) $("adminKey").focus();
 refresh();
 setInterval(refresh, 5000);
 </script>
