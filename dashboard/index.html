@@ -4,19 +4,23 @@
 <meta charset="utf-8" />
 <title>Governed AI Gateway — Dashboard</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Cpath d='M9 11h14M9 16h9M9 21h14' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E" />
 <style>
   :root {
     --bg: #120E24; --panel: #1A1532; --fg: #ECE9F7; --muted: #A69FC4;
     --accent: #A78BFA; --danger: #F87171; --ok: #4ADE80; --border: #2C2452; --warn: #FB923C;
+    --on-accent: #120E24;
   }
   :root:not([data-theme="dark"]) {
     --bg: #ffffff; --panel: #f6f8fa; --fg: #1f2328; --muted: #656d76;
     --accent: #6d28d9; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de; --warn: #c2410c;
+    --on-accent: #ffffff;
   }
   @media (prefers-color-scheme: light) {
     :root:not([data-theme="dark"]) {
       --bg: #ffffff; --panel: #f6f8fa; --fg: #1f2328; --muted: #656d76;
       --accent: #6d28d9; --danger: #cf222e; --ok: #1a7f37; --border: #d0d7de; --warn: #c2410c;
+      --on-accent: #ffffff;
     }
   }
   * { box-sizing: border-box; }
@@ -24,7 +28,10 @@
     margin: 0; font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif;
     background: var(--bg); color: var(--fg); padding: 16px;
   }
-  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  header .row { flex: 0 1 auto; min-width: 0; }
+  #adminKey { width: 260px; max-width: 100%; min-width: 0; flex: 1 1 160px; }
   h1 { font-size: 20px; margin: 0; }
   h2 { font-size: 12px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
@@ -32,14 +39,14 @@
   .stat { font-size: 24px; font-weight: 600; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
-  th { color: var(--muted); font-weight: 500; }
+  th { color: var(--muted); font-weight: 500; white-space: nowrap; }
   td.err { color: var(--danger); font-family: ui-monospace, monospace; font-size: 11px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
   input, button {
     font: inherit; border: 1px solid var(--border); background: var(--bg); color: var(--fg);
     padding: 6px 12px; border-radius: 6px;
   }
   button { cursor: pointer; }
-  button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .muted { color: var(--muted); font-size: 12px; }
   .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
@@ -54,9 +61,9 @@
 <header>
   <h1>Governed AI Gateway <small style="font-size:13px;font-weight:400">classic dashboard · <a href="/console/">open the console</a></small></h1>
   <div class="row">
-    <input id="adminKey" type="password" placeholder="admin key" style="width: 260px;" />
+    <input id="adminKey" type="password" placeholder="admin key" />
     <button class="primary" onclick="save()">Save</button>
-    <button onclick="toggleTheme()">theme</button>
+    <button onclick="toggleTheme()">Theme</button>
   </div>
 </header>
 
@@ -70,10 +77,10 @@
 
 <div class="card" style="margin-bottom: 16px;">
   <h2>Spend anomalies (this hour vs. 7-day baseline)</h2>
-  <table>
+  <div class="tablewrap"><table>
     <thead><tr><th>Key</th><th>Team</th><th>This hour</th><th>Baseline / hr</th><th>Multiple</th><th>Status</th></tr></thead>
     <tbody id="anomalyBody"></tbody>
-  </table>
+  </table></div>
   <div class="muted" style="margin-top:8px">Flagged at 3x baseline, paused at 10x (when auto-pause is on). Keys need 24 hours of history before they're judged.</div>
 </div>
 
@@ -96,7 +103,7 @@
 
 <div class="card" style="margin-bottom: 16px;">
   <h2>Spend by team (today)</h2>
-  <table><thead><tr><th>Team</th><th>Spend</th></tr></thead><tbody id="teamBody"></tbody></table>
+  <div class="tablewrap"><table><thead><tr><th>Team</th><th>Spend</th></tr></thead><tbody id="teamBody"></tbody></table></div>
   <div class="row" style="margin-top:10px">
     <button onclick="downloadShowback()">Download showback CSV (month to date)</button>
     <span class="muted">cost, tokens, cost per 1K requests and per 1K tokens by team, key, provider, model</span>
@@ -105,7 +112,7 @@
 
 <div class="card" style="margin-bottom: 16px;">
   <h2>Spend by key (today)</h2>
-  <table><thead><tr><th>Label</th><th>Team</th><th>Spend</th></tr></thead><tbody id="keyBody"></tbody></table>
+  <div class="tablewrap"><table><thead><tr><th>Label</th><th>Team</th><th>Spend</th></tr></thead><tbody id="keyBody"></tbody></table></div>
 </div>
 
 <div class="card" style="margin-bottom: 16px;">
@@ -118,10 +125,10 @@
 </div>
 <div class="card">
   <h2>Recent calls</h2>
-  <table>
+  <div class="tablewrap"><table>
     <thead><tr><th>Time</th><th>Key · Alias</th><th>Provider / Model</th><th>Tokens</th><th>$</th><th>Error</th></tr></thead>
     <tbody id="callsBody"></tbody>
-  </table>
+  </table></div>
 </div>
 
 <script>
