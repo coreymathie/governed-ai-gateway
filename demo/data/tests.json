@@ -76,6 +76,11 @@
    "tests": 4
   },
   {
+   "about": "The console's sample request log: reproducible, priced from tokens, and consistent with the sample company.",
+   "file": "tests/test_sample_requests.py",
+   "tests": 8
+  },
+  {
    "about": "Semantic cache: embedder, guards, partitions, TTL/LRU, calibration (bundled fictional pairs), and the API path.",
    "file": "tests/test_semcache.py",
    "tests": 12
@@ -102,5 +107,5 @@
   "summary": "277 passed, 1 skipped, 2 warnings"
  },
  "measured": "counted from the test sources; CI runs pytest -q on every push",
- "total": 232
+ "total": 240
 }

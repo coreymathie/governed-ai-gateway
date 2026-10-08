@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Governed AI Gateway Console</title>
+<title>Cypress Harbor AI Gateway · Governed AI Gateway</title>
+<script>try { const t = localStorage.getItem("gag.theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch { /* storage blocked */ }</script>
 <meta name="description" content="Governed AI Gateway console: spend, traces, policies, budgets and keys for an OpenAI-compatible LLM gateway. Runs the gateway's real Python modules in your browser against simulated providers, or connects to a running gateway." />
 <meta name="theme-color" content="#0e0a1d" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Cpath d='M9 11h14M9 16h9M9 21h14' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E" />
@@ -37,7 +38,7 @@
   </aside>
   <div class="main">
     <header class="topbar">
-      <span class="title" id="pageTitle">Overview</span>
+      <span class="title" id="pageTitle">Spend</span>
       <details class="workspace" id="workspace">
         <summary aria-label="Workspace: Cypress Harbor Credit Union, a fictional sample company">
           <span class="ws-mark" aria-hidden="true">CH</span><span class="ws-name">Cypress Harbor CU</span><span class="tag sample">Sample</span>
@@ -46,7 +47,7 @@
         <div class="ws-pop" role="note">
           <div class="eyebrow">Workspace</div>
           <h2>Cypress Harbor Credit Union</h2>
-          <p>A <b>fictional</b> credit union used to show the gateway at business scale: seven teams and ten AI applications across four model providers, with monthly budgets per team.</p>
+          <p>A <b>fictional</b> credit union used to show the gateway at business scale: seven teams and eleven AI applications across four model providers, with monthly budgets per team.</p>
           <p class="muted small">Business numbers come from <code>scripts/generate_sample_company.py</code> and are labelled <span class="tag sample">Sample</span>. Measured results are labelled measured; requests sent in this tab are labelled simulated.</p>
         </div>
       </details>
@@ -55,8 +56,15 @@
         <span class="search-text">Search or jump to…</span><kbd><span class="kbd-mod">Ctrl</span> K</kbd>
       </button>
       <span class="spacer"></span>
-      <button class="ghost sm" id="tourBtn" type="button">Guided tour</button>
+      <div class="seg view-switch" role="group" aria-label="View">
+        <button type="button" data-view="business" aria-pressed="true" title="Business view: spend, outcomes and plain-language decisions">Business</button>
+        <button type="button" data-view="technical" aria-pressed="false" title="Technical view: adds keys, aliases, timings, tokens and raw records">Technical</button>
+      </div>
       <span class="mode-badge" id="modeBadge" role="status"><span class="dot"></span><span id="modeText">Starting…</span></span>
+      <button type="button" class="ghost icon" id="themeBtn" aria-pressed="true" aria-label="Switch to light mode" title="Switch to light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+      <button class="ghost sm hide-sm" id="tourBtn" type="button" title="Take the guided tour">Tour</button>
     </header>
     <main class="content" id="view" tabindex="-1">
       <div class="loading" id="bootPanel"><span class="spin" aria-hidden="true"></span><span id="bootText">Starting the console…</span></div>
@@ -66,6 +74,10 @@
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true"></aside>
 <div class="tour" id="tour" aria-live="polite"></div>
+<div class="tour-invite card" id="tourInvite" role="dialog" aria-labelledby="tiTitle" hidden>
+  <p id="tiTitle"><b>New here?</b> A one-minute tour shows where the AI budget goes and how the gateway keeps each request in policy.</p>
+  <div class="row"><button type="button" class="primary sm" id="tourInviteStart">Take the tour</button><button type="button" class="ghost sm" id="tourInviteNo">No thanks</button></div>
+</div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <div class="palette" id="palette" role="dialog" aria-modal="true" aria-label="Search or jump to" hidden>
   <div class="palette-panel">

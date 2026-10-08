@@ -2,9 +2,23 @@
 
 ## [Unreleased]
 
-The console is set in a business. 282 tests and a 131-check browser smoke test across both console modes.
+The console is set in a business and opens on Spend, with a 500-request log beside it. 290 tests and a 157-check browser smoke test across both console modes.
 
-### Console
+### Spend and requests
+- **Spend** (formerly Overview) adds *October so far*: each team's month-to-date spend, the month-end forecast at its current daily rate and its budget, with a note when a team is on track to go over; the latest requests; and activity-feed items linked to the requests they describe.
+- **Requests**: the sample company's request log (`demo/data/sample_requests.json`): search, filters by team, outcome, model and day, paging, CSV export. Each request opens a page with what happened in plain words, cost, response time and gateway overhead, the model that answered and any failed attempt, the team's month-to-date budget, every control it passed, recent requests from the same app, and (technical view) key fingerprint, stage details and the raw record. Requests sent in the tab are under **Requests › This session** (the former Traces screen, same URLs).
+- Spend and Requests render from the committed files before Pyodide has started; screens that need the engine say they are starting, and explain what still works if it can't load.
+
+### Console: views, theme, tour
+- **Business and technical views** (header switch or `?view=technical`): the business view names apps, teams, models and outcomes in plain language; the technical view adds keys, aliases, tokens, stage names and timings, and raw data.
+- **Light and dark themes**, following the system, with a header toggle.
+- The guided tour is offered on the first visit instead of opening by itself; a not-found page for unknown routes.
+
+### Request log data
+- `scripts/sample_requests.py` writes 500 requests from October 1 to 7, sampled in proportion to each team's traffic and each app's hours, with the fields and stages of `router/traces.py`. Costs are tokens times list prices (on-prem at an assumed GPU chargeback). CI checks the file is current; `tests/test_sample_requests.py` checks prices, each team's cost per 1,000 requests against the usage file (within 30%), month-to-date budgets, on-prem routing for regulated apps, the October 6 overload and October 2 refusal, and that no prompt or answer text is stored.
+- The usage file gains compliance's on-prem `bsa-case-notes` app, the October 6 Anthropic overload (incident, fallbacks, activity item), and a regulated-request count consistent with the on-prem apps.
+
+### Console: business impact
 - **Overview › Business impact** for a sample company, Cypress Harbor Credit Union (fictional: seven teams, ten AI applications, four providers, monthly budgets). Over 7, 30 or 90 days: AI spend against team budgets, requests served, cost per 1,000 requests, cache savings, success rate with fallback rescues, spend stopped by an anomaly pause, policy decisions enforced and regulated requests kept on-prem, each against the previous period with trend lines; daily spend by team; budgets by team; spend by model; provider incidents; governance checks; recent activity. The previous Overview is now **Overview › This session**.
 - **Navigation**: screens grouped by job (Monitor, Operate, Govern, Configure) with sub-pages, breadcrumbs in the header, a command palette (Ctrl/Cmd+K or `/`) over screens and actions, `g` + letter shortcuts with a `?` sheet, a workspace label for the sample company, and a collapsible sidebar (`demo/shell.js`, shared in design with the portfolio's other consoles).
 - New chart: stacked daily columns (`stackedDaily` in `demo/ui.js`).

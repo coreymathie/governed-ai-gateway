@@ -16,8 +16,10 @@ The model, in short:
   the working week; the member assistant also runs nights and weekends.
 - Spend per request depends on each team's model mix; the exact-match cache serves repeated
   questions at $0.
-- One provider incident (September 16) is absorbed by fallback; one runaway batch job (September
-  24) is paused by spend-anomaly detection, and the spend it would have caused is estimated.
+- Two provider incidents (September 16, October 6) are absorbed by fallback; one runaway batch job
+  (September 24) is paused by spend-anomaly detection, and the spend it would have caused is estimated.
+- Regulated work (dispute evidence in risk analytics, BSA case notes in compliance) runs only on the
+  on-prem model.
 """
 
 from __future__ import annotations
@@ -55,7 +57,7 @@ TEAMS = [
     ("digital-banking", ["online-banking", "mobile-banking"], 26000, 0.62, 2.40, 2600, 0.17),
     ("risk-analytics", ["fraud-scoring-batch", "dispute-triage"], 14000, 0.9, 6.80, 4200, 0.04),
     ("lending", ["loan-doc-extraction"], 5200, 0.08, 9.50, 2000, 0.06),
-    ("compliance", ["reg-change-digest"], 900, 0.0, 14.0, 700, 0.09),
+    ("compliance", ["reg-change-digest", "bsa-case-notes"], 900, 0.0, 14.0, 700, 0.09),
     ("it-engineering", ["code-assistant"], 4200, 0.05, 4.90, 1000, 0.12),
     ("marketing", ["content-drafts"], 1100, 0.02, 7.20, 500, 0.08),
 ]
@@ -91,9 +93,11 @@ def _day(rng: random.Random, d: date, i: int) -> dict:
         teams["risk-analytics"]["spend_usd"] = round(teams["risk-analytics"]["spend_usd"] + 192.40, 2)
     requests = sum(t["requests"] for t in teams.values())
     incident = d == date(2026, 9, 16)
-    fallbacks = int(requests * (0.031 if incident else rng.uniform(0.002, 0.006)))
+    usual = rng.uniform(0.002, 0.006)
+    # October 6: twelve minutes of Anthropic overload; smart-fast traffic fell back to gpt-4.1-mini.
+    fallbacks = int(requests * (0.031 if incident else usual + 0.0045 if d == date(2026, 10, 6) else usual))
     failed = int(requests * (0.0004 if incident else rng.uniform(0.00002, 0.00008)))
-    regulated = int(teams["risk-analytics"]["requests"] * 0.4 + teams["compliance"]["requests"])
+    regulated = int(teams["risk-analytics"]["requests"] * 0.4 + teams["compliance"]["requests"] * 0.35)
     return {
         "date": d.isoformat(),
         "requests": requests,
@@ -122,6 +126,14 @@ def build() -> dict:
     models = [{"model": m, "spend_30d_usd": round(spend30 * s * rng.uniform(0.95, 1.05), 2)} for m, s in MODELS]
     incidents = [
         {
+            "date": "2026-10-06",
+            "provider": "Anthropic",
+            "duration_minutes": 12,
+            "what": "Overloaded (529) responses on claude-haiku-4-5",
+            "handled": "Each failed attempt fell through to gpt-4.1-mini within the same request; members saw "
+            "about a second of extra latency and no errors.",
+        },
+        {
             "date": "2026-09-16",
             "provider": "OpenAI",
             "duration_minutes": 47,
@@ -138,6 +150,13 @@ def build() -> dict:
         },
     ]
     notable = [
+        {
+            "date": "2026-10-06",
+            "kind": "reliability",
+            "title": "Twelve minutes of Anthropic overload, no member-facing errors",
+            "detail": "claude-haiku-4-5 returned 529s from 2:05 to 2:17 pm; smart-fast requests fell back to "
+            "gpt-4.1-mini within the same call.",
+        },
         {
             "date": "2026-10-02",
             "kind": "policy",

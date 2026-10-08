@@ -49,7 +49,18 @@ TYPES = {
     ".whl": "application/zip",
     ".tar": "application/x-tar",
 }
-SCREENS = ["overview", "overview/session", "playground", "traces", "policies", "budgets", "mcp", "evals", "settings"]
+SCREENS = [
+    "overview",
+    "overview/session",
+    "requests",
+    "playground",
+    "traces",
+    "policies",
+    "budgets",
+    "mcp",
+    "evals",
+    "settings",
+]
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -155,10 +166,10 @@ def layout_checks(check: Checks, b: Browser, base: str, shots: Path | None, pref
         if shots:
             page.screenshot(path=str(shots / f"{prefix}_{s.replace('/', '-')}_mobile.png"), full_page=True)
     page.click("#menuBtn")
-    check(page.is_visible("#nav a[data-nav='traces']"), "390px: the menu button opens the navigation")
+    check(page.is_visible("#nav a[data-nav='requests']"), "390px: the menu button opens the navigation")
     page.click("#nav a[data-nav='overview']")
     page.wait_for_timeout(300)
-    check(not page.is_visible("#nav a[data-nav='traces']"), "390px: choosing a screen closes the menu")
+    check(not page.is_visible("#nav a[data-nav='requests']"), "390px: choosing a screen closes the menu")
     page.set_viewport_size({"width": 1366, "height": 900})
 
 
@@ -177,13 +188,21 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
     try:
         t0 = time.time()
         page.goto(base)
+        page.wait_for_selector(".kpi.sample", timeout=30_000)
+        check(
+            page.evaluate("window.__consoleReady !== true"),
+            "Spend renders from sample data before the engine has started",
+        )
         page.wait_for_function("window.__consoleReady === true", timeout=180_000)
         check(True, f"Pyodide booted and the engine imported in {time.time() - t0:.1f}s")
-        check(page.inner_text("#modeText") == "Demo · runs in your browser", "header badge says demo mode")
+        check(page.inner_text("#modeText") == "Demo workspace", "header badge says demo workspace (business view)")
 
-        # --- guided tour: shown on first visit, dismissal remembered ---
-        page.wait_for_selector("#tour.open .bubble", timeout=10_000)
-        check("step 1 of 5" in page.inner_text("#tour").lower(), "guided tour opens on first visit")
+        # --- guided tour: offered on first visit, five steps, dismissal remembered ---
+        page.wait_for_selector("#tourInvite:not([hidden])", timeout=10_000)
+        check(not page.is_visible("#tour .bubble"), "tour is offered, not forced")
+        page.click("#tourInviteStart")
+        page.wait_for_selector("#tour.open .bubble")
+        check("step 1 of 5" in page.inner_text("#tour").lower(), "tour starts from the invite")
         for _ in range(4):
             page.click("#tourNext")
         check("step 5 of 5" in page.inner_text("#tour").lower(), "tour walks through five steps")
@@ -192,23 +211,98 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         page.reload()
         page.wait_for_function("window.__consoleReady === true", timeout=180_000)
         page.wait_for_timeout(500)
-        check(not page.is_visible("#tour .bubble"), "tour dismissal is remembered")
+        check(
+            not page.is_visible("#tourInvite") and not page.is_visible("#tour .bubble"), "tour dismissal is remembered"
+        )
 
-        # --- overview: business impact for the sample company ---
+        # --- views and theme ---
+        page.click("[data-view='technical']")
+        check(page.evaluate("document.body.classList.contains('tech')"), "technical view switches on")
+        check(page.inner_text("#modeText") == "Demo · runs in your browser", "technical view: badge names the runtime")
+        page.click("[data-view='business']")
+        page.click("#themeBtn")
+        theme = page.evaluate("document.documentElement.dataset.theme")
+        page.click("#themeBtn")
+        check(
+            theme in ("light", "dark") and page.evaluate("document.documentElement.dataset.theme") != theme,
+            "theme toggle switches light and dark",
+        )
+
+        # --- spend: the sample company ---
         goto(page, base, "#/overview")
-        check("fictional" in page.inner_text(".note.sample"), "business: sample company labelled fictional")
-        check(page.locator(".kpi.sample").count() == 8, "business: eight KPI tiles")
-        check(page.locator("#view svg.chart rect").count() >= 150, "business: daily spend chart by team")
-        check(page.locator("table.budgets tbody tr").count() == 7, "business: budgets for seven teams")
-        check("Monitor" in page.inner_text("#pageTitle .crumbs"), "business: breadcrumb in the header")
+        check("fictional" in page.inner_text(".note.sample"), "spend: sample company labelled fictional")
+        check(page.locator(".kpi.sample").count() == 8, "spend: eight KPI tiles")
+        check(page.locator("#view svg.chart rect").count() >= 150, "spend: daily spend chart by team")
+        check(page.locator(".month-card table.budgets tbody tr").count() == 7, "spend: October budgets for seven teams")
+        check("Forecast for October" in page.inner_text(".month-card"), "spend: month-end forecast against budget")
+        check(page.locator(".latest li").count() == 7, "spend: latest requests listed")
+        check("Monitor" in page.inner_text("#pageTitle .crumbs"), "spend: breadcrumb in the header")
         before = page.inner_text(".kpi.sample .v >> nth=0")
         page.click("[data-range='7']")
         page.wait_for_selector("[data-range='7'][aria-pressed='true']")
-        check(page.inner_text(".kpi.sample .v >> nth=0") != before, "business: date range changes the totals")
+        check(page.inner_text(".kpi.sample .v >> nth=0") != before, "spend: date range changes the totals")
         page.click("[data-range='30']")
         page.wait_for_selector("[data-range='30'][aria-pressed='true']")
         if shots:
             page.screenshot(path=str(shots / "business_desktop.png"), full_page=True)
+            page.screenshot(path=str(shots / "console.png"))
+
+        # --- requests: the sample log, filters, detail page ---
+        page.click(".latest li a >> nth=0")
+        page.wait_for_selector(".rq-story")
+        check("What happened" in page.inner_text("#view"), "requests: a latest request opens its detail page")
+        goto(page, base, "#/requests")
+        check(page.locator("#rqBody tr[data-id]").count() == 50, "requests: first 50 of the log listed")
+        check("500 requests" in page.inner_text("#rqSummary"), "requests: 500 sample requests")
+        page.click("#rqMore")
+        check(page.locator("#rqBody tr[data-id]").count() == 100, "requests: show more")
+        page.select_option("#rqOutcome", "refused")
+        check(
+            page.locator("#rqBody tr[data-id]").count() == 1 and "code-assistant" in page.inner_text("#rqBody"),
+            "requests: refused filter finds the contractor denial",
+        )
+        page.click("#rqBody tr[data-id] >> nth=0")
+        page.wait_for_selector(".rq-story")
+        check(
+            "Refused by policy" in page.inner_text("#view") and "premium reasoning" in page.inner_text(".rq-story"),
+            "requests: refusal explained in plain language",
+        )
+        check("$0" in page.inner_text(".rq-kpis"), "requests: refused request cost nothing")
+        page.go_back()
+        page.wait_for_selector("#rqOutcome")
+        page.select_option("#rqOutcome", "fallback")
+        page.select_option("#rqDay", "10/06/2026")
+        n = page.locator("#rqBody tr[data-id]").count()
+        check(n >= 6, f"requests: October 6 fallbacks listed ({n})")
+        page.click("#rqBody tr[data-id] >> nth=0")
+        page.wait_for_selector(".rq-story")
+        check(
+            "529 overloaded" in page.inner_text(".rq-tl") and "Anthropic overload" in page.inner_text("#view"),
+            "requests: fallback attempt and the incident shown",
+        )
+        page.click("[data-view='technical']")
+        check(
+            page.is_visible("text=Fallback chain") and page.is_visible(".rq-tl details"),
+            "requests: technical view shows stage names and details",
+        )
+        page.click("[data-view='business']")
+        page.click("text=Older →")
+        page.wait_for_selector(".rq-story")
+        check("What happened" in page.inner_text("#view"), "requests: older / newer navigation")
+        goto(page, base, "#/requests")
+        page.select_option("#rqOutcome", "")
+        page.select_option("#rqDay", "")
+        page.fill("#rqQ", "bsa-case-notes")
+        page.wait_for_timeout(300)
+        check(0 < page.locator("#rqBody tr[data-id]").count() < 50, "requests: search narrows the log")
+        with page.expect_download() as dl:
+            page.click("#rqCsv")
+        check(dl.value.suggested_filename == "cypress-harbor-requests.csv", "requests: CSV export of the filtered log")
+        page.fill("#rqQ", "")
+        goto(page, base, "#/requests/req_nope")
+        check("no request with that ID" in page.inner_text("#view"), "requests: unknown ID gets a friendly page")
+        goto(page, base, "#/nowhere")
+        check("no page here" in page.inner_text("#view"), "unknown route gets a not-found page")
 
         # --- navigation: palette, shortcuts, collapsible sidebar ---
         page.keyboard.press("Control+k")

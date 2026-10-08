@@ -1,6 +1,7 @@
 // Governed AI Gateway console: screens. Corey Mathie, 2026.
 // Each screen renders into the view with render(view, ctx) and may return a cleanup function.
 import { SAMPLE_PROMPTS, fetchJson, store } from "./adapters.js";
+import { latestRequests, modelName, money as reqMoney, outcome, requestTabs, requestsScreen, stamp } from "./requests.js";
 import {
   $, $$, busy, compactCharts, curves, download, empty, errorState, esc, hbars, hourlyChart, int, loading, measuredTag, ms, pct,
   realTag, scatter, simTag, stackedDaily, stageChips, statusPill, toast, usd,
@@ -38,8 +39,8 @@ const big = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(2)}M` : n >= 1e4 ? `${Math.r
 const shortDate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 function ovTabs(active) {
-  const tabs = [["business", "Business impact", "#/overview"], ["session", "This session", "#/overview/session"]];
-  return `<div class="tabs page-tabs" role="tablist" aria-label="Overview">${tabs.map(([k, label, href]) => `<a role="tab" href="${href}" aria-selected="${k === active}" id="ovtab-${k}">${label}</a>`).join("")}</div>`;
+  const tabs = [["business", "Company spend", "#/overview"], ["session", "This session", "#/overview/session"]];
+  return `<div class="tabs page-tabs" role="tablist" aria-label="Spend">${tabs.map(([k, label, href]) => `<a role="tab" href="${href}" aria-selected="${k === active}" id="ovtab-${k}">${label}</a>`).join("")}</div>`;
 }
 
 function spark(values, color = "var(--accent)") {
@@ -79,7 +80,7 @@ function kpi(label, value, sub, d, sp, cls = "") {
 }
 
 async function renderBusiness(view, app) {
-  view.innerHTML = head("Overview", "What AI costs the business, and what the gateway controls.") + ovTabs("business") + loading("Loading the sample company…");
+  view.innerHTML = head("Spend", "What AI costs the business, and what the gateway controls.") + ovTabs("business") + loading("Loading…");
   if (!app.cache.company) app.cache.company = await fetchJson("./data/sample_company.json");
   const data = app.cache.company, co = data.company;
   const range = app.cache.range || 30;
@@ -91,12 +92,13 @@ async function renderBusiness(view, app) {
   const series = (f) => days.map(f);
   const period = `${shortDate(days[0].date)} – ${shortDate(days[days.length - 1].date)}, 2026`;
   const teamSeries = data.teams.map((x, i) => ({ key: x.team, label: TEAM_LABELS[x.team] || x.team, color: TEAM_COLORS[i % TEAM_COLORS.length] }));
+  const latest = await latestRequests(7);
   view.innerHTML = head(
-    "Overview",
-    `What AI costs <b>${esc(co.name)}</b> and what the gateway controls. ${`<span class="tag sample">sample company</span>`} Fictional data, generated for this demo, so the gateway can be judged at business scale.`,
-    `<div class="seg" role="group" aria-label="Date range">${RANGES.map(([n, label]) => `<button type="button" data-range="${n}" aria-pressed="${n === range}">${label}</button>`).join("")}</div><a class="btn primary" href="#/playground">Send a request</a>`,
+    "Spend",
+    `What AI costs <b>${esc(co.name)}</b>, team by team, and what the gateway controls.`,
+    `<div class="seg" role="group" aria-label="Date range">${RANGES.map(([n, label]) => `<button type="button" data-range="${n}" aria-pressed="${n === range}">${label}</button>`).join("")}</div><a class="btn primary" href="#/requests">View requests</a>`,
   ) + ovTabs("business") + `
-  <div class="note sample" role="note"><b>Sample company data.</b> ${esc(co.name)} is fictional: ${int(co.employees)} employees, ${data.teams.length} teams, ${data.teams.reduce((a, x) => a + x.apps.length, 0)} AI applications, four model providers. These numbers come from <code>${esc(data.generated_by)}</code> (seed ${esc(data.seed)}), not from a real deployment. Measured results are on <a href="#/evals">Evals</a>; requests sent in this tab are on <a href="#/overview/session">This session</a>.</div>
+  ${app.cache.bannerHidden ? "" : `<div class="note sample row spread" role="note" id="sampleNote"><span><b>Sample workspace.</b> ${esc(co.name)} is fictional: ${int(co.employees)} employees, ${data.teams.length} teams, ${data.teams.reduce((a, x) => a + x.apps.length, 0)} AI applications, four model providers. Its numbers are generated<span class="tech-only"> by <code>${esc(data.generated_by)}</code> (seed ${esc(data.seed)})</span>, not measured; results under <a href="#/evals">Evals</a> are measured on the real code.</span><button type="button" class="ghost sm" id="hideNote">Dismiss</button></div>`}
   <p class="small muted period">${esc(period)} · ${range} days${p ? ` · compared with the ${range} days before` : ""}</p>
   <div class="kpis biz">
     ${kpi("AI spend", money(t.spend), `${Math.round((t.spend / budget) * 100)}% of ${money(budget)} in team budgets`, delta(t.spend, p?.spend, { better: "down" }), spark(series((d) => d.spend_usd)))}
@@ -108,12 +110,17 @@ async function renderBusiness(view, app) {
     ${kpi("Policy decisions enforced", int(t.denied), "model, residency and size rules that said no", delta(t.denied, p?.denied, { better: "down" }), spark(series((d) => d.policy_denied), "var(--chart-4)"))}
     ${kpi("Regulated requests kept on-prem", big(t.regulated), "BSA and dispute evidence never left the network", delta(t.regulated, p?.regulated), spark(series((d) => d.regulated_on_prem)))}
   </div>
+  <div class="grid g2" style="margin-bottom:16px">
+    ${monthCard(data)}
+    <section class="card"><div class="card-head"><div><h2>Latest requests</h2><p>October 7, Eastern time. Each one opens with every control it passed.</p></div><a class="small" href="#/requests">All requests →</a></div>
+      <ul class="latest">${latest.map((r) => { const o = outcome(r); return `<li><span class="t">${esc(stamp(r.ts))}</span><span><a href="#/requests/${esc(r.id)}">${esc(r.app)}</a> <span class="muted small">· ${esc(modelName(r.served_by))}</span></span><span class="row"><span class="pill ${o.cls}">${esc(o.label)}</span><span class="small num">${r.saved_usd ? "$0" : reqMoney(r.cost_usd)}</span></span></li>`; }).join("")}</ul></section>
+  </div>
   <section class="card"><div class="card-head"><div><h2>Daily AI spend by team</h2><p>Every request is attributed to a team and an app before it reaches a provider.</p></div><span class="tag sample">sample</span></div>
     ${stackedDaily(days.map((d) => ({ label: shortDate(d.date), short: shortDate(d.date), values: Object.fromEntries(Object.entries(d.teams).map(([k, v]) => [k, v.spend_usd])) })), teamSeries, { compact: compactCharts(), ariaLabel: "Daily AI spend by team", format: (v) => "$" + Math.round(v).toLocaleString("en-US") })}
     <div class="legend">${teamSeries.map((s) => `<span><i style="background:${s.color}"></i>${esc(s.label)}</span>`).join("")}</div>
   </section>
   <div class="grid g2" style="margin-top:16px">
-    <section class="card"><div class="card-head"><div><h2>Budgets by team</h2><p>Spend in the period against each team's budget for the same length of time.</p></div><span class="tag sample">sample</span></div>
+    <section class="card"><div class="card-head"><div><h2>Budgets by team</h2><p>Spend in the ${range} days against each team's budget for the same length of time.</p></div></div>
       ${budgetTable(data.teams, t, range)}</section>
     <div class="stack">
       <section class="card"><div class="card-head"><div><h2>Spend by model</h2><p>Last 30 days. On-prem Llama serves the regulated work at near-zero marginal cost.</p></div><span class="tag sample">sample</span></div>
@@ -132,10 +139,36 @@ async function renderBusiness(view, app) {
         <li><span class="ck" aria-hidden="true">✓</span><div><b>App keys rotated in the last 90 days</b><span class="small muted">Secrets shown once, stored hashed</span></div><span class="cv">${int(data.governance.keys_rotated_90d)}</span></li>
       </ul></section>
     <section class="card"><div class="card-head"><div><h2>Recent activity</h2></div><span class="tag sample">sample</span></div>
-      <ol class="events">${data.notable.map((n) => `<li class="ev-${esc(n.kind)}"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(n.date))} · ${esc({ policy: "Policy", reliability: "Reliability", finops: "FinOps", risk: "Risk" }[n.kind] || n.kind)}</div><h3>${esc(n.title)}</h3><p>${esc(n.detail)}</p></div></li>`).join("")}</ol></section>
+      <ol class="events">${data.notable.map((n) => `<li class="ev-${esc(n.kind)}"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(n.date))} · ${esc({ policy: "Policy", reliability: "Reliability", finops: "FinOps", risk: "Risk" }[n.kind] || n.kind)}</div><h3>${esc(n.title)}</h3><p>${esc(n.detail)}</p>${EVENT_LINKS[n.date] ? `<a class="ev-link" href="${EVENT_LINKS[n.date][0]}">${esc(EVENT_LINKS[n.date][1])} →</a>` : ""}</div></li>`).join("")}</ol></section>
   </div>
   <p class="small faint" style="margin-top:12px">Assumptions: ${esc(data.assumptions.note)}</p>`;
   $$("[data-range]", view).forEach((b) => b.addEventListener("click", () => { app.cache.range = Number(b.dataset.range); renderBusiness(view, app); }));
+  if ($("#hideNote", view)) $("#hideNote", view).onclick = () => { app.cache.bannerHidden = true; $("#sampleNote", view).remove(); };
+}
+
+const EVENT_LINKS = {
+  "2026-10-06": ["#/requests?day=10%2F06%2F2026&outcome=fallback", "Requests rescued by fallback that day"],
+  "2026-10-02": ["#/requests?outcome=refused", "The refused request"],
+};
+
+// October so far: each team's month-to-date spend, the month-end forecast at the current daily rate, and its budget.
+function monthCard(data) {
+  const month = data.days.filter((d) => d.date >= "2026-10-01");
+  const elapsed = month.length, inMonth = 31;
+  const rows = data.teams.map((x) => {
+    const spend = month.reduce((a, d) => a + d.teams[x.team].spend_usd, 0);
+    return { team: x.team, budget: x.monthly_budget_usd, spend, forecast: (spend / elapsed) * inMonth };
+  });
+  const spend = rows.reduce((a, r) => a + r.spend, 0), budget = rows.reduce((a, r) => a + r.budget, 0), forecast = rows.reduce((a, r) => a + r.forecast, 0);
+  const over = rows.filter((r) => r.forecast > r.budget);
+  return `<section class="card month-card"><div class="card-head"><div><h2>October so far</h2><p>${elapsed} of ${inMonth} days. The marker shows where each team lands at its current daily rate.</p></div></div>
+    <div class="month-top"><div><div class="small muted">Spent</div><div class="big">${money(spend)}</div></div><div><div class="small muted">Forecast for October</div><div class="big">${money(forecast)}</div></div><div><div class="small muted">Budget</div><div class="big">${money(budget)}</div></div></div>
+    <p class="small ${over.length ? "warn-text" : "muted"}">${over.length ? `${over.map((r) => esc(TEAM_LABELS[r.team] || r.team)).join(", ")} ${over.length === 1 ? "is" : "are"} on track to go over budget.` : `Every team is on track to finish under budget; the total forecast is ${Math.round((forecast / budget) * 100)}% of budget.`}</p>
+    <div class="table-wrap"><table class="budgets"><thead><tr><th>Team</th><th class="num">So far</th><th>Forecast against budget</th></tr></thead><tbody>${rows.map((r) => {
+      const used = r.spend / r.budget, fc = r.forecast / r.budget;
+      const cls = fc > 1 ? "bad" : fc >= 0.9 ? "warn" : "ok";
+      return `<tr><td>${esc(TEAM_LABELS[r.team] || r.team)}</td><td class="num">${money(r.spend)}</td><td><span class="meter has-fc ${cls}" role="img" aria-label="${Math.round(used * 100)}% used, forecast ${Math.round(fc * 100)}% of budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i><b class="fc" style="left:${Math.min(99, fc * 100).toFixed(1)}%"></b></span> <span class="nw small">${money(r.forecast)} of ${money(r.budget)}</span></td></tr>`;
+    }).join("")}</tbody></table></div></section>`;
 }
 
 function budgetTable(teams, t, range) {
@@ -148,7 +181,7 @@ function budgetTable(teams, t, range) {
 
 const overview = {
   id: "overview",
-  title: "Overview",
+  title: "Spend",
   async render(view, { app, arg }) {
     if (arg !== "session") return renderBusiness(view, app);
     const A = app.adapter;
@@ -468,8 +501,8 @@ const tracesScreen = {
     const A = ctx.app.adapter;
     const teams = await A.teams().catch(() => []);
     view.innerHTML =
-      head("Traces", `Every request with its decision timeline. ${A.mode === "demo" ? "This browser session." : "Kept in memory by this gateway worker (ROUTER_TRACE_BUFFER); metadata only, never prompt text."}`,
-        `<label class="switch small"><input type="checkbox" id="trAuto" ${A.mode === "live" ? "checked" : ""}/> Auto-refresh</label><button id="trRefresh" class="ghost">Refresh</button>`) +
+      head("Requests", `${A.mode === "demo" ? "Requests sent from this browser tab, each with every control it passed." : "Requests this gateway worker handled, each with every control it passed."}<span class="tech-only"> ${A.mode === "demo" ? "Simulated providers, the gateway's real code." : "Kept in memory (ROUTER_TRACE_BUFFER); metadata only, never prompt text."}</span>`,
+        `<label class="switch small"><input type="checkbox" id="trAuto" ${A.mode === "live" ? "checked" : ""}/> Auto-refresh</label><button id="trRefresh" class="ghost">Refresh</button>`) + requestTabs("session") +
       `<div class="card" style="margin-bottom:16px"><div class="form-grid">
         <label class="field wide">Search<input id="trQ" type="search" placeholder="trace id, key, alias, deployment, status…"/></label>
         <label class="field">Team<select id="trTeam"><option value="">All teams</option>${teams.map((t) => opt(t)).join("")}</select></label>
@@ -977,4 +1010,4 @@ const settingsScreen = {
   },
 };
 
-export const SCREENS = [overview, playground, tracesScreen, policies, budgetsScreen, mcpScreen, evalsScreen, settingsScreen];
+export const SCREENS = [overview, requestsScreen, playground, tracesScreen, policies, budgetsScreen, mcpScreen, evalsScreen, settingsScreen];
