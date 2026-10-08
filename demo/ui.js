@@ -196,3 +196,32 @@ export function curves(grid, chosen, { compact = false } = {}) {
   if (chosen != null) svg += `<line x1="${x(chosen)}" x2="${x(chosen)}" y1="${T}" y2="${H - B}" stroke="#fbbf24" stroke-width="1.5"/><text x="${x(chosen) - 4}" y="${T + 10}" text-anchor="end" style="fill:#fbbf24">chosen ${chosen}</text>`;
   return svg + "</svg>";
 }
+
+/** Stacked daily columns: points [{label, values: {key: n}}], series [{key, label, color}]. Each mark has a <title>. */
+export function stackedDaily(points, series, { format = usd, compact = false, ariaLabel = "chart" } = {}) {
+  const W = compact ? 420 : 1000, H = 240, R = 8, T = 12, B = 30;
+  const totals = points.map((p) => series.reduce((s, k) => s + (p.values[k.key] || 0), 0));
+  const max = niceMax(Math.max(...totals, 0.000001) * 1.05);
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * max);
+  const L = Math.max(44, 14 + 7 * format(max).length);
+  const step = (W - L - R) / Math.max(1, points.length);
+  const bw = Math.max(2, Math.min(16, step * 0.72));
+  const y = (v) => T + (H - T - B) * (1 - v / max);
+  let svg = `<svg class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(ariaLabel)}">`;
+  for (const t of ticks) svg += `<line class="grid-line" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${esc(format(t))}</text>`;
+  const every = Math.max(1, Math.ceil(points.length / (compact ? 4 : 8)));
+  points.forEach((p, i) => {
+    const x = L + i * step + (step - bw) / 2;
+    let acc = 0;
+    series.forEach((s, j) => {
+      const v = p.values[s.key] || 0;
+      if (v <= 0) return;
+      const top = y(acc + v), bottom = y(acc) - (j > 0 ? 1.5 : 0);
+      acc += v;
+      svg += `<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0.5, bottom - top).toFixed(1)}" fill="${s.color}"><title>${esc(p.label)} · ${esc(s.label)}: ${esc(format(v))}</title></rect>`;
+    });
+    if (i % every === 0) svg += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 10}" text-anchor="middle">${esc(p.short || p.label)}</text>`;
+  });
+  svg += `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--border-strong)"/>`;
+  return svg + "</svg>";
+}

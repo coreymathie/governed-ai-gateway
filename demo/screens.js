@@ -3,7 +3,7 @@
 import { SAMPLE_PROMPTS, fetchJson, store } from "./adapters.js";
 import {
   $, $$, busy, compactCharts, curves, download, empty, errorState, esc, hbars, hourlyChart, int, loading, measuredTag, ms, pct,
-  realTag, scatter, simTag, stageChips, statusPill, toast, usd,
+  realTag, scatter, simTag, stackedDaily, stageChips, statusPill, toast, usd,
 } from "./ui.js";
 
 const head = (title, sub, actions = "") =>
@@ -18,15 +18,144 @@ const modeNote = (A) =>
 // Overview
 // =============================================================================================
 
+
+// ---------- Overview › Business impact (sample company) ----------
+
+const RANGES = [[7, "7 days"], [30, "30 days"], [90, "90 days"]];
+const TEAM_LABELS = {
+  "member-services": "Member services", "digital-banking": "Digital banking", "risk-analytics": "Risk analytics",
+  lending: "Lending", compliance: "Compliance", "it-engineering": "IT and engineering", marketing: "Marketing",
+};
+const TEAM_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "#22d3ee", "#94a3b8"];
+const money = (n) => {
+  n = Number(n || 0);
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e4) return `$${(n / 1e3).toFixed(1)}K`;
+  return "$" + Math.round(n).toLocaleString("en-US");
+};
+const big = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(2)}M` : n >= 1e4 ? `${Math.round(n / 1e3)}K` : int(n));
+const shortDate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+function ovTabs(active) {
+  const tabs = [["business", "Business impact", "#/overview"], ["session", "This session", "#/overview/session"]];
+  return `<div class="tabs page-tabs" role="tablist" aria-label="Overview">${tabs.map(([k, label, href]) => `<a role="tab" href="${href}" aria-selected="${k === active}" id="ovtab-${k}">${label}</a>`).join("")}</div>`;
+}
+
+function spark(values, color = "var(--accent)") {
+  if (!values.length) return "";
+  const W = 110, H = 26, min = Math.min(...values), span = Math.max(...values) - min || 1;
+  const pts = values.map((v, i) => [(i / Math.max(1, values.length - 1)) * (W - 4) + 2, H - 3 - ((v - min) / span) * (H - 6)]);
+  const [lx, ly] = pts[pts.length - 1];
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><path d="${pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join("")}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.3" fill="${color}"/></svg>`;
+}
+
+function delta(cur, prev, { better = "up", kind = "pct" } = {}) {
+  if (prev == null || !isFinite(prev) || prev === 0) return '<span class="delta flat">no prior period</span>';
+  const change = kind === "pts" ? (cur - prev) * 100 : ((cur - prev) / Math.abs(prev)) * 100;
+  if (Math.abs(change) < 0.05) return '<span class="delta flat">no change</span>';
+  const up = change > 0, good = (better === "up") === up;
+  const label = kind === "pts" ? `${up ? "+" : "−"}${Math.abs(change).toFixed(2)} pts` : `${up ? "+" : "−"}${Math.abs(change).toFixed(1)}%`;
+  return `<span class="delta ${good ? "good" : "bad"}" title="vs the previous period"><span aria-hidden="true">${up ? "▲" : "▼"}</span> ${label}</span>`;
+}
+
+function agg(days) {
+  const t = { requests: 0, spend: 0, saved: 0, fallbacks: 0, failed: 0, denied: 0, pii: 0, regulated: 0, pauses: 0, teams: {} };
+  for (const d of days) {
+    t.requests += d.requests; t.spend += d.spend_usd; t.saved += d.saved_usd; t.fallbacks += d.fallbacks; t.failed += d.failed;
+    t.denied += d.policy_denied; t.pii += d.pii_redacted; t.regulated += d.regulated_on_prem; t.pauses += d.anomaly_pauses;
+    for (const [k, v] of Object.entries(d.teams)) {
+      const x = (t.teams[k] ||= { requests: 0, spend: 0, saved: 0 });
+      x.requests += v.requests; x.spend += v.spend_usd; x.saved += v.saved_usd;
+    }
+  }
+  t.per1k = t.requests ? (t.spend / t.requests) * 1000 : 0;
+  t.availability = t.requests ? 1 - t.failed / t.requests : 1;
+  return t;
+}
+
+function kpi(label, value, sub, d, sp, cls = "") {
+  return `<div class="kpi sample ${cls}"><div class="l">${esc(label)}</div><div class="v">${value}</div><div class="kpi-foot">${d}${sp}</div><div class="s">${sub}</div></div>`;
+}
+
+async function renderBusiness(view, app) {
+  view.innerHTML = head("Overview", "What AI costs the business, and what the gateway controls.") + ovTabs("business") + loading("Loading the sample company…");
+  if (!app.cache.company) app.cache.company = await fetchJson("./data/sample_company.json");
+  const data = app.cache.company, co = data.company;
+  const range = app.cache.range || 30;
+  const days = data.days.slice(-range);
+  const prevDays = data.days.length >= range * 2 ? data.days.slice(-range * 2, -range) : null;
+  const t = agg(days), p = prevDays ? agg(prevDays) : null;
+  const budget = data.teams.reduce((a, x) => a + x.monthly_budget_usd, 0) * (range / 30);
+  const anomalyIn = days.some((d) => d.date === data.anomaly.date);
+  const series = (f) => days.map(f);
+  const period = `${shortDate(days[0].date)} – ${shortDate(days[days.length - 1].date)}, 2026`;
+  const teamSeries = data.teams.map((x, i) => ({ key: x.team, label: TEAM_LABELS[x.team] || x.team, color: TEAM_COLORS[i % TEAM_COLORS.length] }));
+  view.innerHTML = head(
+    "Overview",
+    `What AI costs <b>${esc(co.name)}</b> and what the gateway controls. ${`<span class="tag sample">sample company</span>`} Fictional data, generated for this demo, so the gateway can be judged at business scale.`,
+    `<div class="seg" role="group" aria-label="Date range">${RANGES.map(([n, label]) => `<button type="button" data-range="${n}" aria-pressed="${n === range}">${label}</button>`).join("")}</div><a class="btn primary" href="#/playground">Send a request</a>`,
+  ) + ovTabs("business") + `
+  <div class="note sample" role="note"><b>Sample company data.</b> ${esc(co.name)} is fictional: ${int(co.employees)} employees, ${data.teams.length} teams, ${data.teams.reduce((a, x) => a + x.apps.length, 0)} AI applications, four model providers. These numbers come from <code>${esc(data.generated_by)}</code> (seed ${esc(data.seed)}), not from a real deployment. Measured results are on <a href="#/evals">Evals</a>; requests sent in this tab are on <a href="#/overview/session">This session</a>.</div>
+  <p class="small muted period">${esc(period)} · ${range} days${p ? ` · compared with the ${range} days before` : ""}</p>
+  <div class="kpis biz">
+    ${kpi("AI spend", money(t.spend), `${Math.round((t.spend / budget) * 100)}% of ${money(budget)} in team budgets`, delta(t.spend, p?.spend, { better: "down" }), spark(series((d) => d.spend_usd)))}
+    ${kpi("Requests served", big(t.requests), `${big(Math.round(t.requests / range))} a day across ${data.teams.reduce((a, x) => a + x.apps.length, 0)} apps`, delta(t.requests, p?.requests), spark(series((d) => d.requests)))}
+    ${kpi("Cost per 1,000 requests", `$${t.per1k.toFixed(2)}`, "after caching and cheaper routes", delta(t.per1k, p?.per1k, { better: "down" }), spark(series((d) => (d.spend_usd / d.requests) * 1000)))}
+    ${kpi("Saved by the cache", money(t.saved), "repeated questions answered at $0", delta(t.saved, p?.saved), spark(series((d) => d.saved_usd), "var(--chart-3)"))}
+    ${kpi("Requests that succeeded", pct(t.availability, 3), `${int(t.fallbacks)} rescued by fallback · ${int(t.failed)} failed`, delta(t.availability, p?.availability, { kind: "pts" }), spark(series((d) => 1 - d.failed / d.requests), "var(--chart-3)"))}
+    ${kpi("Spend stopped by anomaly pause", anomalyIn ? money(data.anomaly.prevented_usd) : "$0", anomalyIn ? `runaway ${esc(data.anomaly.key)} paused at ${data.anomaly.baseline_multiple}× baseline` : "no runaway keys in this period", anomalyIn ? '<span class="delta good">caught within the hour</span>' : '<span class="delta flat">none needed</span>', "", anomalyIn ? "warn" : "")}
+    ${kpi("Policy decisions enforced", int(t.denied), "model, residency and size rules that said no", delta(t.denied, p?.denied, { better: "down" }), spark(series((d) => d.policy_denied), "var(--chart-4)"))}
+    ${kpi("Regulated requests kept on-prem", big(t.regulated), "BSA and dispute evidence never left the network", delta(t.regulated, p?.regulated), spark(series((d) => d.regulated_on_prem)))}
+  </div>
+  <section class="card"><div class="card-head"><div><h2>Daily AI spend by team</h2><p>Every request is attributed to a team and an app before it reaches a provider.</p></div><span class="tag sample">sample</span></div>
+    ${stackedDaily(days.map((d) => ({ label: shortDate(d.date), short: shortDate(d.date), values: Object.fromEntries(Object.entries(d.teams).map(([k, v]) => [k, v.spend_usd])) })), teamSeries, { compact: compactCharts(), ariaLabel: "Daily AI spend by team", format: (v) => "$" + Math.round(v).toLocaleString("en-US") })}
+    <div class="legend">${teamSeries.map((s) => `<span><i style="background:${s.color}"></i>${esc(s.label)}</span>`).join("")}</div>
+  </section>
+  <div class="grid g2" style="margin-top:16px">
+    <section class="card"><div class="card-head"><div><h2>Budgets by team</h2><p>Spend in the period against each team's budget for the same length of time.</p></div><span class="tag sample">sample</span></div>
+      ${budgetTable(data.teams, t, range)}</section>
+    <div class="stack">
+      <section class="card"><div class="card-head"><div><h2>Spend by model</h2><p>Last 30 days. On-prem Llama serves the regulated work at near-zero marginal cost.</p></div><span class="tag sample">sample</span></div>
+        ${hbars(data.models.map((m, i) => ({ name: m.model, value: m.spend_30d_usd * (range / 30), color: TEAM_COLORS[(i + 1) % TEAM_COLORS.length] })), { format: money })}</section>
+      <section class="card"><div class="card-head"><div><h2>Provider incidents</h2><p>Outages the fallback chain absorbed.</p></div><span class="tag sample">sample</span></div>
+        <ol class="events">${data.incidents.map((x) => `<li class="ev-reliability"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(x.date))} · ${esc(x.provider)} · ${x.duration_minutes} min</div><h3>${esc(x.what)}</h3><p>${esc(x.handled)}</p></div></li>`).join("")}</ol></section>
+    </div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <section class="card"><div class="card-head"><div><h2>Governance</h2><p>What finance, risk and examiners ask the platform team.</p></div><span class="tag sample">sample</span></div>
+      <ul class="checklist">
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>Requests attributed to a team and app</b><span class="small muted">Chargeback-ready; nothing reaches a provider unattributed</span></div><span class="cv">${pct(data.governance.requests_with_attribution, 0)}</span></li>
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>Audit trail verified intact</b><span class="small muted">Hash-chained admin and policy changes</span></div><span class="cv">${pct(data.governance.audit_chain_verified_rate, 0)}</span></li>
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>Prompts with personal data redacted</b><span class="small muted">Member-services hook replaces emails, phones and card numbers</span></div><span class="cv">${big(t.pii)}</span></li>
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>Prompt and completion logging</b><span class="small muted">Metadata only unless a team opts in</span></div><span class="cv small">${esc(data.governance.content_logging_default)}</span></li>
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>App keys rotated in the last 90 days</b><span class="small muted">Secrets shown once, stored hashed</span></div><span class="cv">${int(data.governance.keys_rotated_90d)}</span></li>
+      </ul></section>
+    <section class="card"><div class="card-head"><div><h2>Recent activity</h2></div><span class="tag sample">sample</span></div>
+      <ol class="events">${data.notable.map((n) => `<li class="ev-${esc(n.kind)}"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(n.date))} · ${esc({ policy: "Policy", reliability: "Reliability", finops: "FinOps", risk: "Risk" }[n.kind] || n.kind)}</div><h3>${esc(n.title)}</h3><p>${esc(n.detail)}</p></div></li>`).join("")}</ol></section>
+  </div>
+  <p class="small faint" style="margin-top:12px">Assumptions: ${esc(data.assumptions.note)}</p>`;
+  $$("[data-range]", view).forEach((b) => b.addEventListener("click", () => { app.cache.range = Number(b.dataset.range); renderBusiness(view, app); }));
+}
+
+function budgetTable(teams, t, range) {
+  return `<div class="table-wrap"><table class="budgets"><thead><tr><th>Team</th><th class="num">Spend</th><th>Of budget</th></tr></thead><tbody>${teams.map((x) => {
+    const spend = t.teams[x.team]?.spend || 0, cap = x.monthly_budget_usd * (range / 30), used = spend / cap;
+    const cls = used >= 0.9 ? "bad" : used >= 0.75 ? "warn" : "ok";
+    return `<tr><td>${esc(TEAM_LABELS[x.team] || x.team)}<span class="sub">${x.apps.map(esc).join(", ")}</span></td><td class="num">${money(spend)}</td><td><span class="meter ${cls}" role="img" aria-label="${Math.round(used * 100)}% of budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i></span> <span class="nw small">${Math.round(used * 100)}% of ${money(cap)}</span></td></tr>`;
+  }).join("")}</tbody></table></div>`;
+}
+
 const overview = {
   id: "overview",
   title: "Overview",
-  async render(view, { app }) {
+  async render(view, { app, arg }) {
+    if (arg !== "session") return renderBusiness(view, app);
     const A = app.adapter;
     view.innerHTML =
-      head("Overview", `Spend, traffic and risk signals for every team and model. ${modeNote(A)}`,
+      head("This session", `Spend, traffic and risk signals for every team and model. ${modeNote(A)}`,
         `<button id="ovTraffic" type="button">Send 20 requests</button><button id="ovRefresh" type="button" class="ghost">Refresh</button>`) +
-      `<div id="ovBody">${loading("Loading overview…")}</div>`;
+      ovTabs("session") + `<div id="ovBody">${loading("Loading overview…")}</div>`;
     const body = $("#ovBody");
     const paint = (ov) => {
       const k = ov.kpis, t = ov.traces;
@@ -135,7 +264,7 @@ async function keyOptions(A, selected) {
 
 function liveKeyForm(teams) {
   return `<div class="note" style="margin-bottom:12px">Live mode sends real requests to this gateway with an <b>app key</b>. Create one per team here: the console keeps the secret in this tab's session storage only.</div>
-    <div class="row"><label class="field" style="min-width:160px">Team<select id="pkTeam">${teams.map((t) => opt(t, t, t === "support")).join("")}</select></label>
+    <div class="row"><label class="field" style="min-width:160px">Team<select id="pkTeam">${teams.map((t) => opt(t, t, t === "member-services")).join("")}</select></label>
     <button id="pkCreate" class="primary" style="align-self:flex-end">Create playground key</button></div>`;
 }
 
@@ -171,7 +300,7 @@ const playground = {
 async function renderChat(box, A, ctx, params) {
   const sample = params && params.get("sample");
   const [routes, teams, keys] = await Promise.all([A.routes(), A.teams(), A.playgroundKeys()]);
-  const defaultKey = A.mode === "demo" ? (sample === "pii" ? "support-bot" : "web-app") : keys[0] && keys[0].label;
+  const defaultKey = A.mode === "demo" ? (sample === "pii" ? "member-assistant" : "online-banking") : keys[0] && keys[0].label;
   const html = keys.map((k) => opt(k.label, `${k.label} (${k.team})`, k.label === defaultKey)).join("");
   box.innerHTML = `<div class="grid g2">
     <section class="card"><div class="card-head"><div><h2>Request</h2><p>OpenAI-compatible: <code>POST /v1/chat/completions</code> with an app key.</p></div></div>
@@ -187,7 +316,7 @@ async function renderChat(box, A, ctx, params) {
         <button class="sm ghost" data-sample="pii">Ticket with PII</button><button class="sm ghost" data-sample="faq">FAQ</button><button class="sm ghost" data-sample="release">Release note</button></div>
       <div class="row" style="margin-top:14px"><button class="primary" id="chSend" ${keys.length ? "" : "disabled"}>Send request</button>
         ${A.mode === "live" && keys.length ? `<span class="small muted">Need another team? <a href="#/budgets">create a key</a>.</span>` : ""}</div>
-      ${A.mode === "demo" ? `<p class="small muted" style="margin-top:12px">Tip: <b>support-bot</b> has redaction on; team <b>regulated</b> (create a key in Budgets & Keys) may only reach the local model.</p>` : ""}
+      ${A.mode === "demo" ? `<p class="small muted" style="margin-top:12px">Tip: <b>member-assistant</b> has redaction on; team <b>regulated</b> (create a key in Budgets & Keys) may only reach the local model.</p>` : ""}
     </section>
     <section class="card" aria-live="polite"><div class="card-head"><h2>Result</h2></div><div id="chOut">${empty("No request yet", "Send one to see who answered, what it cost and every stage it passed.")}</div></section>
   </div>`;
@@ -208,7 +337,7 @@ async function renderChat(box, A, ctx, params) {
 }
 
 async function renderCompare(box, A, ctx) {
-  const [routes, { keys, html }] = await Promise.all([A.routes(), keyOptions(A, "web-app")]);
+  const [routes, { keys, html }] = await Promise.all([A.routes(), keyOptions(A, "online-banking")]);
   const aliases = Object.keys(routes);
   const b0 = aliases.includes("cheap-batch") ? "cheap-batch" : aliases[1] || aliases[0];
   box.innerHTML = `<section class="card"><div class="card-head"><div><h2>Compare two routes</h2><p>The same prompt through two aliases, N times each. Each run is a real gateway request with its own trace.</p></div>${A.simulated ? simTag("simulated providers") : ""}</div>
@@ -305,9 +434,9 @@ async function renderCache(box, A) {
     return;
   }
   const view = await A.semanticView();
-  const teams = (await A.teams()).filter((t) => ["product", "support", "data"].includes(t));
+  const teams = (await A.teams()).filter((t) => ["digital-banking", "member-services", "risk-analytics"].includes(t));
   box.innerHTML = `<div class="grid g2"><section class="card"><div class="card-head"><div><h2>Ask through the semantic cache</h2><p><code>router/semcache.py</code>: hashing embedder, number and negation guards, partitions per team and policy.</p></div>${realTag()}</div>
-    <div class="form-grid"><label class="field wide">Team<select id="smTeam">${teams.map((t) => opt(t, t, t === "product")).join("")}</select></label>
+    <div class="form-grid"><label class="field wide">Team<select id="smTeam">${teams.map((t) => opt(t, t, t === "digital-banking")).join("")}</select></label>
     <label class="field wide">Threshold <output id="smThrOut">${view.threshold}</output><input id="smThr" type="range" min="0.7" max="0.99" step="0.01" value="${view.threshold}"/></label>
     <label class="field full">Question<input id="smText" type="text" value="${esc(view.examples[0])}"/></label></div>
     <div class="chips" style="margin-top:10px">${view.examples.map((t, i) => `<button class="sm ghost" data-ex="${i}">${esc(t)}</button>`).join("")}</div>
@@ -655,7 +784,7 @@ const mcpScreen = {
       const servers = Object.fromEntries(Object.entries(v.servers).map(([s, tools]) => [s, tools.length ? tools : LIVE_MCP_TOOLS[s] || []]));
       const allTools = Object.entries(servers).flatMap(([s, ts]) => ts.map((t) => [s, t]));
       const allowedFor = (team, s, t) => (v.allowed[team] && v.allowed[team][s] || []).some((p) => p === t || (p.endsWith("*") && t.startsWith(p.slice(0, -1))));
-      const teams = v.teams.length ? v.teams : ["support", "data"];
+      const teams = v.teams.length ? v.teams : ["member-services", "risk-analytics"];
       body.innerHTML = `<div class="grid g-main">
         <section class="card"><div class="card-head"><div><h2>Allow-list</h2><p>What each team can see in <code>tools/list</code> and call. Anything not listed is denied and never reaches the server.</p></div></div>
           ${allTools.length ? `<div class="table-wrap"><table class="matrix"><thead><tr><th>Tool</th>${teams.map((t) => `<th>${esc(t)}</th>`).join("")}</tr></thead><tbody>
@@ -663,7 +792,7 @@ const mcpScreen = {
           </tbody></table></div>` : empty("No MCP servers configured", "Copy config/mcp.example.yaml to config/mcp.yaml (or set ROUTER_MCP_FILE) and edit it on the Policies screen.")}
         </section>
         <section class="card"><div class="card-head"><div><h2>Try a tool call</h2><p>${A.caps.mcpCalls ? "Goes through the same policy check, limiter and audit as an agent's call." : "Calls need MCP servers: run the gateway with ROUTER_MOCK_PROVIDERS=true and ROUTER_MCP_FILE=config/mcp.mock.yaml."}</p></div></div>
-          <div class="form-grid"><label class="field wide">Team<select id="mcTeam">${[...new Set([...teams, "product"])].map((t) => opt(t, t, t === "support")).join("")}</select></label>
+          <div class="form-grid"><label class="field wide">Team<select id="mcTeam">${[...new Set([...teams, "digital-banking"])].map((t) => opt(t, t, t === "member-services")).join("")}</select></label>
           <label class="field wide">Tool<select id="mcTool">${allTools.map(([s, t]) => opt(`${s}/${t}`, `${s}/${t}`, t === "search_tickets")).join("")}</select></label>
           <label class="field full">Arguments (JSON)<textarea id="mcArgs" rows="3" class="mono"></textarea></label></div>
           <div class="row" style="margin-top:10px"><button class="primary" id="mcCall" ${A.caps.mcpCalls ? "" : "disabled"}>Call</button><button id="mcBurst" ${A.caps.mcpCalls ? "" : "disabled"}>Call 6× (velocity)</button></div>

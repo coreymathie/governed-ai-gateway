@@ -71,6 +71,11 @@
    "tests": 16
   },
   {
+   "about": "The console's sample-company data: reproducible, internally consistent, and labelled fictional.",
+   "file": "tests/test_sample_company.py",
+   "tests": 4
+  },
+  {
    "about": "Semantic cache: embedder, guards, partitions, TTL/LRU, calibration (bundled fictional pairs), and the API path.",
    "file": "tests/test_semcache.py",
    "tests": 12
@@ -97,5 +102,5 @@
   "summary": "277 passed, 1 skipped, 2 warnings"
  },
  "measured": "counted from the test sources; CI runs pytest -q on every push",
- "total": 228
+ "total": 232
 }

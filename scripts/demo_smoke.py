@@ -49,7 +49,7 @@ TYPES = {
     ".whl": "application/zip",
     ".tar": "application/x-tar",
 }
-SCREENS = ["overview", "playground", "traces", "policies", "budgets", "mcp", "evals", "settings"]
+SCREENS = ["overview", "overview/session", "playground", "traces", "policies", "budgets", "mcp", "evals", "settings"]
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -145,7 +145,7 @@ def layout_checks(check: Checks, b: Browser, base: str, shots: Path | None, pref
         width = no_hscroll(page)
         check(width <= 1366, f"{s}: no horizontal scroll at 1366px (scrollWidth={width})")
         if shots:
-            page.screenshot(path=str(shots / f"{prefix}_{s}_desktop.png"), full_page=True)
+            page.screenshot(path=str(shots / f"{prefix}_{s.replace('/', '-')}_desktop.png"), full_page=True)
     page.set_viewport_size({"width": 390, "height": 844})
     page.wait_for_timeout(300)
     for s in SCREENS:
@@ -153,7 +153,7 @@ def layout_checks(check: Checks, b: Browser, base: str, shots: Path | None, pref
         width = no_hscroll(page)
         check(width <= 390, f"{s}: no horizontal scroll at 390px (scrollWidth={width})")
         if shots:
-            page.screenshot(path=str(shots / f"{prefix}_{s}_mobile.png"), full_page=True)
+            page.screenshot(path=str(shots / f"{prefix}_{s.replace('/', '-')}_mobile.png"), full_page=True)
     page.click("#menuBtn")
     check(page.is_visible("#nav a[data-nav='traces']"), "390px: the menu button opens the navigation")
     page.click("#nav a[data-nav='overview']")
@@ -194,8 +194,44 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         page.wait_for_timeout(500)
         check(not page.is_visible("#tour .bubble"), "tour dismissal is remembered")
 
-        # --- overview ---
+        # --- overview: business impact for the sample company ---
         goto(page, base, "#/overview")
+        check("fictional" in page.inner_text(".note.sample"), "business: sample company labelled fictional")
+        check(page.locator(".kpi.sample").count() == 8, "business: eight KPI tiles")
+        check(page.locator("#view svg.chart rect").count() >= 150, "business: daily spend chart by team")
+        check(page.locator("table.budgets tbody tr").count() == 7, "business: budgets for seven teams")
+        check("Monitor" in page.inner_text("#pageTitle .crumbs"), "business: breadcrumb in the header")
+        before = page.inner_text(".kpi.sample .v >> nth=0")
+        page.click("[data-range='7']")
+        page.wait_for_selector("[data-range='7'][aria-pressed='true']")
+        check(page.inner_text(".kpi.sample .v >> nth=0") != before, "business: date range changes the totals")
+        page.click("[data-range='30']")
+        page.wait_for_selector("[data-range='30'][aria-pressed='true']")
+        if shots:
+            page.screenshot(path=str(shots / "business_desktop.png"), full_page=True)
+
+        # --- navigation: palette, shortcuts, collapsible sidebar ---
+        page.keyboard.press("Control+k")
+        page.wait_for_selector("#palette:not([hidden])")
+        page.fill("#palette-input", "traces")
+        page.keyboard.press("Enter")
+        page.wait_for_function("location.hash === '#/traces'")
+        check(page.is_hidden("#palette"), "palette: jumps to a screen and closes")
+        page.keyboard.press("g")
+        page.keyboard.press("e")
+        page.wait_for_function("location.hash === '#/evals'")
+        check(True, "shortcut: g e opens Evals")
+        page.keyboard.press("?")
+        check(page.is_visible("#keys"), "shortcut: ? shows the shortcuts sheet")
+        page.keyboard.press("Escape")
+        check(page.is_hidden("#keys"), "shortcuts sheet closes with Esc")
+        page.click("#nav-collapse")
+        check(page.evaluate("document.body.classList.contains('nav-collapsed')"), "sidebar collapses")
+        page.click("#nav-collapse")
+
+        # --- overview: this session ---
+        goto(page, base, "#/overview/session")
+        check(page.locator("#nav a[data-sub='session'][aria-current='page']").count() == 1, "session: sub-page in nav")
         check(page.locator(".kpi").count() == 6, "overview: six KPI tiles")
         bars = page.locator("#ovBody svg.chart rect").count()
         check(bars >= 14, f"overview: hourly chart drawn with simulated history ({bars} bars)")
@@ -209,7 +245,7 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
 
         # --- playground: chat with PII redaction and the trace drawer ---
         goto(page, base, "#/playground?tab=chat&sample=pii")
-        page.select_option("#chKey", "support-bot")
+        page.select_option("#chKey", "member-assistant")
         page.click("#chSend")
         wait_idle(page)
         out = page.inner_text("#chOut")
@@ -299,7 +335,7 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         wait_idle(page)
         err = page.inner_text("#cfErrors")
         check("Line 21" in err and "mars" in err, f"policies: schema error shown inline with its line ({err[:60]}…)")
-        tighter = text.replace("teams:\n", "teams:\n  product:\n    deny_aliases: [local-first]\n", 1)
+        tighter = text.replace("teams:\n", "teams:\n  digital-banking:\n    deny_aliases: [local-first]\n", 1)
         page.fill("#cfText", tighter)
         page.click("#cfPreview")
         wait_idle(page)
@@ -308,7 +344,7 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         page.click("#cfApply")
         wait_idle(page)
         check("Applied" in page.inner_text("#cfResult"), "policies: apply")
-        page.select_option("#cfKey", "web-app")
+        page.select_option("#cfKey", "online-banking")
         page.select_option("#cfAlias", "local-first")
         page.click("#cfRun")
         wait_idle(page)
@@ -325,48 +361,51 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         page.click("#nkCreate")
         wait_idle(page)
         check("reg-app" in page.inner_text("#bkKeys") and "simulated" in page.inner_text("#nkShown"), "keys: create")
-        page.locator('#bkKeys tr:has-text("mobile-app") [data-act="pause"]').click()
+        page.locator('#bkKeys tr:has-text("mobile-banking") [data-act="pause"]').click()
         wait_idle(page)
-        check("paused" in page.inner_text('#bkKeys tr:has-text("mobile-app")'), "keys: pause")
-        page.locator('#bkKeys tr:has-text("mobile-app") [data-act="unpause"]').click()
+        check("paused" in page.inner_text('#bkKeys tr:has-text("mobile-banking")'), "keys: pause")
+        page.locator('#bkKeys tr:has-text("mobile-banking") [data-act="unpause"]').click()
         wait_idle(page)
-        check("active" in page.inner_text('#bkKeys tr:has-text("mobile-app")'), "keys: unpause")
+        check("active" in page.inner_text('#bkKeys tr:has-text("mobile-banking")'), "keys: unpause")
         page.click("#bkSpike")
         wait_idle(page)
         page.wait_for_timeout(300)
         check("pause" in page.inner_text("#bkAnom"), "anomaly: runaway batch job reaches pause level")
-        page.locator('#bkKeys tr:has-text("nightly-batch") [data-act="unpause"]').click()
+        page.locator('#bkKeys tr:has-text("fraud-scoring-batch") [data-act="unpause"]').click()
         wait_idle(page)
-        check("override" in page.inner_text('#bkKeys tr:has-text("nightly-batch")'), "anomaly: unpause is an override")
+        check(
+            "override" in page.inner_text('#bkKeys tr:has-text("fraud-scoring-batch")'),
+            "anomaly: unpause is an override",
+        )
         check(page.locator("#bkShow tbody tr").count() >= 3, "showback: rows")
         with page.expect_download() as dl:
             page.click("#sbCsv")
         head = Path(dl.value.path()).read_text().splitlines()[0]
         check(head.startswith("team,model,requests"), f"showback CSV header: {head[:40]}…")
-        budget_row = page.locator('[data-team="product"]')
+        budget_row = page.locator('[data-team="digital-banking"]')
         budget_row.locator("[data-cap]").fill("0.0001")
         budget_row.locator("[data-save]").click()
         wait_idle(page)
-        check("of $0.00010" in page.inner_text('[data-team="product"]'), "budgets: team cap saved")
+        check("of $0.00010" in page.inner_text('[data-team="digital-banking"]'), "budgets: team cap saved")
         goto(page, base, "#/playground?tab=chat")
-        page.select_option("#chKey", "web-app")
+        page.select_option("#chKey", "online-banking")
         page.click("#chSend")
         wait_idle(page)
         check("402" in page.inner_text("#chOut"), "budgets: a request over the new team cap gets 402")
 
         # --- MCP ---
         goto(page, base, "#/mcp")
-        page.select_option("#mcTeam", "support")
+        page.select_option("#mcTeam", "member-services")
         page.select_option("#mcTool", "tickets/search_tickets")
         page.click("#mcCall")
         wait_idle(page)
         check(page.inner_text("#mcOut").startswith("allow"), "mcp: allowed call")
         check("[REDACTED:EMAIL]" in page.inner_text("#mcLog"), "mcp: arguments audited redacted")
-        page.select_option("#mcTeam", "product")
+        page.select_option("#mcTeam", "digital-banking")
         page.click("#mcCall")
         wait_idle(page)
         check("not allowed" in page.inner_text("#mcOut"), "mcp: tool outside the allow-list denied")
-        page.select_option("#mcTeam", "support")
+        page.select_option("#mcTeam", "member-services")
         page.select_option("#mcTool", "tickets/close_ticket")
         page.click("#mcBurst")
         wait_idle(page)
@@ -386,7 +425,7 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         files = page.locator("#stFiles li").count()
         expected = page.evaluate("import('./adapters.js').then(m => m.ROUTER_MODULES.length)") + 2  # engine + models
         check(files == expected, f"settings: {files} files listed with hashes")
-        page.locator('tr[data-team="product"] [data-mode]').select_option("redact")
+        page.locator('tr[data-team="digital-banking"] [data-mode]').select_option("redact")
         page.wait_for_timeout(300)
         goto(page, base, "#/playground?tab=chat&sample=pii")
         page.select_option("#chKey", "reg-app")
@@ -454,6 +493,9 @@ def run_live(p, shots: Path | None, headed: bool) -> Checks:
         page.goto(base + "?mode=live&notour")
         page.wait_for_function("window.__consoleReady === true", timeout=30_000)
         check(page.inner_text("#modeText") == f"Live · connected to 127.0.0.1:{port}", "header badge says live mode")
+        page.wait_for_selector(".kpi.sample")
+        check(page.locator(".kpi.sample").count() == 8, "business impact loads without a key (static sample data)")
+        goto(page, base, "#/overview/session")
         page.wait_for_selector(".error-state")
         check("Admin key needed" in page.inner_text("#view"), "overview asks for the admin key first")
 
@@ -463,7 +505,7 @@ def run_live(p, shots: Path | None, headed: bool) -> Checks:
         wait_idle(page)
         check(page.inner_text("#stMsg") == "Connected.", "settings: admin key accepted")
 
-        goto(page, base, "#/overview")
+        goto(page, base, "#/overview/session")
         page.click("#ovTraffic")
         wait_idle(page, 120_000)
         page.wait_for_timeout(300)
@@ -472,7 +514,7 @@ def run_live(p, shots: Path | None, headed: bool) -> Checks:
         check(page.locator("#ovBody .hbar").count() >= 3, "overview: spend by team and model from showback")
 
         goto(page, base, "#/playground?tab=chat&sample=pii")
-        page.select_option("#chKey", "console-data")
+        page.select_option("#chKey", "console-risk-analytics")
         page.click("#chSend")
         wait_idle(page)
         check("[simulated" in page.inner_text("#chOut"), "playground: answered by the simulated provider")
@@ -525,7 +567,7 @@ def run_live(p, shots: Path | None, headed: bool) -> Checks:
         check("paused" in page.inner_text('#bkKeys tr:has-text("reg-live")'), "keys: pause through the API")
 
         goto(page, base, "#/mcp")
-        page.select_option("#mcTeam", "support")
+        page.select_option("#mcTeam", "member-services")
         page.select_option("#mcTool", "tickets/search_tickets")
         page.click("#mcCall")
         wait_idle(page)

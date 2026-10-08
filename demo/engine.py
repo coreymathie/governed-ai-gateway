@@ -139,45 +139,45 @@ PROVIDER_LABELS = {"anthropic": "Anthropic", "openai": "OpenAI", "gemini": "Gemi
 NOW_HOUR = 14  # the simulated time of day the overview chart is drawn at
 # Which hours of the day each demo key is active (simulated history for the overview chart).
 ACTIVE_HOURS = {
-    "web-app": range(8, 22),
-    "mobile-app": range(7, 23),
-    "support-bot": range(0, 24),
-    "nightly-batch": range(0, 6),
+    "online-banking": range(8, 22),
+    "mobile-banking": range(7, 23),
+    "member-assistant": range(0, 24),
+    "fraud-scoring-batch": range(0, 6),
 }
 KEY_ALIAS = {
-    "web-app": "smart-fast",
-    "mobile-app": "fast-chat",
-    "support-bot": "smart-fast",
-    "nightly-batch": "cheap-batch",
+    "online-banking": "smart-fast",
+    "mobile-banking": "fast-chat",
+    "member-assistant": "smart-fast",
+    "fraud-scoring-batch": "cheap-batch",
 }
 SAMPLE_PROMPTS = {
-    "product": [
-        "Draft a two-sentence release note for the new CSV export.",
-        "Rewrite this error so a customer understands it: 'E_TIMEOUT 504 upstream'.",
-        "Suggest three names for a saved-search feature, one line each.",
-        "Turn these bullet points into a short changelog entry: faster search, dark mode, bug fixes.",
+    "digital-banking": [
+        "Draft a two-sentence in-app message announcing instant card lock in mobile banking.",
+        "Rewrite this error so a member understands it: 'E_TIMEOUT 504 core banking'.",
+        "Suggest three names for a round-up savings feature, one line each.",
+        "Turn these bullet points into short release notes: faster login, Zelle limits shown, bug fixes.",
     ],
-    "support": [
-        "How do I export my invoices as CSV?",
-        "A customer says they were charged twice this month. What should I check first?",
-        "Summarize ticket T-1042 for the on-call engineer in three bullets.",
-        "How do I rotate an API key in the dashboard?",
+    "member-services": [
+        "How does a member download statements as PDF?",
+        "A member says their debit card was charged twice this month. What should I check first?",
+        "Summarize case C-1042 for the card-services team in three bullets.",
+        "How do I reset a member's online banking password?",
     ],
-    "data": [
-        "Summarize each of these 40 support tickets in one line and tag it billing, bug, how-to or feature "
-        "request. "
+    "risk-analytics": [
+        "Summarize each of these 40 card-dispute cases in one line and tag it fraud, merchant error, "
+        "duplicate or member error. "
         + " ".join(
-            f"Ticket T-{1000 + i}: {s}. The customer wrote in twice and attached screenshots from the web app."
+            f"Case C-{1000 + i}: {s}. The member called twice and uploaded the statement from online banking."
             for i, s in enumerate(
                 [
-                    "invoice export to CSV fails with a timeout",
-                    "asks for a dark mode in the reporting pages",
-                    "password reset email arrives after the link expired",
-                    "card was charged twice for the same monthly plan",
-                    "search takes over ten seconds on large workspaces",
-                    "wants single sign-on for the whole company",
-                    "CSV export shows dates in the wrong time zone",
-                    "cannot invite a teammate from the settings page",
+                    "card charged at a gas station the member never visited",
+                    "subscription renewed after the member cancelled it",
+                    "same restaurant charge posted twice on the statement",
+                    "online purchase never arrived and the merchant stopped replying",
+                    "foreign transaction while the card was in the member's wallet",
+                    "hotel kept the deposit after checkout",
+                    "ATM withdrawal posted but the cash was not dispensed",
+                    "member forgot a family member used the card",
                 ]
                 * 5
             )
@@ -199,12 +199,14 @@ DEMO_MCP = {
         "daily_usd": 0.0, "redact_args": True, "forward_redacted": False,
     },
     "teams": {
-        "support": [
+        "member-services": [
             {"server": "tickets", "tool": "search_*"},
             {"server": "tickets", "tool": "get_ticket"},
             {"server": "tickets", "tool": "close_ticket", "per_minute": 5, "per_day": 200},
         ],
-        "data": [{"server": "files", "tool": "read_file", "per_minute": 30, "cost_usd": 0.001, "daily_usd": 2.0}],
+        "risk-analytics": [
+            {"server": "files", "tool": "read_file", "per_minute": 30, "cost_usd": 0.001, "daily_usd": 2.0},
+        ],
     },
 }  # fmt: skip
 # What the simulated MCP servers expose (tools/list before the gateway filters it).
@@ -319,10 +321,10 @@ def default_deployments() -> list[Deployment]:
 
 def default_keys() -> list[DemoKey]:
     return [
-        DemoKey("web-app", "product", 0.40, 0.030, 14, 700, 400),
-        DemoKey("mobile-app", "product", 0.25, 0.020, 16, 500, 300),
-        DemoKey("support-bot", "support", 0.30, 0.025, 24, 900, 350),
-        DemoKey("nightly-batch", "data", 0.05, 0.004, 6, 1200, 500),
+        DemoKey("online-banking", "digital-banking", 0.40, 0.030, 14, 700, 400),
+        DemoKey("mobile-banking", "digital-banking", 0.25, 0.020, 16, 500, 300),
+        DemoKey("member-assistant", "member-services", 0.30, 0.025, 24, 900, 350),
+        DemoKey("fraud-scoring-batch", "risk-analytics", 0.05, 0.004, 6, 1200, 500),
     ]
 
 
@@ -348,20 +350,20 @@ class Engine:
         self.tpm = TokenRateLimiter(clock=self.clock)
         self.org = Limits(daily_usd=0.40)
         self.team_limits = {
-            "product": Limits(daily_usd=0.15, tpm=40_000),
-            "support": Limits(daily_usd=0.12, tpm=25_000),
-            "data": Limits(daily_usd=0.15, tpm=30_000),
+            "digital-banking": Limits(daily_usd=0.15, tpm=40_000),
+            "member-services": Limits(daily_usd=0.12, tpm=25_000),
+            "risk-analytics": Limits(daily_usd=0.15, tpm=30_000),
         }
-        self.key_limits = {"nightly-batch": Limits(daily_usd=0.10)}
+        self.key_limits = {"fraud-scoring-batch": Limits(daily_usd=0.10)}
         self.key_default = Limits(daily_usd=0.08)
         self.ledger: list[dict] = []
         self.events: list[dict] = []
         self.counter = 0
         # Governance panel state (router/privacy.py config, simplified to one setting per team).
         self.content = {
-            "product": {"mode": "off", "log_content": False},
-            "support": {"mode": "redact", "log_content": True},
-            "data": {"mode": "block", "log_content": False},
+            "digital-banking": {"mode": "off", "log_content": False},
+            "member-services": {"mode": "redact", "log_content": True},
+            "risk-analytics": {"mode": "block", "log_content": False},
             "regulated": {"mode": "off", "log_content": False},
             "contractors": {"mode": "off", "log_content": False},
         }
@@ -828,7 +830,7 @@ class Engine:
         return out
 
     def mcp_view(self) -> dict:
-        teams = sorted({*self.mcp.teams, "product"})
+        teams = sorted({*self.mcp.teams, "digital-banking"})
         return {
             "servers": {s: DEMO_MCP_TOOLS[s] for s in self.mcp.servers},
             "teams": teams,
@@ -1251,12 +1253,12 @@ class Engine:
         out = []
         for i in range(max(1, min(int(n), 200))):
             if scenario == "spike":  # a batch job stuck in a retry loop on the premium route
-                k, gap = self.key("nightly-batch"), 4.0
+                k, gap = self.key("fraud-scoring-batch"), 4.0
             else:
                 k, gap = self.pick_key(), 0.25
-            prompts = SAMPLE_PROMPTS.get(k.team, SAMPLE_PROMPTS["product"])
+            prompts = SAMPLE_PROMPTS.get(k.team, SAMPLE_PROMPTS["digital-banking"])
             text = prompts[(self.counter + i) % len(prompts)]
-            temp = 0.0 if k.team == "support" else 0.7
+            temp = 0.0 if k.team == "member-services" else 0.7
             alias = "smart-fast" if scenario == "spike" else KEY_ALIAS.get(k.label, "smart-fast")
             out.append(await self.request(k.label, alias, text, k.max_tokens, temp, gap, source=scenario))
         self.counter += len(out)

@@ -1,0 +1,5311 @@
+{
+ "generated_by": "scripts/generate_sample_company.py",
+ "seed": 20261009,
+ "disclaimer": "Fictional sample company. Generated data for demonstration, not measurements.",
+ "period": {
+  "start": "2026-07-10",
+  "end": "2026-10-07",
+  "days": 90
+ },
+ "company": {
+  "name": "Cypress Harbor Credit Union",
+  "short": "Cypress Harbor CU",
+  "fictional": true,
+  "industry": "Credit union (financial services)",
+  "headquarters": "Fort Lauderdale, Florida",
+  "members": 92400,
+  "assets_usd": 1400000000,
+  "employees": 340,
+  "branches": 11,
+  "providers": [
+   "Anthropic",
+   "OpenAI",
+   "Google Gemini",
+   "On-prem Llama (Ollama)"
+  ],
+  "regulators": [
+   "NCUA",
+   "CFPB",
+   "Florida OFR"
+  ]
+ },
+ "assumptions": {
+  "note": "Request volumes, per-request prices by team and budgets are illustrative assumptions for the sample company. Spend prevented by the anomaly pause is the paused job's hourly rate times the hours it would have run until someone read the invoice (estimated, not measured)."
+ },
+ "teams": [
+  {
+   "team": "member-services",
+   "apps": [
+    "member-assistant",
+    "agent-assist"
+   ],
+   "monthly_budget_usd": 3600,
+   "cache_hit_rate": 0.21
+  },
+  {
+   "team": "digital-banking",
+   "apps": [
+    "online-banking",
+    "mobile-banking"
+   ],
+   "monthly_budget_usd": 2600,
+   "cache_hit_rate": 0.17
+  },
+  {
+   "team": "risk-analytics",
+   "apps": [
+    "fraud-scoring-batch",
+    "dispute-triage"
+   ],
+   "monthly_budget_usd": 4200,
+   "cache_hit_rate": 0.04
+  },
+  {
+   "team": "lending",
+   "apps": [
+    "loan-doc-extraction"
+   ],
+   "monthly_budget_usd": 2000,
+   "cache_hit_rate": 0.06
+  },
+  {
+   "team": "compliance",
+   "apps": [
+    "reg-change-digest"
+   ],
+   "monthly_budget_usd": 700,
+   "cache_hit_rate": 0.09
+  },
+  {
+   "team": "it-engineering",
+   "apps": [
+    "code-assistant"
+   ],
+   "monthly_budget_usd": 1000,
+   "cache_hit_rate": 0.12
+  },
+  {
+   "team": "marketing",
+   "apps": [
+    "content-drafts"
+   ],
+   "monthly_budget_usd": 500,
+   "cache_hit_rate": 0.08
+  }
+ ],
+ "days": [
+  {
+   "date": "2026-07-10",
+   "requests": 81966,
+   "spend_usd": 307.65,
+   "saved_usd": 42.42,
+   "fallbacks": 337,
+   "failed": 3,
+   "policy_denied": 18,
+   "pii_redacted": 682,
+   "regulated_on_prem": 6573,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.6,
+   "teams": {
+    "member-services": {
+     "requests": 31828,
+     "cached": 7060,
+     "spend_usd": 79.37,
+     "saved_usd": 21.89
+    },
+    "digital-banking": {
+     "requests": 24498,
+     "cached": 3818,
+     "spend_usd": 50.45,
+     "saved_usd": 9.16
+    },
+    "risk-analytics": {
+     "requests": 14080,
+     "cached": 599,
+     "spend_usd": 94.34,
+     "saved_usd": 4.07
+    },
+    "lending": {
+     "requests": 4976,
+     "cached": 296,
+     "spend_usd": 45.25,
+     "saved_usd": 2.81
+    },
+    "compliance": {
+     "requests": 941,
+     "cached": 80,
+     "spend_usd": 11.86,
+     "saved_usd": 1.12
+    },
+    "it-engineering": {
+     "requests": 4484,
+     "cached": 542,
+     "spend_usd": 19.1,
+     "saved_usd": 2.66
+    },
+    "marketing": {
+     "requests": 1159,
+     "cached": 99,
+     "spend_usd": 7.28,
+     "saved_usd": 0.71
+    }
+   }
+  },
+  {
+   "date": "2026-07-11",
+   "requests": 48397,
+   "spend_usd": 167.18,
+   "saved_usd": 23.42,
+   "fallbacks": 193,
+   "failed": 3,
+   "policy_denied": 1,
+   "pii_redacted": 328,
+   "regulated_on_prem": 5040,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 18035,
+     "cached": 4029,
+     "spend_usd": 44.5,
+     "saved_usd": 12.49
+    },
+    "digital-banking": {
+     "requests": 17076,
+     "cached": 2881,
+     "spend_usd": 33.53,
+     "saved_usd": 6.91
+    },
+    "risk-analytics": {
+     "requests": 12601,
+     "cached": 536,
+     "spend_usd": 84.05,
+     "saved_usd": 3.64
+    },
+    "lending": {
+     "requests": 443,
+     "cached": 26,
+     "spend_usd": 4.03,
+     "saved_usd": 0.25
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 220,
+     "cached": 25,
+     "spend_usd": 0.92,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 22,
+     "cached": 1,
+     "spend_usd": 0.15,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-07-12",
+   "requests": 45703,
+   "spend_usd": 157.2,
+   "saved_usd": 21.05,
+   "fallbacks": 105,
+   "failed": 1,
+   "policy_denied": 2,
+   "pii_redacted": 340,
+   "regulated_on_prem": 5094,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.5,
+   "teams": {
+    "member-services": {
+     "requests": 16693,
+     "cached": 3532,
+     "spend_usd": 40.26,
+     "saved_usd": 10.95
+    },
+    "digital-banking": {
+     "requests": 15620,
+     "cached": 2752,
+     "spend_usd": 29.88,
+     "saved_usd": 6.6
+    },
+    "risk-analytics": {
+     "requests": 12735,
+     "cached": 460,
+     "spend_usd": 82.45,
+     "saved_usd": 3.13
+    },
+    "lending": {
+     "requests": 406,
+     "cached": 25,
+     "spend_usd": 3.51,
+     "saved_usd": 0.24
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 227,
+     "cached": 25,
+     "spend_usd": 0.95,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 22,
+     "cached": 1,
+     "spend_usd": 0.15,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-07-13",
+   "requests": 81849,
+   "spend_usd": 299.37,
+   "saved_usd": 39.93,
+   "fallbacks": 428,
+   "failed": 3,
+   "policy_denied": 12,
+   "pii_redacted": 788,
+   "regulated_on_prem": 6225,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.7,
+   "teams": {
+    "member-services": {
+     "requests": 30470,
+     "cached": 6053,
+     "spend_usd": 74.85,
+     "saved_usd": 18.76
+    },
+    "digital-banking": {
+     "requests": 26311,
+     "cached": 4226,
+     "spend_usd": 52.5,
+     "saved_usd": 10.14
+    },
+    "risk-analytics": {
+     "requests": 13236,
+     "cached": 481,
+     "spend_usd": 85.52,
+     "saved_usd": 3.27
+    },
+    "lending": {
+     "requests": 5219,
+     "cached": 332,
+     "spend_usd": 47.48,
+     "saved_usd": 3.15
+    },
+    "compliance": {
+     "requests": 931,
+     "cached": 87,
+     "spend_usd": 11.3,
+     "saved_usd": 1.22
+    },
+    "it-engineering": {
+     "requests": 4526,
+     "cached": 559,
+     "spend_usd": 20.09,
+     "saved_usd": 2.74
+    },
+    "marketing": {
+     "requests": 1156,
+     "cached": 90,
+     "spend_usd": 7.63,
+     "saved_usd": 0.65
+    }
+   }
+  },
+  {
+   "date": "2026-07-14",
+   "requests": 86470,
+   "spend_usd": 313.06,
+   "saved_usd": 44.76,
+   "fallbacks": 467,
+   "failed": 3,
+   "policy_denied": 14,
+   "pii_redacted": 730,
+   "regulated_on_prem": 6937,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.7,
+   "teams": {
+    "member-services": {
+     "requests": 33026,
+     "cached": 7071,
+     "spend_usd": 83.65,
+     "saved_usd": 21.92
+    },
+    "digital-banking": {
+     "requests": 26915,
+     "cached": 4752,
+     "spend_usd": 53.07,
+     "saved_usd": 11.4
+    },
+    "risk-analytics": {
+     "requests": 15173,
+     "cached": 620,
+     "spend_usd": 94.25,
+     "saved_usd": 4.22
+    },
+    "lending": {
+     "requests": 4872,
+     "cached": 290,
+     "spend_usd": 44.57,
+     "saved_usd": 2.75
+    },
+    "compliance": {
+     "requests": 868,
+     "cached": 70,
+     "spend_usd": 11.15,
+     "saved_usd": 0.98
+    },
+    "it-engineering": {
+     "requests": 4439,
+     "cached": 567,
+     "spend_usd": 18.94,
+     "saved_usd": 2.78
+    },
+    "marketing": {
+     "requests": 1177,
+     "cached": 99,
+     "spend_usd": 7.43,
+     "saved_usd": 0.71
+    }
+   }
+  },
+  {
+   "date": "2026-07-15",
+   "requests": 84637,
+   "spend_usd": 310.63,
+   "saved_usd": 40.82,
+   "fallbacks": 311,
+   "failed": 3,
+   "policy_denied": 12,
+   "pii_redacted": 640,
+   "regulated_on_prem": 6740,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.0,
+   "teams": {
+    "member-services": {
+     "requests": 32316,
+     "cached": 6418,
+     "spend_usd": 80.77,
+     "saved_usd": 19.9
+    },
+    "digital-banking": {
+     "requests": 26337,
+     "cached": 4269,
+     "spend_usd": 55.03,
+     "saved_usd": 10.25
+    },
+    "risk-analytics": {
+     "requests": 14534,
+     "cached": 543,
+     "spend_usd": 91.22,
+     "saved_usd": 3.69
+    },
+    "lending": {
+     "requests": 4940,
+     "cached": 288,
+     "spend_usd": 44.64,
+     "saved_usd": 2.74
+    },
+    "compliance": {
+     "requests": 927,
+     "cached": 85,
+     "spend_usd": 11.6,
+     "saved_usd": 1.19
+    },
+    "it-engineering": {
+     "requests": 4536,
+     "cached": 493,
+     "spend_usd": 20.45,
+     "saved_usd": 2.42
+    },
+    "marketing": {
+     "requests": 1047,
+     "cached": 87,
+     "spend_usd": 6.92,
+     "saved_usd": 0.63
+    }
+   }
+  },
+  {
+   "date": "2026-07-16",
+   "requests": 81621,
+   "spend_usd": 296.76,
+   "saved_usd": 40.13,
+   "fallbacks": 205,
+   "failed": 5,
+   "policy_denied": 7,
+   "pii_redacted": 662,
+   "regulated_on_prem": 6775,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.0,
+   "teams": {
+    "member-services": {
+     "requests": 28876,
+     "cached": 5464,
+     "spend_usd": 69.52,
+     "saved_usd": 16.94
+    },
+    "digital-banking": {
+     "requests": 27057,
+     "cached": 5016,
+     "spend_usd": 50.7,
+     "saved_usd": 12.04
+    },
+    "risk-analytics": {
+     "requests": 14738,
+     "cached": 614,
+     "spend_usd": 97.28,
+     "saved_usd": 4.18
+    },
+    "lending": {
+     "requests": 5025,
+     "cached": 292,
+     "spend_usd": 43.98,
+     "saved_usd": 2.77
+    },
+    "compliance": {
+     "requests": 880,
+     "cached": 80,
+     "spend_usd": 10.76,
+     "saved_usd": 1.12
+    },
+    "it-engineering": {
+     "requests": 3995,
+     "cached": 510,
+     "spend_usd": 17.6,
+     "saved_usd": 2.5
+    },
+    "marketing": {
+     "requests": 1050,
+     "cached": 80,
+     "spend_usd": 6.92,
+     "saved_usd": 0.58
+    }
+   }
+  },
+  {
+   "date": "2026-07-17",
+   "requests": 85000,
+   "spend_usd": 306.07,
+   "saved_usd": 45.02,
+   "fallbacks": 335,
+   "failed": 4,
+   "policy_denied": 10,
+   "pii_redacted": 779,
+   "regulated_on_prem": 6703,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.5,
+   "teams": {
+    "member-services": {
+     "requests": 33913,
+     "cached": 7492,
+     "spend_usd": 81.99,
+     "saved_usd": 23.23
+    },
+    "digital-banking": {
+     "requests": 24813,
+     "cached": 4374,
+     "spend_usd": 48.0,
+     "saved_usd": 10.5
+    },
+    "risk-analytics": {
+     "requests": 14318,
+     "cached": 568,
+     "spend_usd": 89.79,
+     "saved_usd": 3.86
+    },
+    "lending": {
+     "requests": 5481,
+     "cached": 322,
+     "spend_usd": 48.27,
+     "saved_usd": 3.06
+    },
+    "compliance": {
+     "requests": 976,
+     "cached": 92,
+     "spend_usd": 11.99,
+     "saved_usd": 1.29
+    },
+    "it-engineering": {
+     "requests": 4467,
+     "cached": 496,
+     "spend_usd": 18.97,
+     "saved_usd": 2.43
+    },
+    "marketing": {
+     "requests": 1032,
+     "cached": 90,
+     "spend_usd": 7.06,
+     "saved_usd": 0.65
+    }
+   }
+  },
+  {
+   "date": "2026-07-18",
+   "requests": 48274,
+   "spend_usd": 172.92,
+   "saved_usd": 20.39,
+   "fallbacks": 145,
+   "failed": 3,
+   "policy_denied": 2,
+   "pii_redacted": 403,
+   "regulated_on_prem": 5384,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.2,
+   "teams": {
+    "member-services": {
+     "requests": 16776,
+     "cached": 3178,
+     "spend_usd": 43.29,
+     "saved_usd": 9.85
+    },
+    "digital-banking": {
+     "requests": 17389,
+     "cached": 2860,
+     "spend_usd": 35.25,
+     "saved_usd": 6.86
+    },
+    "risk-analytics": {
+     "requests": 13460,
+     "cached": 489,
+     "spend_usd": 89.64,
+     "saved_usd": 3.33
+    },
+    "lending": {
+     "requests": 422,
+     "cached": 23,
+     "spend_usd": 3.75,
+     "saved_usd": 0.22
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 206,
+     "cached": 24,
+     "spend_usd": 0.85,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 21,
+     "cached": 1,
+     "spend_usd": 0.14,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-07-19",
+   "requests": 47237,
+   "spend_usd": 161.55,
+   "saved_usd": 23.66,
+   "fallbacks": 242,
+   "failed": 3,
+   "policy_denied": 4,
+   "pii_redacted": 334,
+   "regulated_on_prem": 5102,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 17710,
+     "cached": 3964,
+     "spend_usd": 40.93,
+     "saved_usd": 12.29
+    },
+    "digital-banking": {
+     "requests": 16134,
+     "cached": 3015,
+     "spend_usd": 32.27,
+     "saved_usd": 7.24
+    },
+    "risk-analytics": {
+     "requests": 12757,
+     "cached": 554,
+     "spend_usd": 83.72,
+     "saved_usd": 3.77
+    },
+    "lending": {
+     "requests": 404,
+     "cached": 23,
+     "spend_usd": 3.6,
+     "saved_usd": 0.22
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 210,
+     "cached": 27,
+     "spend_usd": 0.88,
+     "saved_usd": 0.13
+    },
+    "marketing": {
+     "requests": 22,
+     "cached": 1,
+     "spend_usd": 0.15,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-07-20",
+   "requests": 87350,
+   "spend_usd": 324.18,
+   "saved_usd": 45.5,
+   "fallbacks": 517,
+   "failed": 3,
+   "policy_denied": 5,
+   "pii_redacted": 640,
+   "regulated_on_prem": 7078,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.5,
+   "teams": {
+    "member-services": {
+     "requests": 32497,
+     "cached": 6895,
+     "spend_usd": 83.2,
+     "saved_usd": 21.37
+    },
+    "digital-banking": {
+     "requests": 27537,
+     "cached": 5095,
+     "spend_usd": 54.07,
+     "saved_usd": 12.23
+    },
+    "risk-analytics": {
+     "requests": 15352,
+     "cached": 652,
+     "spend_usd": 98.51,
+     "saved_usd": 4.43
+    },
+    "lending": {
+     "requests": 5371,
+     "cached": 308,
+     "spend_usd": 49.82,
+     "saved_usd": 2.93
+    },
+    "compliance": {
+     "requests": 938,
+     "cached": 89,
+     "spend_usd": 11.96,
+     "saved_usd": 1.25
+    },
+    "it-engineering": {
+     "requests": 4504,
+     "cached": 533,
+     "spend_usd": 19.34,
+     "saved_usd": 2.61
+    },
+    "marketing": {
+     "requests": 1151,
+     "cached": 95,
+     "spend_usd": 7.28,
+     "saved_usd": 0.68
+    }
+   }
+  },
+  {
+   "date": "2026-07-21",
+   "requests": 80677,
+   "spend_usd": 298.81,
+   "saved_usd": 39.03,
+   "fallbacks": 229,
+   "failed": 2,
+   "policy_denied": 8,
+   "pii_redacted": 543,
+   "regulated_on_prem": 6397,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.2,
+   "teams": {
+    "member-services": {
+     "requests": 29362,
+     "cached": 5859,
+     "spend_usd": 73.9,
+     "saved_usd": 18.16
+    },
+    "digital-banking": {
+     "requests": 26035,
+     "cached": 4186,
+     "spend_usd": 52.87,
+     "saved_usd": 10.05
+    },
+    "risk-analytics": {
+     "requests": 13573,
+     "cached": 534,
+     "spend_usd": 88.16,
+     "saved_usd": 3.63
+    },
+    "lending": {
+     "requests": 5163,
+     "cached": 300,
+     "spend_usd": 44.93,
+     "saved_usd": 2.85
+    },
+    "compliance": {
+     "requests": 968,
+     "cached": 90,
+     "spend_usd": 12.11,
+     "saved_usd": 1.26
+    },
+    "it-engineering": {
+     "requests": 4525,
+     "cached": 500,
+     "spend_usd": 19.98,
+     "saved_usd": 2.45
+    },
+    "marketing": {
+     "requests": 1051,
+     "cached": 88,
+     "spend_usd": 6.86,
+     "saved_usd": 0.63
+    }
+   }
+  },
+  {
+   "date": "2026-07-22",
+   "requests": 82948,
+   "spend_usd": 306.97,
+   "saved_usd": 40.15,
+   "fallbacks": 287,
+   "failed": 6,
+   "policy_denied": 16,
+   "pii_redacted": 689,
+   "regulated_on_prem": 6255,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.4,
+   "teams": {
+    "member-services": {
+     "requests": 32075,
+     "cached": 6150,
+     "spend_usd": 83.74,
+     "saved_usd": 19.07
+    },
+    "digital-banking": {
+     "requests": 25648,
+     "cached": 4399,
+     "spend_usd": 51.02,
+     "saved_usd": 10.56
+    },
+    "risk-analytics": {
+     "requests": 13297,
+     "cached": 490,
+     "spend_usd": 83.53,
+     "saved_usd": 3.33
+    },
+    "lending": {
+     "requests": 5584,
+     "cached": 334,
+     "spend_usd": 51.54,
+     "saved_usd": 3.17
+    },
+    "compliance": {
+     "requests": 937,
+     "cached": 81,
+     "spend_usd": 11.43,
+     "saved_usd": 1.13
+    },
+    "it-engineering": {
+     "requests": 4208,
+     "cached": 458,
+     "spend_usd": 17.63,
+     "saved_usd": 2.24
+    },
+    "marketing": {
+     "requests": 1199,
+     "cached": 90,
+     "spend_usd": 8.08,
+     "saved_usd": 0.65
+    }
+   }
+  },
+  {
+   "date": "2026-07-23",
+   "requests": 88796,
+   "spend_usd": 321.57,
+   "saved_usd": 44.23,
+   "fallbacks": 307,
+   "failed": 4,
+   "policy_denied": 14,
+   "pii_redacted": 757,
+   "regulated_on_prem": 6682,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.1,
+   "teams": {
+    "member-services": {
+     "requests": 33537,
+     "cached": 7191,
+     "spend_usd": 83.78,
+     "saved_usd": 22.29
+    },
+    "digital-banking": {
+     "requests": 28722,
+     "cached": 4497,
+     "spend_usd": 56.38,
+     "saved_usd": 10.79
+    },
+    "risk-analytics": {
+     "requests": 14287,
+     "cached": 532,
+     "spend_usd": 91.83,
+     "saved_usd": 3.62
+    },
+    "lending": {
+     "requests": 5510,
+     "cached": 323,
+     "spend_usd": 49.8,
+     "saved_usd": 3.07
+    },
+    "compliance": {
+     "requests": 968,
+     "cached": 82,
+     "spend_usd": 12.98,
+     "saved_usd": 1.15
+    },
+    "it-engineering": {
+     "requests": 4557,
+     "cached": 526,
+     "spend_usd": 18.85,
+     "saved_usd": 2.58
+    },
+    "marketing": {
+     "requests": 1215,
+     "cached": 102,
+     "spend_usd": 7.95,
+     "saved_usd": 0.73
+    }
+   }
+  },
+  {
+   "date": "2026-07-24",
+   "requests": 83694,
+   "spend_usd": 311.05,
+   "saved_usd": 42.47,
+   "fallbacks": 331,
+   "failed": 5,
+   "policy_denied": 8,
+   "pii_redacted": 665,
+   "regulated_on_prem": 6615,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.8,
+   "teams": {
+    "member-services": {
+     "requests": 31964,
+     "cached": 6752,
+     "spend_usd": 79.8,
+     "saved_usd": 20.93
+    },
+    "digital-banking": {
+     "requests": 25427,
+     "cached": 4426,
+     "spend_usd": 51.2,
+     "saved_usd": 10.62
+    },
+    "risk-analytics": {
+     "requests": 14332,
+     "cached": 538,
+     "spend_usd": 92.46,
+     "saved_usd": 3.66
+    },
+    "lending": {
+     "requests": 5357,
+     "cached": 296,
+     "spend_usd": 49.74,
+     "saved_usd": 2.81
+    },
+    "compliance": {
+     "requests": 883,
+     "cached": 83,
+     "spend_usd": 10.91,
+     "saved_usd": 1.16
+    },
+    "it-engineering": {
+     "requests": 4555,
+     "cached": 522,
+     "spend_usd": 19.2,
+     "saved_usd": 2.56
+    },
+    "marketing": {
+     "requests": 1176,
+     "cached": 101,
+     "spend_usd": 7.74,
+     "saved_usd": 0.73
+    }
+   }
+  },
+  {
+   "date": "2026-07-25",
+   "requests": 47122,
+   "spend_usd": 159.62,
+   "saved_usd": 23.07,
+   "fallbacks": 215,
+   "failed": 3,
+   "policy_denied": 2,
+   "pii_redacted": 454,
+   "regulated_on_prem": 4975,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.3,
+   "teams": {
+    "member-services": {
+     "requests": 17626,
+     "cached": 4002,
+     "spend_usd": 42.05,
+     "saved_usd": 12.41
+    },
+    "digital-banking": {
+     "requests": 16405,
+     "cached": 2907,
+     "spend_usd": 30.85,
+     "saved_usd": 6.98
+    },
+    "risk-analytics": {
+     "requests": 12439,
+     "cached": 485,
+     "spend_usd": 82.05,
+     "saved_usd": 3.3
+    },
+    "lending": {
+     "requests": 429,
+     "cached": 27,
+     "spend_usd": 3.69,
+     "saved_usd": 0.26
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 200,
+     "cached": 23,
+     "spend_usd": 0.83,
+     "saved_usd": 0.11
+    },
+    "marketing": {
+     "requests": 23,
+     "cached": 1,
+     "spend_usd": 0.15,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-07-26",
+   "requests": 47897,
+   "spend_usd": 164.62,
+   "saved_usd": 22.51,
+   "fallbacks": 181,
+   "failed": 3,
+   "policy_denied": 1,
+   "pii_redacted": 323,
+   "regulated_on_prem": 5128,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.2,
+   "teams": {
+    "member-services": {
+     "requests": 16481,
+     "cached": 3734,
+     "spend_usd": 39.9,
+     "saved_usd": 11.58
+    },
+    "digital-banking": {
+     "requests": 17965,
+     "cached": 2818,
+     "spend_usd": 37.1,
+     "saved_usd": 6.76
+    },
+    "risk-analytics": {
+     "requests": 12822,
+     "cached": 563,
+     "spend_usd": 82.9,
+     "saved_usd": 3.83
+    },
+    "lending": {
+     "requests": 402,
+     "cached": 23,
+     "spend_usd": 3.67,
+     "saved_usd": 0.22
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 203,
+     "cached": 22,
+     "spend_usd": 0.89,
+     "saved_usd": 0.11
+    },
+    "marketing": {
+     "requests": 24,
+     "cached": 1,
+     "spend_usd": 0.16,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-07-27",
+   "requests": 87514,
+   "spend_usd": 315.44,
+   "saved_usd": 44.18,
+   "fallbacks": 213,
+   "failed": 1,
+   "policy_denied": 6,
+   "pii_redacted": 620,
+   "regulated_on_prem": 6588,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.0,
+   "teams": {
+    "member-services": {
+     "requests": 34398,
+     "cached": 7129,
+     "spend_usd": 81.16,
+     "saved_usd": 22.1
+    },
+    "digital-banking": {
+     "requests": 27037,
+     "cached": 4695,
+     "spend_usd": 54.88,
+     "saved_usd": 11.27
+    },
+    "risk-analytics": {
+     "requests": 14067,
+     "cached": 537,
+     "spend_usd": 88.61,
+     "saved_usd": 3.65
+    },
+    "lending": {
+     "requests": 5724,
+     "cached": 312,
+     "spend_usd": 53.38,
+     "saved_usd": 2.96
+    },
+    "compliance": {
+     "requests": 962,
+     "cached": 80,
+     "spend_usd": 12.07,
+     "saved_usd": 1.12
+    },
+    "it-engineering": {
+     "requests": 4216,
+     "cached": 510,
+     "spend_usd": 17.78,
+     "saved_usd": 2.5
+    },
+    "marketing": {
+     "requests": 1110,
+     "cached": 80,
+     "spend_usd": 7.56,
+     "saved_usd": 0.58
+    }
+   }
+  },
+  {
+   "date": "2026-07-28",
+   "requests": 84632,
+   "spend_usd": 315.45,
+   "saved_usd": 44.29,
+   "fallbacks": 261,
+   "failed": 4,
+   "policy_denied": 15,
+   "pii_redacted": 727,
+   "regulated_on_prem": 7042,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.6,
+   "teams": {
+    "member-services": {
+     "requests": 31156,
+     "cached": 6791,
+     "spend_usd": 76.49,
+     "saved_usd": 21.05
+    },
+    "digital-banking": {
+     "requests": 26576,
+     "cached": 4879,
+     "spend_usd": 52.87,
+     "saved_usd": 11.71
+    },
+    "risk-analytics": {
+     "requests": 15297,
+     "cached": 622,
+     "spend_usd": 99.38,
+     "saved_usd": 4.23
+    },
+    "lending": {
+     "requests": 5421,
+     "cached": 328,
+     "spend_usd": 49.95,
+     "saved_usd": 3.12
+    },
+    "compliance": {
+     "requests": 924,
+     "cached": 84,
+     "spend_usd": 11.75,
+     "saved_usd": 1.18
+    },
+    "it-engineering": {
+     "requests": 4055,
+     "cached": 474,
+     "spend_usd": 16.96,
+     "saved_usd": 2.32
+    },
+    "marketing": {
+     "requests": 1203,
+     "cached": 94,
+     "spend_usd": 8.05,
+     "saved_usd": 0.68
+    }
+   }
+  },
+  {
+   "date": "2026-07-29",
+   "requests": 82697,
+   "spend_usd": 311.39,
+   "saved_usd": 42.86,
+   "fallbacks": 409,
+   "failed": 5,
+   "policy_denied": 4,
+   "pii_redacted": 660,
+   "regulated_on_prem": 7224,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.3,
+   "teams": {
+    "member-services": {
+     "requests": 30218,
+     "cached": 6703,
+     "spend_usd": 72.94,
+     "saved_usd": 20.78
+    },
+    "digital-banking": {
+     "requests": 25274,
+     "cached": 4442,
+     "spend_usd": 49.58,
+     "saved_usd": 10.66
+    },
+    "risk-analytics": {
+     "requests": 15600,
+     "cached": 625,
+     "spend_usd": 105.62,
+     "saved_usd": 4.25
+    },
+    "lending": {
+     "requests": 5343,
+     "cached": 290,
+     "spend_usd": 45.99,
+     "saved_usd": 2.75
+    },
+    "compliance": {
+     "requests": 984,
+     "cached": 83,
+     "spend_usd": 12.9,
+     "saved_usd": 1.16
+    },
+    "it-engineering": {
+     "requests": 4124,
+     "cached": 540,
+     "spend_usd": 16.95,
+     "saved_usd": 2.65
+    },
+    "marketing": {
+     "requests": 1154,
+     "cached": 85,
+     "spend_usd": 7.41,
+     "saved_usd": 0.61
+    }
+   }
+  },
+  {
+   "date": "2026-07-30",
+   "requests": 89044,
+   "spend_usd": 318.47,
+   "saved_usd": 45.06,
+   "fallbacks": 430,
+   "failed": 6,
+   "policy_denied": 5,
+   "pii_redacted": 873,
+   "regulated_on_prem": 7066,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.9,
+   "teams": {
+    "member-services": {
+     "requests": 34148,
+     "cached": 7252,
+     "spend_usd": 82.06,
+     "saved_usd": 22.48
+    },
+    "digital-banking": {
+     "requests": 27562,
+     "cached": 4509,
+     "spend_usd": 54.36,
+     "saved_usd": 10.82
+    },
+    "risk-analytics": {
+     "requests": 15292,
+     "cached": 583,
+     "spend_usd": 95.96,
+     "saved_usd": 3.96
+    },
+    "lending": {
+     "requests": 5306,
+     "cached": 330,
+     "spend_usd": 46.08,
+     "saved_usd": 3.14
+    },
+    "compliance": {
+     "requests": 950,
+     "cached": 84,
+     "spend_usd": 12.46,
+     "saved_usd": 1.18
+    },
+    "it-engineering": {
+     "requests": 4622,
+     "cached": 583,
+     "spend_usd": 20.09,
+     "saved_usd": 2.86
+    },
+    "marketing": {
+     "requests": 1164,
+     "cached": 86,
+     "spend_usd": 7.46,
+     "saved_usd": 0.62
+    }
+   }
+  },
+  {
+   "date": "2026-07-31",
+   "requests": 82795,
+   "spend_usd": 306.93,
+   "saved_usd": 41.68,
+   "fallbacks": 453,
+   "failed": 6,
+   "policy_denied": 12,
+   "pii_redacted": 572,
+   "regulated_on_prem": 6837,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.0,
+   "teams": {
+    "member-services": {
+     "requests": 29896,
+     "cached": 5989,
+     "spend_usd": 72.49,
+     "saved_usd": 18.57
+    },
+    "digital-banking": {
+     "requests": 25845,
+     "cached": 4652,
+     "spend_usd": 51.73,
+     "saved_usd": 11.16
+    },
+    "risk-analytics": {
+     "requests": 14773,
+     "cached": 618,
+     "spend_usd": 93.07,
+     "saved_usd": 4.2
+    },
+    "lending": {
+     "requests": 5809,
+     "cached": 365,
+     "spend_usd": 51.57,
+     "saved_usd": 3.47
+    },
+    "compliance": {
+     "requests": 928,
+     "cached": 83,
+     "spend_usd": 12.36,
+     "saved_usd": 1.16
+    },
+    "it-engineering": {
+     "requests": 4372,
+     "cached": 497,
+     "spend_usd": 18.21,
+     "saved_usd": 2.44
+    },
+    "marketing": {
+     "requests": 1172,
+     "cached": 95,
+     "spend_usd": 7.5,
+     "saved_usd": 0.68
+    }
+   }
+  },
+  {
+   "date": "2026-08-01",
+   "requests": 50781,
+   "spend_usd": 172.02,
+   "saved_usd": 23.23,
+   "fallbacks": 132,
+   "failed": 2,
+   "policy_denied": 2,
+   "pii_redacted": 440,
+   "regulated_on_prem": 5420,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 18697,
+     "cached": 4090,
+     "spend_usd": 43.63,
+     "saved_usd": 12.68
+    },
+    "digital-banking": {
+     "requests": 17832,
+     "cached": 2825,
+     "spend_usd": 36.51,
+     "saved_usd": 6.78
+    },
+    "risk-analytics": {
+     "requests": 13552,
+     "cached": 498,
+     "spend_usd": 86.44,
+     "saved_usd": 3.39
+    },
+    "lending": {
+     "requests": 463,
+     "cached": 27,
+     "spend_usd": 4.33,
+     "saved_usd": 0.26
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 214,
+     "cached": 23,
+     "spend_usd": 0.96,
+     "saved_usd": 0.11
+    },
+    "marketing": {
+     "requests": 23,
+     "cached": 2,
+     "spend_usd": 0.15,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-02",
+   "requests": 47212,
+   "spend_usd": 160.86,
+   "saved_usd": 21.87,
+   "fallbacks": 168,
+   "failed": 3,
+   "policy_denied": 2,
+   "pii_redacted": 304,
+   "regulated_on_prem": 5321,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.7,
+   "teams": {
+    "member-services": {
+     "requests": 16717,
+     "cached": 3410,
+     "spend_usd": 41.25,
+     "saved_usd": 10.57
+    },
+    "digital-banking": {
+     "requests": 16532,
+     "cached": 3062,
+     "spend_usd": 30.93,
+     "saved_usd": 7.35
+    },
+    "risk-analytics": {
+     "requests": 13304,
+     "cached": 530,
+     "spend_usd": 84.05,
+     "saved_usd": 3.6
+    },
+    "lending": {
+     "requests": 409,
+     "cached": 23,
+     "spend_usd": 3.5,
+     "saved_usd": 0.22
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 229,
+     "cached": 25,
+     "spend_usd": 0.99,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 21,
+     "cached": 1,
+     "spend_usd": 0.14,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-03",
+   "requests": 91586,
+   "spend_usd": 336.67,
+   "saved_usd": 49.25,
+   "fallbacks": 204,
+   "failed": 4,
+   "policy_denied": 19,
+   "pii_redacted": 798,
+   "regulated_on_prem": 7171,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.4,
+   "teams": {
+    "member-services": {
+     "requests": 34611,
+     "cached": 7896,
+     "spend_usd": 81.76,
+     "saved_usd": 24.48
+    },
+    "digital-banking": {
+     "requests": 29313,
+     "cached": 5426,
+     "spend_usd": 56.58,
+     "saved_usd": 13.02
+    },
+    "risk-analytics": {
+     "requests": 15698,
+     "cached": 662,
+     "spend_usd": 107.19,
+     "saved_usd": 4.5
+    },
+    "lending": {
+     "requests": 5724,
+     "cached": 309,
+     "spend_usd": 53.06,
+     "saved_usd": 2.94
+    },
+    "compliance": {
+     "requests": 892,
+     "cached": 77,
+     "spend_usd": 11.51,
+     "saved_usd": 1.08
+    },
+    "it-engineering": {
+     "requests": 4112,
+     "cached": 520,
+     "spend_usd": 18.42,
+     "saved_usd": 2.55
+    },
+    "marketing": {
+     "requests": 1236,
+     "cached": 95,
+     "spend_usd": 8.15,
+     "saved_usd": 0.68
+    }
+   }
+  },
+  {
+   "date": "2026-08-04",
+   "requests": 82706,
+   "spend_usd": 301.87,
+   "saved_usd": 44.22,
+   "fallbacks": 197,
+   "failed": 4,
+   "policy_denied": 19,
+   "pii_redacted": 726,
+   "regulated_on_prem": 6777,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 30070,
+     "cached": 6945,
+     "spend_usd": 70.75,
+     "saved_usd": 21.53
+    },
+    "digital-banking": {
+     "requests": 26778,
+     "cached": 4901,
+     "spend_usd": 50.49,
+     "saved_usd": 11.76
+    },
+    "risk-analytics": {
+     "requests": 14440,
+     "cached": 595,
+     "spend_usd": 97.41,
+     "saved_usd": 4.05
+    },
+    "lending": {
+     "requests": 5028,
+     "cached": 279,
+     "spend_usd": 43.45,
+     "saved_usd": 2.65
+    },
+    "compliance": {
+     "requests": 1001,
+     "cached": 86,
+     "spend_usd": 13.33,
+     "saved_usd": 1.2
+    },
+    "it-engineering": {
+     "requests": 4279,
+     "cached": 488,
+     "spend_usd": 19.05,
+     "saved_usd": 2.39
+    },
+    "marketing": {
+     "requests": 1110,
+     "cached": 89,
+     "spend_usd": 7.39,
+     "saved_usd": 0.64
+    }
+   }
+  },
+  {
+   "date": "2026-08-05",
+   "requests": 86379,
+   "spend_usd": 308.34,
+   "saved_usd": 42.12,
+   "fallbacks": 388,
+   "failed": 6,
+   "policy_denied": 10,
+   "pii_redacted": 634,
+   "regulated_on_prem": 6512,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 32739,
+     "cached": 6765,
+     "spend_usd": 81.51,
+     "saved_usd": 20.97
+    },
+    "digital-banking": {
+     "requests": 28316,
+     "cached": 4447,
+     "spend_usd": 56.96,
+     "saved_usd": 10.67
+    },
+    "risk-analytics": {
+     "requests": 13815,
+     "cached": 541,
+     "spend_usd": 86.63,
+     "saved_usd": 3.68
+    },
+    "lending": {
+     "requests": 5139,
+     "cached": 284,
+     "spend_usd": 43.9,
+     "saved_usd": 2.7
+    },
+    "compliance": {
+     "requests": 986,
+     "cached": 83,
+     "spend_usd": 13.1,
+     "saved_usd": 1.16
+    },
+    "it-engineering": {
+     "requests": 4142,
+     "cached": 449,
+     "spend_usd": 18.04,
+     "saved_usd": 2.2
+    },
+    "marketing": {
+     "requests": 1242,
+     "cached": 103,
+     "spend_usd": 8.2,
+     "saved_usd": 0.74
+    }
+   }
+  },
+  {
+   "date": "2026-08-06",
+   "requests": 87037,
+   "spend_usd": 315.11,
+   "saved_usd": 46.0,
+   "fallbacks": 498,
+   "failed": 3,
+   "policy_denied": 4,
+   "pii_redacted": 740,
+   "regulated_on_prem": 6628,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.7,
+   "teams": {
+    "member-services": {
+     "requests": 33899,
+     "cached": 7467,
+     "spend_usd": 78.88,
+     "saved_usd": 23.15
+    },
+    "digital-banking": {
+     "requests": 26481,
+     "cached": 4790,
+     "spend_usd": 52.85,
+     "saved_usd": 11.5
+    },
+    "risk-analytics": {
+     "requests": 14205,
+     "cached": 564,
+     "spend_usd": 91.79,
+     "saved_usd": 3.84
+    },
+    "lending": {
+     "requests": 5582,
+     "cached": 323,
+     "spend_usd": 50.91,
+     "saved_usd": 3.07
+    },
+    "compliance": {
+     "requests": 946,
+     "cached": 79,
+     "spend_usd": 12.11,
+     "saved_usd": 1.11
+    },
+    "it-engineering": {
+     "requests": 4694,
+     "cached": 531,
+     "spend_usd": 20.11,
+     "saved_usd": 2.6
+    },
+    "marketing": {
+     "requests": 1230,
+     "cached": 101,
+     "spend_usd": 8.46,
+     "saved_usd": 0.73
+    }
+   }
+  },
+  {
+   "date": "2026-08-07",
+   "requests": 88927,
+   "spend_usd": 322.93,
+   "saved_usd": 46.04,
+   "fallbacks": 317,
+   "failed": 3,
+   "policy_denied": 13,
+   "pii_redacted": 824,
+   "regulated_on_prem": 7117,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.8,
+   "teams": {
+    "member-services": {
+     "requests": 34714,
+     "cached": 7337,
+     "spend_usd": 83.09,
+     "saved_usd": 22.74
+    },
+    "digital-banking": {
+     "requests": 27264,
+     "cached": 4807,
+     "spend_usd": 56.44,
+     "saved_usd": 11.54
+    },
+    "risk-analytics": {
+     "requests": 15571,
+     "cached": 658,
+     "spend_usd": 97.98,
+     "saved_usd": 4.47
+    },
+    "lending": {
+     "requests": 5249,
+     "cached": 324,
+     "spend_usd": 48.87,
+     "saved_usd": 3.08
+    },
+    "compliance": {
+     "requests": 889,
+     "cached": 86,
+     "spend_usd": 11.79,
+     "saved_usd": 1.2
+    },
+    "it-engineering": {
+     "requests": 4146,
+     "cached": 497,
+     "spend_usd": 17.42,
+     "saved_usd": 2.44
+    },
+    "marketing": {
+     "requests": 1094,
+     "cached": 79,
+     "spend_usd": 7.34,
+     "saved_usd": 0.57
+    }
+   }
+  },
+  {
+   "date": "2026-08-08",
+   "requests": 49407,
+   "spend_usd": 169.06,
+   "saved_usd": 23.28,
+   "fallbacks": 178,
+   "failed": 3,
+   "policy_denied": 1,
+   "pii_redacted": 340,
+   "regulated_on_prem": 5622,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.8,
+   "teams": {
+    "member-services": {
+     "requests": 17591,
+     "cached": 3892,
+     "spend_usd": 40.51,
+     "saved_usd": 12.07
+    },
+    "digital-banking": {
+     "requests": 17058,
+     "cached": 2769,
+     "spend_usd": 34.7,
+     "saved_usd": 6.65
+    },
+    "risk-analytics": {
+     "requests": 14055,
+     "cached": 613,
+     "spend_usd": 88.44,
+     "saved_usd": 4.17
+    },
+    "lending": {
+     "requests": 467,
+     "cached": 27,
+     "spend_usd": 4.33,
+     "saved_usd": 0.26
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 212,
+     "cached": 25,
+     "spend_usd": 0.92,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 24,
+     "cached": 1,
+     "spend_usd": 0.16,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-09",
+   "requests": 50236,
+   "spend_usd": 172.21,
+   "saved_usd": 22.8,
+   "fallbacks": 137,
+   "failed": 3,
+   "policy_denied": 3,
+   "pii_redacted": 484,
+   "regulated_on_prem": 5203,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.8,
+   "teams": {
+    "member-services": {
+     "requests": 19008,
+     "cached": 3852,
+     "spend_usd": 47.85,
+     "saved_usd": 11.94
+    },
+    "digital-banking": {
+     "requests": 17526,
+     "cached": 2896,
+     "spend_usd": 35.8,
+     "saved_usd": 6.95
+    },
+    "risk-analytics": {
+     "requests": 13009,
+     "cached": 517,
+     "spend_usd": 83.2,
+     "saved_usd": 3.52
+    },
+    "lending": {
+     "requests": 464,
+     "cached": 27,
+     "spend_usd": 4.34,
+     "saved_usd": 0.26
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 206,
+     "cached": 25,
+     "spend_usd": 0.86,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 23,
+     "cached": 1,
+     "spend_usd": 0.16,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-10",
+   "requests": 87838,
+   "spend_usd": 324.51,
+   "saved_usd": 43.66,
+   "fallbacks": 300,
+   "failed": 5,
+   "policy_denied": 14,
+   "pii_redacted": 642,
+   "regulated_on_prem": 6751,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 33600,
+     "cached": 6851,
+     "spend_usd": 85.24,
+     "saved_usd": 21.24
+    },
+    "digital-banking": {
+     "requests": 27152,
+     "cached": 4598,
+     "spend_usd": 55.75,
+     "saved_usd": 11.04
+    },
+    "risk-analytics": {
+     "requests": 14543,
+     "cached": 536,
+     "spend_usd": 93.07,
+     "saved_usd": 3.64
+    },
+    "lending": {
+     "requests": 5668,
+     "cached": 349,
+     "spend_usd": 49.25,
+     "saved_usd": 3.32
+    },
+    "compliance": {
+     "requests": 934,
+     "cached": 83,
+     "spend_usd": 11.86,
+     "saved_usd": 1.16
+    },
+    "it-engineering": {
+     "requests": 4779,
+     "cached": 525,
+     "spend_usd": 21.68,
+     "saved_usd": 2.57
+    },
+    "marketing": {
+     "requests": 1162,
+     "cached": 96,
+     "spend_usd": 7.66,
+     "saved_usd": 0.69
+    }
+   }
+  },
+  {
+   "date": "2026-08-11",
+   "requests": 89809,
+   "spend_usd": 327.04,
+   "saved_usd": 45.35,
+   "fallbacks": 391,
+   "failed": 7,
+   "policy_denied": 13,
+   "pii_redacted": 788,
+   "regulated_on_prem": 7325,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.1,
+   "teams": {
+    "member-services": {
+     "requests": 34796,
+     "cached": 7381,
+     "spend_usd": 80.95,
+     "saved_usd": 22.88
+    },
+    "digital-banking": {
+     "requests": 27554,
+     "cached": 4514,
+     "spend_usd": 55.04,
+     "saved_usd": 10.83
+    },
+    "risk-analytics": {
+     "requests": 16046,
+     "cached": 655,
+     "spend_usd": 109.42,
+     "saved_usd": 4.45
+    },
+    "lending": {
+     "requests": 5256,
+     "cached": 339,
+     "spend_usd": 45.32,
+     "saved_usd": 3.22
+    },
+    "compliance": {
+     "requests": 907,
+     "cached": 78,
+     "spend_usd": 11.34,
+     "saved_usd": 1.09
+    },
+    "it-engineering": {
+     "requests": 4140,
+     "cached": 449,
+     "spend_usd": 17.36,
+     "saved_usd": 2.2
+    },
+    "marketing": {
+     "requests": 1110,
+     "cached": 95,
+     "spend_usd": 7.61,
+     "saved_usd": 0.68
+    }
+   }
+  },
+  {
+   "date": "2026-08-12",
+   "requests": 86958,
+   "spend_usd": 311.15,
+   "saved_usd": 42.98,
+   "fallbacks": 505,
+   "failed": 5,
+   "policy_denied": 11,
+   "pii_redacted": 782,
+   "regulated_on_prem": 7099,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.9,
+   "teams": {
+    "member-services": {
+     "requests": 31262,
+     "cached": 6278,
+     "spend_usd": 74.53,
+     "saved_usd": 19.46
+    },
+    "digital-banking": {
+     "requests": 28213,
+     "cached": 5076,
+     "spend_usd": 53.22,
+     "saved_usd": 12.18
+    },
+    "risk-analytics": {
+     "requests": 15456,
+     "cached": 617,
+     "spend_usd": 95.99,
+     "saved_usd": 4.2
+    },
+    "lending": {
+     "requests": 5510,
+     "cached": 299,
+     "spend_usd": 48.85,
+     "saved_usd": 2.84
+    },
+    "compliance": {
+     "requests": 917,
+     "cached": 88,
+     "spend_usd": 11.55,
+     "saved_usd": 1.23
+    },
+    "it-engineering": {
+     "requests": 4430,
+     "cached": 503,
+     "spend_usd": 19.52,
+     "saved_usd": 2.46
+    },
+    "marketing": {
+     "requests": 1170,
+     "cached": 85,
+     "spend_usd": 7.49,
+     "saved_usd": 0.61
+    }
+   }
+  },
+  {
+   "date": "2026-08-13",
+   "requests": 86697,
+   "spend_usd": 317.65,
+   "saved_usd": 46.7,
+   "fallbacks": 291,
+   "failed": 4,
+   "policy_denied": 19,
+   "pii_redacted": 740,
+   "regulated_on_prem": 7229,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.2,
+   "teams": {
+    "member-services": {
+     "requests": 32976,
+     "cached": 7617,
+     "spend_usd": 76.32,
+     "saved_usd": 23.61
+    },
+    "digital-banking": {
+     "requests": 26097,
+     "cached": 4520,
+     "spend_usd": 51.97,
+     "saved_usd": 10.85
+    },
+    "risk-analytics": {
+     "requests": 15595,
+     "cached": 676,
+     "spend_usd": 103.53,
+     "saved_usd": 4.6
+    },
+    "lending": {
+     "requests": 5196,
+     "cached": 311,
+     "spend_usd": 46.57,
+     "saved_usd": 2.95
+    },
+    "compliance": {
+     "requests": 991,
+     "cached": 83,
+     "spend_usd": 12.75,
+     "saved_usd": 1.16
+    },
+    "it-engineering": {
+     "requests": 4653,
+     "cached": 586,
+     "spend_usd": 18.99,
+     "saved_usd": 2.87
+    },
+    "marketing": {
+     "requests": 1189,
+     "cached": 91,
+     "spend_usd": 7.52,
+     "saved_usd": 0.66
+    }
+   }
+  },
+  {
+   "date": "2026-08-14",
+   "requests": 89512,
+   "spend_usd": 324.85,
+   "saved_usd": 45.44,
+   "fallbacks": 485,
+   "failed": 5,
+   "policy_denied": 15,
+   "pii_redacted": 730,
+   "regulated_on_prem": 6947,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.1,
+   "teams": {
+    "member-services": {
+     "requests": 34576,
+     "cached": 7304,
+     "spend_usd": 80.48,
+     "saved_usd": 22.64
+    },
+    "digital-banking": {
+     "requests": 27737,
+     "cached": 4789,
+     "spend_usd": 57.43,
+     "saved_usd": 11.49
+    },
+    "risk-analytics": {
+     "requests": 14835,
+     "cached": 589,
+     "spend_usd": 95.25,
+     "saved_usd": 4.01
+    },
+    "lending": {
+     "requests": 5566,
+     "cached": 300,
+     "spend_usd": 51.47,
+     "saved_usd": 2.85
+    },
+    "compliance": {
+     "requests": 1013,
+     "cached": 88,
+     "spend_usd": 12.54,
+     "saved_usd": 1.23
+    },
+    "it-engineering": {
+     "requests": 4586,
+     "cached": 509,
+     "spend_usd": 20.03,
+     "saved_usd": 2.49
+    },
+    "marketing": {
+     "requests": 1199,
+     "cached": 101,
+     "spend_usd": 7.65,
+     "saved_usd": 0.73
+    }
+   }
+  },
+  {
+   "date": "2026-08-15",
+   "requests": 50022,
+   "spend_usd": 166.54,
+   "saved_usd": 22.23,
+   "fallbacks": 195,
+   "failed": 3,
+   "policy_denied": 2,
+   "pii_redacted": 386,
+   "regulated_on_prem": 5130,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.3,
+   "teams": {
+    "member-services": {
+     "requests": 18086,
+     "cached": 3741,
+     "spend_usd": 45.78,
+     "saved_usd": 11.6
+    },
+    "digital-banking": {
+     "requests": 18422,
+     "cached": 2889,
+     "spend_usd": 35.73,
+     "saved_usd": 6.93
+    },
+    "risk-analytics": {
+     "requests": 12826,
+     "cached": 488,
+     "spend_usd": 79.82,
+     "saved_usd": 3.32
+    },
+    "lending": {
+     "requests": 441,
+     "cached": 26,
+     "spend_usd": 4.08,
+     "saved_usd": 0.25
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 222,
+     "cached": 25,
+     "spend_usd": 0.95,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 25,
+     "cached": 1,
+     "spend_usd": 0.18,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-16",
+   "requests": 48004,
+   "spend_usd": 161.14,
+   "saved_usd": 22.72,
+   "fallbacks": 149,
+   "failed": 1,
+   "policy_denied": 3,
+   "pii_redacted": 417,
+   "regulated_on_prem": 5094,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.0,
+   "teams": {
+    "member-services": {
+     "requests": 17934,
+     "cached": 4000,
+     "spend_usd": 41.1,
+     "saved_usd": 12.4
+    },
+    "digital-banking": {
+     "requests": 16645,
+     "cached": 2762,
+     "spend_usd": 34.04,
+     "saved_usd": 6.63
+    },
+    "risk-analytics": {
+     "requests": 12737,
+     "cached": 487,
+     "spend_usd": 80.7,
+     "saved_usd": 3.31
+    },
+    "lending": {
+     "requests": 457,
+     "cached": 26,
+     "spend_usd": 4.26,
+     "saved_usd": 0.25
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 209,
+     "cached": 24,
+     "spend_usd": 0.89,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 22,
+     "cached": 1,
+     "spend_usd": 0.15,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-17",
+   "requests": 85484,
+   "spend_usd": 330.93,
+   "saved_usd": 41.65,
+   "fallbacks": 188,
+   "failed": 6,
+   "policy_denied": 18,
+   "pii_redacted": 683,
+   "regulated_on_prem": 7276,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.7,
+   "teams": {
+    "member-services": {
+     "requests": 30751,
+     "cached": 6363,
+     "spend_usd": 79.28,
+     "saved_usd": 19.73
+    },
+    "digital-banking": {
+     "requests": 26204,
+     "cached": 4158,
+     "spend_usd": 53.67,
+     "saved_usd": 9.98
+    },
+    "risk-analytics": {
+     "requests": 15771,
+     "cached": 577,
+     "spend_usd": 106.23,
+     "saved_usd": 3.92
+    },
+    "lending": {
+     "requests": 5886,
+     "cached": 352,
+     "spend_usd": 51.63,
+     "saved_usd": 3.34
+    },
+    "compliance": {
+     "requests": 968,
+     "cached": 85,
+     "spend_usd": 11.78,
+     "saved_usd": 1.19
+    },
+    "it-engineering": {
+     "requests": 4723,
+     "cached": 570,
+     "spend_usd": 20.58,
+     "saved_usd": 2.79
+    },
+    "marketing": {
+     "requests": 1181,
+     "cached": 97,
+     "spend_usd": 7.76,
+     "saved_usd": 0.7
+    }
+   }
+  },
+  {
+   "date": "2026-08-18",
+   "requests": 86166,
+   "spend_usd": 330.39,
+   "saved_usd": 42.47,
+   "fallbacks": 184,
+   "failed": 2,
+   "policy_denied": 12,
+   "pii_redacted": 701,
+   "regulated_on_prem": 7364,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.1,
+   "teams": {
+    "member-services": {
+     "requests": 32403,
+     "cached": 6144,
+     "spend_usd": 85.17,
+     "saved_usd": 19.05
+    },
+    "digital-banking": {
+     "requests": 25989,
+     "cached": 4801,
+     "spend_usd": 52.98,
+     "saved_usd": 11.52
+    },
+    "risk-analytics": {
+     "requests": 15793,
+     "cached": 618,
+     "spend_usd": 104.28,
+     "saved_usd": 4.2
+    },
+    "lending": {
+     "requests": 5524,
+     "cached": 323,
+     "spend_usd": 49.01,
+     "saved_usd": 3.07
+    },
+    "compliance": {
+     "requests": 1047,
+     "cached": 103,
+     "spend_usd": 13.06,
+     "saved_usd": 1.44
+    },
+    "it-engineering": {
+     "requests": 4273,
+     "cached": 521,
+     "spend_usd": 18.58,
+     "saved_usd": 2.55
+    },
+    "marketing": {
+     "requests": 1137,
+     "cached": 89,
+     "spend_usd": 7.31,
+     "saved_usd": 0.64
+    }
+   }
+  },
+  {
+   "date": "2026-08-19",
+   "requests": 90891,
+   "spend_usd": 334.22,
+   "saved_usd": 45.67,
+   "fallbacks": 463,
+   "failed": 6,
+   "policy_denied": 6,
+   "pii_redacted": 863,
+   "regulated_on_prem": 7288,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.7,
+   "teams": {
+    "member-services": {
+     "requests": 34103,
+     "cached": 7239,
+     "spend_usd": 79.58,
+     "saved_usd": 22.44
+    },
+    "digital-banking": {
+     "requests": 28353,
+     "cached": 4756,
+     "spend_usd": 58.23,
+     "saved_usd": 11.41
+    },
+    "risk-analytics": {
+     "requests": 15751,
+     "cached": 622,
+     "spend_usd": 102.24,
+     "saved_usd": 4.23
+    },
+    "lending": {
+     "requests": 5896,
+     "cached": 335,
+     "spend_usd": 53.66,
+     "saved_usd": 3.18
+    },
+    "compliance": {
+     "requests": 988,
+     "cached": 87,
+     "spend_usd": 13.14,
+     "saved_usd": 1.22
+    },
+    "it-engineering": {
+     "requests": 4575,
+     "cached": 496,
+     "spend_usd": 19.36,
+     "saved_usd": 2.43
+    },
+    "marketing": {
+     "requests": 1225,
+     "cached": 106,
+     "spend_usd": 8.01,
+     "saved_usd": 0.76
+    }
+   }
+  },
+  {
+   "date": "2026-08-20",
+   "requests": 91806,
+   "spend_usd": 337.57,
+   "saved_usd": 44.45,
+   "fallbacks": 489,
+   "failed": 4,
+   "policy_denied": 5,
+   "pii_redacted": 665,
+   "regulated_on_prem": 7226,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.9,
+   "teams": {
+    "member-services": {
+     "requests": 36201,
+     "cached": 6898,
+     "spend_usd": 89.78,
+     "saved_usd": 21.38
+    },
+    "digital-banking": {
+     "requests": 27966,
+     "cached": 4721,
+     "spend_usd": 54.43,
+     "saved_usd": 11.33
+    },
+    "risk-analytics": {
+     "requests": 15554,
+     "cached": 600,
+     "spend_usd": 102.36,
+     "saved_usd": 4.08
+    },
+    "lending": {
+     "requests": 5468,
+     "cached": 342,
+     "spend_usd": 49.46,
+     "saved_usd": 3.25
+    },
+    "compliance": {
+     "requests": 1005,
+     "cached": 94,
+     "spend_usd": 12.93,
+     "saved_usd": 1.32
+    },
+    "it-engineering": {
+     "requests": 4331,
+     "cached": 470,
+     "spend_usd": 19.86,
+     "saved_usd": 2.3
+    },
+    "marketing": {
+     "requests": 1281,
+     "cached": 110,
+     "spend_usd": 8.75,
+     "saved_usd": 0.79
+    }
+   }
+  },
+  {
+   "date": "2026-08-21",
+   "requests": 88126,
+   "spend_usd": 332.25,
+   "saved_usd": 47.26,
+   "fallbacks": 432,
+   "failed": 2,
+   "policy_denied": 5,
+   "pii_redacted": 835,
+   "regulated_on_prem": 7517,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.8,
+   "teams": {
+    "member-services": {
+     "requests": 33010,
+     "cached": 7593,
+     "spend_usd": 77.36,
+     "saved_usd": 23.54
+    },
+    "digital-banking": {
+     "requests": 26263,
+     "cached": 4612,
+     "spend_usd": 51.34,
+     "saved_usd": 11.07
+    },
+    "risk-analytics": {
+     "requests": 16217,
+     "cached": 656,
+     "spend_usd": 107.23,
+     "saved_usd": 4.46
+    },
+    "lending": {
+     "requests": 5914,
+     "cached": 365,
+     "spend_usd": 54.85,
+     "saved_usd": 3.47
+    },
+    "compliance": {
+     "requests": 1031,
+     "cached": 87,
+     "spend_usd": 13.59,
+     "saved_usd": 1.22
+    },
+    "it-engineering": {
+     "requests": 4426,
+     "cached": 579,
+     "spend_usd": 19.45,
+     "saved_usd": 2.84
+    },
+    "marketing": {
+     "requests": 1265,
+     "cached": 91,
+     "spend_usd": 8.43,
+     "saved_usd": 0.66
+    }
+   }
+  },
+  {
+   "date": "2026-08-22",
+   "requests": 48809,
+   "spend_usd": 174.1,
+   "saved_usd": 21.42,
+   "fallbacks": 136,
+   "failed": 0,
+   "policy_denied": 3,
+   "pii_redacted": 393,
+   "regulated_on_prem": 5201,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.0,
+   "teams": {
+    "member-services": {
+     "requests": 18188,
+     "cached": 3646,
+     "spend_usd": 45.25,
+     "saved_usd": 11.3
+    },
+    "digital-banking": {
+     "requests": 16900,
+     "cached": 2613,
+     "spend_usd": 35.74,
+     "saved_usd": 6.27
+    },
+    "risk-analytics": {
+     "requests": 13003,
+     "cached": 509,
+     "spend_usd": 87.67,
+     "saved_usd": 3.46
+    },
+    "lending": {
+     "requests": 479,
+     "cached": 25,
+     "spend_usd": 4.41,
+     "saved_usd": 0.24
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 217,
+     "cached": 28,
+     "spend_usd": 0.88,
+     "saved_usd": 0.14
+    },
+    "marketing": {
+     "requests": 22,
+     "cached": 1,
+     "spend_usd": 0.15,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-23",
+   "requests": 50850,
+   "spend_usd": 172.75,
+   "saved_usd": 24.15,
+   "fallbacks": 141,
+   "failed": 1,
+   "policy_denied": 2,
+   "pii_redacted": 336,
+   "regulated_on_prem": 5418,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 18605,
+     "cached": 4102,
+     "spend_usd": 44.34,
+     "saved_usd": 12.72
+    },
+    "digital-banking": {
+     "requests": 17979,
+     "cached": 3184,
+     "spend_usd": 33.87,
+     "saved_usd": 7.64
+    },
+    "risk-analytics": {
+     "requests": 13547,
+     "cached": 497,
+     "spend_usd": 89.4,
+     "saved_usd": 3.38
+    },
+    "lending": {
+     "requests": 448,
+     "cached": 26,
+     "spend_usd": 3.96,
+     "saved_usd": 0.25
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 246,
+     "cached": 30,
+     "spend_usd": 1.02,
+     "saved_usd": 0.15
+    },
+    "marketing": {
+     "requests": 25,
+     "cached": 2,
+     "spend_usd": 0.16,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-24",
+   "requests": 90066,
+   "spend_usd": 333.69,
+   "saved_usd": 44.33,
+   "fallbacks": 234,
+   "failed": 6,
+   "policy_denied": 12,
+   "pii_redacted": 742,
+   "regulated_on_prem": 7008,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.3,
+   "teams": {
+    "member-services": {
+     "requests": 32207,
+     "cached": 6935,
+     "spend_usd": 82.06,
+     "saved_usd": 21.5
+    },
+    "digital-banking": {
+     "requests": 29827,
+     "cached": 4662,
+     "spend_usd": 58.01,
+     "saved_usd": 11.19
+    },
+    "risk-analytics": {
+     "requests": 15042,
+     "cached": 545,
+     "spend_usd": 98.46,
+     "saved_usd": 3.71
+    },
+    "lending": {
+     "requests": 5978,
+     "cached": 358,
+     "spend_usd": 52.48,
+     "saved_usd": 3.4
+    },
+    "compliance": {
+     "requests": 992,
+     "cached": 91,
+     "spend_usd": 12.95,
+     "saved_usd": 1.27
+    },
+    "it-engineering": {
+     "requests": 4894,
+     "cached": 535,
+     "spend_usd": 21.91,
+     "saved_usd": 2.62
+    },
+    "marketing": {
+     "requests": 1126,
+     "cached": 89,
+     "spend_usd": 7.82,
+     "saved_usd": 0.64
+    }
+   }
+  },
+  {
+   "date": "2026-08-25",
+   "requests": 91902,
+   "spend_usd": 325.83,
+   "saved_usd": 45.81,
+   "fallbacks": 447,
+   "failed": 6,
+   "policy_denied": 11,
+   "pii_redacted": 759,
+   "regulated_on_prem": 7046,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.5,
+   "teams": {
+    "member-services": {
+     "requests": 34524,
+     "cached": 7291,
+     "spend_usd": 81.29,
+     "saved_usd": 22.6
+    },
+    "digital-banking": {
+     "requests": 30380,
+     "cached": 4744,
+     "spend_usd": 64.58,
+     "saved_usd": 11.39
+    },
+    "risk-analytics": {
+     "requests": 15029,
+     "cached": 587,
+     "spend_usd": 94.18,
+     "saved_usd": 3.99
+    },
+    "lending": {
+     "requests": 5272,
+     "cached": 341,
+     "spend_usd": 44.88,
+     "saved_usd": 3.24
+    },
+    "compliance": {
+     "requests": 1035,
+     "cached": 93,
+     "spend_usd": 13.28,
+     "saved_usd": 1.3
+    },
+    "it-engineering": {
+     "requests": 4457,
+     "cached": 542,
+     "spend_usd": 19.82,
+     "saved_usd": 2.66
+    },
+    "marketing": {
+     "requests": 1205,
+     "cached": 88,
+     "spend_usd": 7.8,
+     "saved_usd": 0.63
+    }
+   }
+  },
+  {
+   "date": "2026-08-26",
+   "requests": 90349,
+   "spend_usd": 332.39,
+   "saved_usd": 46.92,
+   "fallbacks": 264,
+   "failed": 1,
+   "policy_denied": 14,
+   "pii_redacted": 811,
+   "regulated_on_prem": 6886,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.7,
+   "teams": {
+    "member-services": {
+     "requests": 34943,
+     "cached": 7662,
+     "spend_usd": 84.74,
+     "saved_usd": 23.75
+    },
+    "digital-banking": {
+     "requests": 27736,
+     "cached": 4598,
+     "spend_usd": 57.64,
+     "saved_usd": 11.04
+    },
+    "risk-analytics": {
+     "requests": 14774,
+     "cached": 558,
+     "spend_usd": 96.78,
+     "saved_usd": 3.79
+    },
+    "lending": {
+     "requests": 5915,
+     "cached": 374,
+     "spend_usd": 52.66,
+     "saved_usd": 3.55
+    },
+    "compliance": {
+     "requests": 977,
+     "cached": 96,
+     "spend_usd": 12.47,
+     "saved_usd": 1.34
+    },
+    "it-engineering": {
+     "requests": 4845,
+     "cached": 569,
+     "spend_usd": 20.6,
+     "saved_usd": 2.79
+    },
+    "marketing": {
+     "requests": 1159,
+     "cached": 91,
+     "spend_usd": 7.5,
+     "saved_usd": 0.66
+    }
+   }
+  },
+  {
+   "date": "2026-08-27",
+   "requests": 85222,
+   "spend_usd": 316.98,
+   "saved_usd": 45.04,
+   "fallbacks": 288,
+   "failed": 3,
+   "policy_denied": 16,
+   "pii_redacted": 651,
+   "regulated_on_prem": 6736,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.9,
+   "teams": {
+    "member-services": {
+     "requests": 32239,
+     "cached": 7111,
+     "spend_usd": 78.44,
+     "saved_usd": 22.04
+    },
+    "digital-banking": {
+     "requests": 26428,
+     "cached": 4905,
+     "spend_usd": 52.47,
+     "saved_usd": 11.77
+    },
+    "risk-analytics": {
+     "requests": 14370,
+     "cached": 534,
+     "spend_usd": 95.68,
+     "saved_usd": 3.63
+    },
+    "lending": {
+     "requests": 5556,
+     "cached": 341,
+     "spend_usd": 50.91,
+     "saved_usd": 3.24
+    },
+    "compliance": {
+     "requests": 988,
+     "cached": 81,
+     "spend_usd": 12.16,
+     "saved_usd": 1.13
+    },
+    "it-engineering": {
+     "requests": 4483,
+     "cached": 528,
+     "spend_usd": 19.65,
+     "saved_usd": 2.59
+    },
+    "marketing": {
+     "requests": 1158,
+     "cached": 89,
+     "spend_usd": 7.67,
+     "saved_usd": 0.64
+    }
+   }
+  },
+  {
+   "date": "2026-08-28",
+   "requests": 90997,
+   "spend_usd": 334.64,
+   "saved_usd": 47.99,
+   "fallbacks": 403,
+   "failed": 3,
+   "policy_denied": 13,
+   "pii_redacted": 644,
+   "regulated_on_prem": 7487,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.6,
+   "teams": {
+    "member-services": {
+     "requests": 33557,
+     "cached": 7384,
+     "spend_usd": 77.89,
+     "saved_usd": 22.89
+    },
+    "digital-banking": {
+     "requests": 28558,
+     "cached": 5324,
+     "spend_usd": 55.77,
+     "saved_usd": 12.78
+    },
+    "risk-analytics": {
+     "requests": 16108,
+     "cached": 645,
+     "spend_usd": 106.04,
+     "saved_usd": 4.39
+    },
+    "lending": {
+     "requests": 5550,
+     "cached": 334,
+     "spend_usd": 51.03,
+     "saved_usd": 3.17
+    },
+    "compliance": {
+     "requests": 1044,
+     "cached": 86,
+     "spend_usd": 13.79,
+     "saved_usd": 1.2
+    },
+    "it-engineering": {
+     "requests": 4963,
+     "cached": 590,
+     "spend_usd": 21.72,
+     "saved_usd": 2.89
+    },
+    "marketing": {
+     "requests": 1217,
+     "cached": 93,
+     "spend_usd": 8.4,
+     "saved_usd": 0.67
+    }
+   }
+  },
+  {
+   "date": "2026-08-29",
+   "requests": 49824,
+   "spend_usd": 173.24,
+   "saved_usd": 23.69,
+   "fallbacks": 242,
+   "failed": 3,
+   "policy_denied": 0,
+   "pii_redacted": 470,
+   "regulated_on_prem": 5495,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.6,
+   "teams": {
+    "member-services": {
+     "requests": 18339,
+     "cached": 4023,
+     "spend_usd": 46.09,
+     "saved_usd": 12.47
+    },
+    "digital-banking": {
+     "requests": 16999,
+     "cached": 3024,
+     "spend_usd": 32.82,
+     "saved_usd": 7.26
+    },
+    "risk-analytics": {
+     "requests": 13738,
+     "cached": 516,
+     "spend_usd": 88.7,
+     "saved_usd": 3.51
+    },
+    "lending": {
+     "requests": 491,
+     "cached": 31,
+     "spend_usd": 4.43,
+     "saved_usd": 0.29
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 235,
+     "cached": 31,
+     "spend_usd": 1.05,
+     "saved_usd": 0.15
+    },
+    "marketing": {
+     "requests": 22,
+     "cached": 1,
+     "spend_usd": 0.15,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-30",
+   "requests": 49296,
+   "spend_usd": 162.67,
+   "saved_usd": 24.18,
+   "fallbacks": 161,
+   "failed": 2,
+   "policy_denied": 3,
+   "pii_redacted": 372,
+   "regulated_on_prem": 5365,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.3,
+   "teams": {
+    "member-services": {
+     "requests": 17727,
+     "cached": 4079,
+     "spend_usd": 40.21,
+     "saved_usd": 12.64
+    },
+    "digital-banking": {
+     "requests": 17417,
+     "cached": 2994,
+     "spend_usd": 33.57,
+     "saved_usd": 7.19
+    },
+    "risk-analytics": {
+     "requests": 13413,
+     "cached": 581,
+     "spend_usd": 83.58,
+     "saved_usd": 3.95
+    },
+    "lending": {
+     "requests": 480,
+     "cached": 27,
+     "spend_usd": 4.16,
+     "saved_usd": 0.26
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 234,
+     "cached": 26,
+     "spend_usd": 0.98,
+     "saved_usd": 0.13
+    },
+    "marketing": {
+     "requests": 25,
+     "cached": 2,
+     "spend_usd": 0.17,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-08-31",
+   "requests": 91779,
+   "spend_usd": 340.94,
+   "saved_usd": 48.02,
+   "fallbacks": 241,
+   "failed": 5,
+   "policy_denied": 14,
+   "pii_redacted": 791,
+   "regulated_on_prem": 6953,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.8,
+   "teams": {
+    "member-services": {
+     "requests": 34866,
+     "cached": 7458,
+     "spend_usd": 85.78,
+     "saved_usd": 23.12
+    },
+    "digital-banking": {
+     "requests": 29406,
+     "cached": 5450,
+     "spend_usd": 59.27,
+     "saved_usd": 13.08
+    },
+    "risk-analytics": {
+     "requests": 14937,
+     "cached": 574,
+     "spend_usd": 101.1,
+     "saved_usd": 3.9
+    },
+    "lending": {
+     "requests": 5889,
+     "cached": 352,
+     "spend_usd": 53.91,
+     "saved_usd": 3.34
+    },
+    "compliance": {
+     "requests": 979,
+     "cached": 91,
+     "spend_usd": 12.75,
+     "saved_usd": 1.27
+    },
+    "it-engineering": {
+     "requests": 4446,
+     "cached": 531,
+     "spend_usd": 20.11,
+     "saved_usd": 2.6
+    },
+    "marketing": {
+     "requests": 1256,
+     "cached": 99,
+     "spend_usd": 8.02,
+     "saved_usd": 0.71
+    }
+   }
+  },
+  {
+   "date": "2026-09-01",
+   "requests": 95035,
+   "spend_usd": 353.98,
+   "saved_usd": 48.44,
+   "fallbacks": 424,
+   "failed": 7,
+   "policy_denied": 8,
+   "pii_redacted": 758,
+   "regulated_on_prem": 7398,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.3,
+   "teams": {
+    "member-services": {
+     "requests": 36350,
+     "cached": 7719,
+     "spend_usd": 92.39,
+     "saved_usd": 23.93
+    },
+    "digital-banking": {
+     "requests": 29810,
+     "cached": 4885,
+     "spend_usd": 60.71,
+     "saved_usd": 11.72
+    },
+    "risk-analytics": {
+     "requests": 16016,
+     "cached": 622,
+     "spend_usd": 104.61,
+     "saved_usd": 4.23
+    },
+    "lending": {
+     "requests": 6068,
+     "cached": 380,
+     "spend_usd": 55.89,
+     "saved_usd": 3.61
+    },
+    "compliance": {
+     "requests": 992,
+     "cached": 97,
+     "spend_usd": 12.94,
+     "saved_usd": 1.36
+    },
+    "it-engineering": {
+     "requests": 4584,
+     "cached": 593,
+     "spend_usd": 19.41,
+     "saved_usd": 2.91
+    },
+    "marketing": {
+     "requests": 1215,
+     "cached": 94,
+     "spend_usd": 8.03,
+     "saved_usd": 0.68
+    }
+   }
+  },
+  {
+   "date": "2026-09-02",
+   "requests": 93203,
+   "spend_usd": 342.57,
+   "saved_usd": 48.02,
+   "fallbacks": 222,
+   "failed": 4,
+   "policy_denied": 6,
+   "pii_redacted": 627,
+   "regulated_on_prem": 7654,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.2,
+   "teams": {
+    "member-services": {
+     "requests": 33239,
+     "cached": 6946,
+     "spend_usd": 82.39,
+     "saved_usd": 21.53
+    },
+    "digital-banking": {
+     "requests": 30134,
+     "cached": 5515,
+     "spend_usd": 59.54,
+     "saved_usd": 13.24
+    },
+    "risk-analytics": {
+     "requests": 16766,
+     "cached": 686,
+     "spend_usd": 105.82,
+     "saved_usd": 4.66
+    },
+    "lending": {
+     "requests": 5989,
+     "cached": 368,
+     "spend_usd": 53.61,
+     "saved_usd": 3.5
+    },
+    "compliance": {
+     "requests": 948,
+     "cached": 89,
+     "spend_usd": 12.22,
+     "saved_usd": 1.25
+    },
+    "it-engineering": {
+     "requests": 4990,
+     "cached": 646,
+     "spend_usd": 21.36,
+     "saved_usd": 3.17
+    },
+    "marketing": {
+     "requests": 1137,
+     "cached": 93,
+     "spend_usd": 7.63,
+     "saved_usd": 0.67
+    }
+   }
+  },
+  {
+   "date": "2026-09-03",
+   "requests": 90643,
+   "spend_usd": 334.61,
+   "saved_usd": 45.54,
+   "fallbacks": 452,
+   "failed": 2,
+   "policy_denied": 6,
+   "pii_redacted": 772,
+   "regulated_on_prem": 7063,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.0,
+   "teams": {
+    "member-services": {
+     "requests": 32068,
+     "cached": 6880,
+     "spend_usd": 79.53,
+     "saved_usd": 21.33
+    },
+    "digital-banking": {
+     "requests": 30560,
+     "cached": 4850,
+     "spend_usd": 61.12,
+     "saved_usd": 11.64
+    },
+    "risk-analytics": {
+     "requests": 15250,
+     "cached": 649,
+     "spend_usd": 101.89,
+     "saved_usd": 4.41
+    },
+    "lending": {
+     "requests": 6073,
+     "cached": 384,
+     "spend_usd": 51.41,
+     "saved_usd": 3.65
+    },
+    "compliance": {
+     "requests": 963,
+     "cached": 81,
+     "spend_usd": 12.92,
+     "saved_usd": 1.13
+    },
+    "it-engineering": {
+     "requests": 4551,
+     "cached": 557,
+     "spend_usd": 20.2,
+     "saved_usd": 2.73
+    },
+    "marketing": {
+     "requests": 1178,
+     "cached": 90,
+     "spend_usd": 7.54,
+     "saved_usd": 0.65
+    }
+   }
+  },
+  {
+   "date": "2026-09-04",
+   "requests": 93814,
+   "spend_usd": 343.49,
+   "saved_usd": 48.78,
+   "fallbacks": 370,
+   "failed": 3,
+   "policy_denied": 17,
+   "pii_redacted": 829,
+   "regulated_on_prem": 6927,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.1,
+   "teams": {
+    "member-services": {
+     "requests": 36870,
+     "cached": 7877,
+     "spend_usd": 93.68,
+     "saved_usd": 24.42
+    },
+    "digital-banking": {
+     "requests": 29050,
+     "cached": 4902,
+     "spend_usd": 58.82,
+     "saved_usd": 11.76
+    },
+    "risk-analytics": {
+     "requests": 14734,
+     "cached": 595,
+     "spend_usd": 92.28,
+     "saved_usd": 4.05
+    },
+    "lending": {
+     "requests": 6126,
+     "cached": 389,
+     "spend_usd": 56.77,
+     "saved_usd": 3.7
+    },
+    "compliance": {
+     "requests": 1034,
+     "cached": 96,
+     "spend_usd": 12.96,
+     "saved_usd": 1.34
+    },
+    "it-engineering": {
+     "requests": 4871,
+     "cached": 582,
+     "spend_usd": 21.43,
+     "saved_usd": 2.85
+    },
+    "marketing": {
+     "requests": 1129,
+     "cached": 91,
+     "spend_usd": 7.55,
+     "saved_usd": 0.66
+    }
+   }
+  },
+  {
+   "date": "2026-09-05",
+   "requests": 52041,
+   "spend_usd": 186.65,
+   "saved_usd": 23.34,
+   "fallbacks": 138,
+   "failed": 2,
+   "policy_denied": 1,
+   "pii_redacted": 451,
+   "regulated_on_prem": 5881,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.2,
+   "teams": {
+    "member-services": {
+     "requests": 19760,
+     "cached": 3857,
+     "spend_usd": 50.32,
+     "saved_usd": 11.96
+    },
+    "digital-banking": {
+     "requests": 16872,
+     "cached": 2964,
+     "spend_usd": 33.55,
+     "saved_usd": 7.11
+    },
+    "risk-analytics": {
+     "requests": 14703,
+     "cached": 565,
+     "spend_usd": 97.74,
+     "saved_usd": 3.84
+    },
+    "lending": {
+     "requests": 459,
+     "cached": 29,
+     "spend_usd": 3.95,
+     "saved_usd": 0.28
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 222,
+     "cached": 29,
+     "spend_usd": 0.92,
+     "saved_usd": 0.14
+    },
+    "marketing": {
+     "requests": 25,
+     "cached": 1,
+     "spend_usd": 0.17,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-09-06",
+   "requests": 53364,
+   "spend_usd": 182.65,
+   "saved_usd": 26.4,
+   "fallbacks": 319,
+   "failed": 3,
+   "policy_denied": 1,
+   "pii_redacted": 408,
+   "regulated_on_prem": 5404,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.9,
+   "teams": {
+    "member-services": {
+     "requests": 20013,
+     "cached": 4527,
+     "spend_usd": 48.83,
+     "saved_usd": 14.03
+    },
+    "digital-banking": {
+     "requests": 19152,
+     "cached": 3531,
+     "spend_usd": 38.09,
+     "saved_usd": 8.47
+    },
+    "risk-analytics": {
+     "requests": 13510,
+     "cached": 514,
+     "spend_usd": 90.54,
+     "saved_usd": 3.5
+    },
+    "lending": {
+     "requests": 435,
+     "cached": 26,
+     "spend_usd": 4.04,
+     "saved_usd": 0.25
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 231,
+     "cached": 29,
+     "spend_usd": 0.99,
+     "saved_usd": 0.14
+    },
+    "marketing": {
+     "requests": 23,
+     "cached": 1,
+     "spend_usd": 0.16,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-09-07",
+   "requests": 52007,
+   "spend_usd": 178.63,
+   "saved_usd": 24.39,
+   "fallbacks": 224,
+   "failed": 2,
+   "policy_denied": 3,
+   "pii_redacted": 434,
+   "regulated_on_prem": 5414,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.1,
+   "teams": {
+    "member-services": {
+     "requests": 20255,
+     "cached": 4240,
+     "spend_usd": 47.33,
+     "saved_usd": 13.14
+    },
+    "digital-banking": {
+     "requests": 17477,
+     "cached": 3083,
+     "spend_usd": 35.13,
+     "saved_usd": 7.4
+    },
+    "risk-analytics": {
+     "requests": 13535,
+     "cached": 504,
+     "spend_usd": 90.49,
+     "saved_usd": 3.43
+    },
+    "lending": {
+     "requests": 497,
+     "cached": 31,
+     "spend_usd": 4.57,
+     "saved_usd": 0.29
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 220,
+     "cached": 24,
+     "spend_usd": 0.95,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 23,
+     "cached": 1,
+     "spend_usd": 0.16,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-09-08",
+   "requests": 89990,
+   "spend_usd": 339.31,
+   "saved_usd": 43.71,
+   "fallbacks": 523,
+   "failed": 2,
+   "policy_denied": 8,
+   "pii_redacted": 635,
+   "regulated_on_prem": 7065,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.1,
+   "teams": {
+    "member-services": {
+     "requests": 32474,
+     "cached": 6281,
+     "spend_usd": 82.45,
+     "saved_usd": 19.47
+    },
+    "digital-banking": {
+     "requests": 28987,
+     "cached": 4605,
+     "spend_usd": 60.3,
+     "saved_usd": 11.05
+    },
+    "risk-analytics": {
+     "requests": 14974,
+     "cached": 612,
+     "spend_usd": 95.25,
+     "saved_usd": 4.16
+    },
+    "lending": {
+     "requests": 6258,
+     "cached": 405,
+     "spend_usd": 56.82,
+     "saved_usd": 3.85
+    },
+    "compliance": {
+     "requests": 1076,
+     "cached": 98,
+     "spend_usd": 14.09,
+     "saved_usd": 1.37
+    },
+    "it-engineering": {
+     "requests": 5018,
+     "cached": 649,
+     "spend_usd": 22.12,
+     "saved_usd": 3.18
+    },
+    "marketing": {
+     "requests": 1203,
+     "cached": 87,
+     "spend_usd": 8.28,
+     "saved_usd": 0.63
+    }
+   }
+  },
+  {
+   "date": "2026-09-09",
+   "requests": 94915,
+   "spend_usd": 340.39,
+   "saved_usd": 48.66,
+   "fallbacks": 561,
+   "failed": 7,
+   "policy_denied": 14,
+   "pii_redacted": 867,
+   "regulated_on_prem": 7625,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.7,
+   "teams": {
+    "member-services": {
+     "requests": 34545,
+     "cached": 7619,
+     "spend_usd": 79.7,
+     "saved_usd": 23.62
+    },
+    "digital-banking": {
+     "requests": 30935,
+     "cached": 5483,
+     "spend_usd": 63.98,
+     "saved_usd": 13.16
+    },
+    "risk-analytics": {
+     "requests": 16481,
+     "cached": 615,
+     "spend_usd": 103.89,
+     "saved_usd": 4.18
+    },
+    "lending": {
+     "requests": 5810,
+     "cached": 328,
+     "spend_usd": 49.7,
+     "saved_usd": 3.12
+    },
+    "compliance": {
+     "requests": 1033,
+     "cached": 85,
+     "spend_usd": 13.23,
+     "saved_usd": 1.19
+    },
+    "it-engineering": {
+     "requests": 4813,
+     "cached": 554,
+     "spend_usd": 21.56,
+     "saved_usd": 2.71
+    },
+    "marketing": {
+     "requests": 1298,
+     "cached": 94,
+     "spend_usd": 8.33,
+     "saved_usd": 0.68
+    }
+   }
+  },
+  {
+   "date": "2026-09-10",
+   "requests": 92527,
+   "spend_usd": 337.35,
+   "saved_usd": 48.05,
+   "fallbacks": 248,
+   "failed": 2,
+   "policy_denied": 19,
+   "pii_redacted": 734,
+   "regulated_on_prem": 7613,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.7,
+   "teams": {
+    "member-services": {
+     "requests": 32454,
+     "cached": 7204,
+     "spend_usd": 78.07,
+     "saved_usd": 22.33
+    },
+    "digital-banking": {
+     "requests": 30985,
+     "cached": 5476,
+     "spend_usd": 58.62,
+     "saved_usd": 13.14
+    },
+    "risk-analytics": {
+     "requests": 16435,
+     "cached": 716,
+     "spend_usd": 108.05,
+     "saved_usd": 4.87
+    },
+    "lending": {
+     "requests": 5447,
+     "cached": 332,
+     "spend_usd": 49.11,
+     "saved_usd": 3.15
+    },
+    "compliance": {
+     "requests": 1039,
+     "cached": 84,
+     "spend_usd": 13.63,
+     "saved_usd": 1.18
+    },
+    "it-engineering": {
+     "requests": 4916,
+     "cached": 557,
+     "spend_usd": 21.92,
+     "saved_usd": 2.73
+    },
+    "marketing": {
+     "requests": 1251,
+     "cached": 90,
+     "spend_usd": 7.95,
+     "saved_usd": 0.65
+    }
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "requests": 93597,
+   "spend_usd": 349.75,
+   "saved_usd": 44.88,
+   "fallbacks": 269,
+   "failed": 2,
+   "policy_denied": 11,
+   "pii_redacted": 699,
+   "regulated_on_prem": 7705,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.6,
+   "teams": {
+    "member-services": {
+     "requests": 35041,
+     "cached": 6962,
+     "spend_usd": 88.26,
+     "saved_usd": 21.58
+    },
+    "digital-banking": {
+     "requests": 29022,
+     "cached": 4534,
+     "spend_usd": 56.33,
+     "saved_usd": 10.88
+    },
+    "risk-analytics": {
+     "requests": 16820,
+     "cached": 654,
+     "spend_usd": 112.44,
+     "saved_usd": 4.45
+    },
+    "lending": {
+     "requests": 5735,
+     "cached": 351,
+     "spend_usd": 52.72,
+     "saved_usd": 3.33
+    },
+    "compliance": {
+     "requests": 977,
+     "cached": 79,
+     "spend_usd": 12.66,
+     "saved_usd": 1.11
+    },
+    "it-engineering": {
+     "requests": 4795,
+     "cached": 576,
+     "spend_usd": 19.65,
+     "saved_usd": 2.82
+    },
+    "marketing": {
+     "requests": 1207,
+     "cached": 98,
+     "spend_usd": 7.69,
+     "saved_usd": 0.71
+    }
+   }
+  },
+  {
+   "date": "2026-09-12",
+   "requests": 53737,
+   "spend_usd": 194.0,
+   "saved_usd": 24.61,
+   "fallbacks": 137,
+   "failed": 3,
+   "policy_denied": 0,
+   "pii_redacted": 431,
+   "regulated_on_prem": 6066,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.0,
+   "teams": {
+    "member-services": {
+     "requests": 19788,
+     "cached": 4072,
+     "spend_usd": 50.15,
+     "saved_usd": 12.62
+    },
+    "digital-banking": {
+     "requests": 18050,
+     "cached": 3074,
+     "spend_usd": 37.27,
+     "saved_usd": 7.38
+    },
+    "risk-analytics": {
+     "requests": 15165,
+     "cached": 615,
+     "spend_usd": 101.38,
+     "saved_usd": 4.18
+    },
+    "lending": {
+     "requests": 479,
+     "cached": 29,
+     "spend_usd": 4.07,
+     "saved_usd": 0.28
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 232,
+     "cached": 28,
+     "spend_usd": 0.96,
+     "saved_usd": 0.14
+    },
+    "marketing": {
+     "requests": 23,
+     "cached": 1,
+     "spend_usd": 0.17,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-09-13",
+   "requests": 51651,
+   "spend_usd": 181.15,
+   "saved_usd": 25.03,
+   "fallbacks": 261,
+   "failed": 3,
+   "policy_denied": 4,
+   "pii_redacted": 444,
+   "regulated_on_prem": 5459,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.3,
+   "teams": {
+    "member-services": {
+     "requests": 18847,
+     "cached": 4271,
+     "spend_usd": 47.35,
+     "saved_usd": 13.24
+    },
+    "digital-banking": {
+     "requests": 18436,
+     "cached": 3345,
+     "spend_usd": 37.61,
+     "saved_usd": 8.03
+    },
+    "risk-analytics": {
+     "requests": 13648,
+     "cached": 497,
+     "spend_usd": 90.9,
+     "saved_usd": 3.38
+    },
+    "lending": {
+     "requests": 450,
+     "cached": 24,
+     "spend_usd": 4.02,
+     "saved_usd": 0.23
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 246,
+     "cached": 29,
+     "spend_usd": 1.11,
+     "saved_usd": 0.14
+    },
+    "marketing": {
+     "requests": 24,
+     "cached": 2,
+     "spend_usd": 0.16,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-09-14",
+   "requests": 94620,
+   "spend_usd": 343.86,
+   "saved_usd": 46.48,
+   "fallbacks": 498,
+   "failed": 1,
+   "policy_denied": 15,
+   "pii_redacted": 831,
+   "regulated_on_prem": 7601,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.2,
+   "teams": {
+    "member-services": {
+     "requests": 35305,
+     "cached": 7193,
+     "spend_usd": 89.01,
+     "saved_usd": 22.3
+    },
+    "digital-banking": {
+     "requests": 30097,
+     "cached": 4954,
+     "spend_usd": 57.59,
+     "saved_usd": 11.89
+    },
+    "risk-analytics": {
+     "requests": 16464,
+     "cached": 659,
+     "spend_usd": 104.62,
+     "saved_usd": 4.48
+    },
+    "lending": {
+     "requests": 5879,
+     "cached": 322,
+     "spend_usd": 53.02,
+     "saved_usd": 3.06
+    },
+    "compliance": {
+     "requests": 1016,
+     "cached": 91,
+     "spend_usd": 12.63,
+     "saved_usd": 1.27
+    },
+    "it-engineering": {
+     "requests": 4662,
+     "cached": 560,
+     "spend_usd": 19.41,
+     "saved_usd": 2.74
+    },
+    "marketing": {
+     "requests": 1197,
+     "cached": 103,
+     "spend_usd": 7.58,
+     "saved_usd": 0.74
+    }
+   }
+  },
+  {
+   "date": "2026-09-15",
+   "requests": 95343,
+   "spend_usd": 336.91,
+   "saved_usd": 47.14,
+   "fallbacks": 357,
+   "failed": 2,
+   "policy_denied": 8,
+   "pii_redacted": 715,
+   "regulated_on_prem": 6963,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.4,
+   "teams": {
+    "member-services": {
+     "requests": 37070,
+     "cached": 7195,
+     "spend_usd": 90.61,
+     "saved_usd": 22.3
+    },
+    "digital-banking": {
+     "requests": 30403,
+     "cached": 5406,
+     "spend_usd": 57.84,
+     "saved_usd": 12.97
+    },
+    "risk-analytics": {
+     "requests": 15012,
+     "cached": 592,
+     "spend_usd": 93.6,
+     "saved_usd": 4.03
+    },
+    "lending": {
+     "requests": 5928,
+     "cached": 348,
+     "spend_usd": 54.07,
+     "saved_usd": 3.31
+    },
+    "compliance": {
+     "requests": 959,
+     "cached": 78,
+     "spend_usd": 11.88,
+     "saved_usd": 1.09
+    },
+    "it-engineering": {
+     "requests": 4666,
+     "cached": 551,
+     "spend_usd": 20.46,
+     "saved_usd": 2.7
+    },
+    "marketing": {
+     "requests": 1305,
+     "cached": 103,
+     "spend_usd": 8.45,
+     "saved_usd": 0.74
+    }
+   }
+  },
+  {
+   "date": "2026-09-16",
+   "requests": 89457,
+   "spend_usd": 326.93,
+   "saved_usd": 46.82,
+   "fallbacks": 2773,
+   "failed": 35,
+   "policy_denied": 19,
+   "pii_redacted": 688,
+   "regulated_on_prem": 7010,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.8,
+   "teams": {
+    "member-services": {
+     "requests": 33471,
+     "cached": 7697,
+     "spend_usd": 76.28,
+     "saved_usd": 23.86
+    },
+    "digital-banking": {
+     "requests": 28316,
+     "cached": 4520,
+     "spend_usd": 57.81,
+     "saved_usd": 10.85
+    },
+    "risk-analytics": {
+     "requests": 14980,
+     "cached": 644,
+     "spend_usd": 97.49,
+     "saved_usd": 4.38
+    },
+    "lending": {
+     "requests": 5601,
+     "cached": 306,
+     "spend_usd": 52.3,
+     "saved_usd": 2.91
+    },
+    "compliance": {
+     "requests": 1018,
+     "cached": 96,
+     "spend_usd": 13.01,
+     "saved_usd": 1.34
+    },
+    "it-engineering": {
+     "requests": 4726,
+     "cached": 549,
+     "spend_usd": 21.12,
+     "saved_usd": 2.69
+    },
+    "marketing": {
+     "requests": 1345,
+     "cached": 110,
+     "spend_usd": 8.92,
+     "saved_usd": 0.79
+    }
+   }
+  },
+  {
+   "date": "2026-09-17",
+   "requests": 92424,
+   "spend_usd": 333.59,
+   "saved_usd": 47.44,
+   "fallbacks": 351,
+   "failed": 5,
+   "policy_denied": 15,
+   "pii_redacted": 861,
+   "regulated_on_prem": 7304,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.2,
+   "teams": {
+    "member-services": {
+     "requests": 33314,
+     "cached": 7549,
+     "spend_usd": 82.14,
+     "saved_usd": 23.4
+    },
+    "digital-banking": {
+     "requests": 30772,
+     "cached": 4874,
+     "spend_usd": 62.66,
+     "saved_usd": 11.7
+    },
+    "risk-analytics": {
+     "requests": 15595,
+     "cached": 648,
+     "spend_usd": 97.15,
+     "saved_usd": 4.41
+    },
+    "lending": {
+     "requests": 5764,
+     "cached": 337,
+     "spend_usd": 50.21,
+     "saved_usd": 3.2
+    },
+    "compliance": {
+     "requests": 1066,
+     "cached": 102,
+     "spend_usd": 13.53,
+     "saved_usd": 1.43
+    },
+    "it-engineering": {
+     "requests": 4738,
+     "cached": 528,
+     "spend_usd": 20.5,
+     "saved_usd": 2.59
+    },
+    "marketing": {
+     "requests": 1175,
+     "cached": 99,
+     "spend_usd": 7.4,
+     "saved_usd": 0.71
+    }
+   }
+  },
+  {
+   "date": "2026-09-18",
+   "requests": 92105,
+   "spend_usd": 345.61,
+   "saved_usd": 44.65,
+   "fallbacks": 433,
+   "failed": 4,
+   "policy_denied": 13,
+   "pii_redacted": 678,
+   "regulated_on_prem": 7228,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.9,
+   "teams": {
+    "member-services": {
+     "requests": 33223,
+     "cached": 6509,
+     "spend_usd": 86.57,
+     "saved_usd": 20.18
+    },
+    "digital-banking": {
+     "requests": 30131,
+     "cached": 5212,
+     "spend_usd": 60.63,
+     "saved_usd": 12.51
+    },
+    "risk-analytics": {
+     "requests": 15605,
+     "cached": 591,
+     "spend_usd": 102.94,
+     "saved_usd": 4.02
+    },
+    "lending": {
+     "requests": 5901,
+     "cached": 339,
+     "spend_usd": 53.25,
+     "saved_usd": 3.22
+    },
+    "compliance": {
+     "requests": 986,
+     "cached": 96,
+     "spend_usd": 12.55,
+     "saved_usd": 1.34
+    },
+    "it-engineering": {
+     "requests": 4927,
+     "cached": 534,
+     "spend_usd": 21.22,
+     "saved_usd": 2.62
+    },
+    "marketing": {
+     "requests": 1332,
+     "cached": 106,
+     "spend_usd": 8.45,
+     "saved_usd": 0.76
+    }
+   }
+  },
+  {
+   "date": "2026-09-19",
+   "requests": 53694,
+   "spend_usd": 185.85,
+   "saved_usd": 24.43,
+   "fallbacks": 265,
+   "failed": 3,
+   "policy_denied": 0,
+   "pii_redacted": 482,
+   "regulated_on_prem": 5764,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.8,
+   "teams": {
+    "member-services": {
+     "requests": 20096,
+     "cached": 3903,
+     "spend_usd": 52.22,
+     "saved_usd": 12.1
+    },
+    "digital-banking": {
+     "requests": 18462,
+     "cached": 3292,
+     "spend_usd": 37.96,
+     "saved_usd": 7.9
+    },
+    "risk-analytics": {
+     "requests": 14410,
+     "cached": 592,
+     "spend_usd": 90.31,
+     "saved_usd": 4.03
+    },
+    "lending": {
+     "requests": 451,
+     "cached": 27,
+     "spend_usd": 4.12,
+     "saved_usd": 0.26
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 250,
+     "cached": 27,
+     "spend_usd": 1.06,
+     "saved_usd": 0.13
+    },
+    "marketing": {
+     "requests": 25,
+     "cached": 1,
+     "spend_usd": 0.18,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-09-20",
+   "requests": 53494,
+   "spend_usd": 181.66,
+   "saved_usd": 26.19,
+   "fallbacks": 210,
+   "failed": 3,
+   "policy_denied": 4,
+   "pii_redacted": 436,
+   "regulated_on_prem": 5398,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.7,
+   "teams": {
+    "member-services": {
+     "requests": 19811,
+     "cached": 4522,
+     "spend_usd": 45.88,
+     "saved_usd": 14.02
+    },
+    "digital-banking": {
+     "requests": 19456,
+     "cached": 3235,
+     "spend_usd": 39.84,
+     "saved_usd": 7.76
+    },
+    "risk-analytics": {
+     "requests": 13495,
+     "cached": 586,
+     "spend_usd": 90.37,
+     "saved_usd": 3.98
+    },
+    "lending": {
+     "requests": 466,
+     "cached": 30,
+     "spend_usd": 4.35,
+     "saved_usd": 0.28
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 242,
+     "cached": 28,
+     "spend_usd": 1.06,
+     "saved_usd": 0.14
+    },
+    "marketing": {
+     "requests": 24,
+     "cached": 1,
+     "spend_usd": 0.16,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-09-21",
+   "requests": 97666,
+   "spend_usd": 354.64,
+   "saved_usd": 51.28,
+   "fallbacks": 229,
+   "failed": 4,
+   "policy_denied": 16,
+   "pii_redacted": 910,
+   "regulated_on_prem": 7821,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.3,
+   "teams": {
+    "member-services": {
+     "requests": 36425,
+     "cached": 8059,
+     "spend_usd": 85.15,
+     "saved_usd": 24.98
+    },
+    "digital-banking": {
+     "requests": 31325,
+     "cached": 5273,
+     "spend_usd": 63.3,
+     "saved_usd": 12.66
+    },
+    "risk-analytics": {
+     "requests": 16793,
+     "cached": 736,
+     "spend_usd": 105.59,
+     "saved_usd": 5.0
+    },
+    "lending": {
+     "requests": 6315,
+     "cached": 402,
+     "spend_usd": 58.77,
+     "saved_usd": 3.82
+    },
+    "compliance": {
+     "requests": 1104,
+     "cached": 90,
+     "spend_usd": 14.02,
+     "saved_usd": 1.26
+    },
+    "it-engineering": {
+     "requests": 4526,
+     "cached": 588,
+     "spend_usd": 19.74,
+     "saved_usd": 2.88
+    },
+    "marketing": {
+     "requests": 1178,
+     "cached": 95,
+     "spend_usd": 8.07,
+     "saved_usd": 0.68
+    }
+   }
+  },
+  {
+   "date": "2026-09-22",
+   "requests": 93669,
+   "spend_usd": 345.75,
+   "saved_usd": 46.45,
+   "fallbacks": 506,
+   "failed": 5,
+   "policy_denied": 6,
+   "pii_redacted": 655,
+   "regulated_on_prem": 7006,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.5,
+   "teams": {
+    "member-services": {
+     "requests": 33109,
+     "cached": 6617,
+     "spend_usd": 83.84,
+     "saved_usd": 20.51
+    },
+    "digital-banking": {
+     "requests": 32256,
+     "cached": 5725,
+     "spend_usd": 65.49,
+     "saved_usd": 13.74
+    },
+    "risk-analytics": {
+     "requests": 15105,
+     "cached": 590,
+     "spend_usd": 100.22,
+     "saved_usd": 4.01
+    },
+    "lending": {
+     "requests": 6017,
+     "cached": 371,
+     "spend_usd": 54.34,
+     "saved_usd": 3.52
+    },
+    "compliance": {
+     "requests": 964,
+     "cached": 93,
+     "spend_usd": 12.59,
+     "saved_usd": 1.3
+    },
+    "it-engineering": {
+     "requests": 4906,
+     "cached": 532,
+     "spend_usd": 20.75,
+     "saved_usd": 2.61
+    },
+    "marketing": {
+     "requests": 1312,
+     "cached": 106,
+     "spend_usd": 8.52,
+     "saved_usd": 0.76
+    }
+   }
+  },
+  {
+   "date": "2026-09-23",
+   "requests": 91274,
+   "spend_usd": 333.56,
+   "saved_usd": 45.75,
+   "fallbacks": 244,
+   "failed": 4,
+   "policy_denied": 13,
+   "pii_redacted": 641,
+   "regulated_on_prem": 7710,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.0,
+   "teams": {
+    "member-services": {
+     "requests": 33170,
+     "cached": 6714,
+     "spend_usd": 82.12,
+     "saved_usd": 20.81
+    },
+    "digital-banking": {
+     "requests": 28934,
+     "cached": 5199,
+     "spend_usd": 55.6,
+     "saved_usd": 12.48
+    },
+    "risk-analytics": {
+     "requests": 16803,
+     "cached": 734,
+     "spend_usd": 104.33,
+     "saved_usd": 4.99
+    },
+    "lending": {
+     "requests": 5536,
+     "cached": 315,
+     "spend_usd": 50.44,
+     "saved_usd": 2.99
+    },
+    "compliance": {
+     "requests": 989,
+     "cached": 92,
+     "spend_usd": 12.56,
+     "saved_usd": 1.29
+    },
+    "it-engineering": {
+     "requests": 4626,
+     "cached": 500,
+     "spend_usd": 20.46,
+     "saved_usd": 2.45
+    },
+    "marketing": {
+     "requests": 1216,
+     "cached": 103,
+     "spend_usd": 8.05,
+     "saved_usd": 0.74
+    }
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "requests": 115896,
+   "spend_usd": 537.64,
+   "saved_usd": 49.19,
+   "fallbacks": 354,
+   "failed": 3,
+   "policy_denied": 8,
+   "pii_redacted": 835,
+   "regulated_on_prem": 16183,
+   "anomaly_pauses": 1,
+   "p50_overhead_ms": 8.7,
+   "teams": {
+    "member-services": {
+     "requests": 35990,
+     "cached": 8280,
+     "spend_usd": 85.63,
+     "saved_usd": 25.67
+    },
+    "digital-banking": {
+     "requests": 29228,
+     "cached": 4484,
+     "spend_usd": 56.85,
+     "saved_usd": 10.76
+    },
+    "risk-analytics": {
+     "requests": 37710,
+     "cached": 649,
+     "spend_usd": 299.01,
+     "saved_usd": 4.41
+    },
+    "lending": {
+     "requests": 5900,
+     "cached": 365,
+     "spend_usd": 52.45,
+     "saved_usd": 3.47
+    },
+    "compliance": {
+     "requests": 1099,
+     "cached": 96,
+     "spend_usd": 14.15,
+     "saved_usd": 1.34
+    },
+    "it-engineering": {
+     "requests": 4730,
+     "cached": 573,
+     "spend_usd": 21.36,
+     "saved_usd": 2.81
+    },
+    "marketing": {
+     "requests": 1239,
+     "cached": 102,
+     "spend_usd": 8.19,
+     "saved_usd": 0.73
+    }
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "requests": 93509,
+   "spend_usd": 351.44,
+   "saved_usd": 48.84,
+   "fallbacks": 304,
+   "failed": 7,
+   "policy_denied": 10,
+   "pii_redacted": 721,
+   "regulated_on_prem": 7750,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.7,
+   "teams": {
+    "member-services": {
+     "requests": 33419,
+     "cached": 7307,
+     "spend_usd": 80.25,
+     "saved_usd": 22.65
+    },
+    "digital-banking": {
+     "requests": 29851,
+     "cached": 5400,
+     "spend_usd": 60.03,
+     "saved_usd": 12.96
+    },
+    "risk-analytics": {
+     "requests": 16730,
+     "cached": 734,
+     "spend_usd": 110.88,
+     "saved_usd": 4.99
+    },
+    "lending": {
+     "requests": 6440,
+     "cached": 371,
+     "spend_usd": 57.92,
+     "saved_usd": 3.52
+    },
+    "compliance": {
+     "requests": 1058,
+     "cached": 100,
+     "spend_usd": 13.01,
+     "saved_usd": 1.4
+    },
+    "it-engineering": {
+     "requests": 4707,
+     "cached": 518,
+     "spend_usd": 20.56,
+     "saved_usd": 2.54
+    },
+    "marketing": {
+     "requests": 1304,
+     "cached": 109,
+     "spend_usd": 8.79,
+     "saved_usd": 0.78
+    }
+   }
+  },
+  {
+   "date": "2026-09-26",
+   "requests": 51625,
+   "spend_usd": 187.8,
+   "saved_usd": 22.67,
+   "fallbacks": 192,
+   "failed": 3,
+   "policy_denied": 0,
+   "pii_redacted": 472,
+   "regulated_on_prem": 5744,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 19271,
+     "cached": 3833,
+     "spend_usd": 49.67,
+     "saved_usd": 11.88
+    },
+    "digital-banking": {
+     "requests": 17291,
+     "cached": 2807,
+     "spend_usd": 35.04,
+     "saved_usd": 6.74
+    },
+    "risk-analytics": {
+     "requests": 14361,
+     "cached": 539,
+     "spend_usd": 97.77,
+     "saved_usd": 3.67
+    },
+    "lending": {
+     "requests": 450,
+     "cached": 26,
+     "spend_usd": 4.12,
+     "saved_usd": 0.25
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 226,
+     "cached": 25,
+     "spend_usd": 1.03,
+     "saved_usd": 0.12
+    },
+    "marketing": {
+     "requests": 26,
+     "cached": 2,
+     "spend_usd": 0.17,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-09-27",
+   "requests": 51630,
+   "spend_usd": 180.0,
+   "saved_usd": 24.77,
+   "fallbacks": 309,
+   "failed": 1,
+   "policy_denied": 1,
+   "pii_redacted": 348,
+   "regulated_on_prem": 5543,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.8,
+   "teams": {
+    "member-services": {
+     "requests": 18517,
+     "cached": 4271,
+     "spend_usd": 41.97,
+     "saved_usd": 13.24
+    },
+    "digital-banking": {
+     "requests": 18500,
+     "cached": 3170,
+     "spend_usd": 38.17,
+     "saved_usd": 7.61
+    },
+    "risk-analytics": {
+     "requests": 13859,
+     "cached": 519,
+     "spend_usd": 94.49,
+     "saved_usd": 3.53
+    },
+    "lending": {
+     "requests": 474,
+     "cached": 26,
+     "spend_usd": 4.06,
+     "saved_usd": 0.25
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 256,
+     "cached": 27,
+     "spend_usd": 1.14,
+     "saved_usd": 0.13
+    },
+    "marketing": {
+     "requests": 24,
+     "cached": 1,
+     "spend_usd": 0.17,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-09-28",
+   "requests": 92219,
+   "spend_usd": 354.05,
+   "saved_usd": 46.02,
+   "fallbacks": 297,
+   "failed": 3,
+   "policy_denied": 14,
+   "pii_redacted": 691,
+   "regulated_on_prem": 8000,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 33490,
+     "cached": 6979,
+     "spend_usd": 86.15,
+     "saved_usd": 21.63
+    },
+    "digital-banking": {
+     "requests": 28286,
+     "cached": 4797,
+     "spend_usd": 54.28,
+     "saved_usd": 11.51
+    },
+    "risk-analytics": {
+     "requests": 17470,
+     "cached": 630,
+     "spend_usd": 117.9,
+     "saved_usd": 4.28
+    },
+    "lending": {
+     "requests": 5955,
+     "cached": 382,
+     "spend_usd": 54.04,
+     "saved_usd": 3.63
+    },
+    "compliance": {
+     "requests": 1012,
+     "cached": 99,
+     "spend_usd": 12.24,
+     "saved_usd": 1.39
+    },
+    "it-engineering": {
+     "requests": 4805,
+     "cached": 584,
+     "spend_usd": 21.56,
+     "saved_usd": 2.86
+    },
+    "marketing": {
+     "requests": 1201,
+     "cached": 100,
+     "spend_usd": 7.88,
+     "saved_usd": 0.72
+    }
+   }
+  },
+  {
+   "date": "2026-09-29",
+   "requests": 99469,
+   "spend_usd": 360.02,
+   "saved_usd": 51.23,
+   "fallbacks": 237,
+   "failed": 2,
+   "policy_denied": 7,
+   "pii_redacted": 678,
+   "regulated_on_prem": 7927,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.5,
+   "teams": {
+    "member-services": {
+     "requests": 37378,
+     "cached": 8299,
+     "spend_usd": 93.57,
+     "saved_usd": 25.73
+    },
+    "digital-banking": {
+     "requests": 31747,
+     "cached": 5245,
+     "spend_usd": 60.81,
+     "saved_usd": 12.59
+    },
+    "risk-analytics": {
+     "requests": 17359,
+     "cached": 670,
+     "spend_usd": 109.66,
+     "saved_usd": 4.56
+    },
+    "lending": {
+     "requests": 5743,
+     "cached": 331,
+     "spend_usd": 52.53,
+     "saved_usd": 3.14
+    },
+    "compliance": {
+     "requests": 984,
+     "cached": 95,
+     "spend_usd": 12.94,
+     "saved_usd": 1.33
+    },
+    "it-engineering": {
+     "requests": 4959,
+     "cached": 637,
+     "spend_usd": 22.2,
+     "saved_usd": 3.12
+    },
+    "marketing": {
+     "requests": 1299,
+     "cached": 105,
+     "spend_usd": 8.31,
+     "saved_usd": 0.76
+    }
+   }
+  },
+  {
+   "date": "2026-09-30",
+   "requests": 93862,
+   "spend_usd": 350.95,
+   "saved_usd": 45.57,
+   "fallbacks": 393,
+   "failed": 5,
+   "policy_denied": 5,
+   "pii_redacted": 775,
+   "regulated_on_prem": 7810,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.6,
+   "teams": {
+    "member-services": {
+     "requests": 35467,
+     "cached": 7045,
+     "spend_usd": 86.3,
+     "saved_usd": 21.84
+    },
+    "digital-banking": {
+     "requests": 28369,
+     "cached": 4613,
+     "spend_usd": 54.33,
+     "saved_usd": 11.07
+    },
+    "risk-analytics": {
+     "requests": 16756,
+     "cached": 654,
+     "spend_usd": 113.34,
+     "saved_usd": 4.45
+    },
+    "lending": {
+     "requests": 5904,
+     "cached": 340,
+     "spend_usd": 53.71,
+     "saved_usd": 3.23
+    },
+    "compliance": {
+     "requests": 1108,
+     "cached": 109,
+     "spend_usd": 13.67,
+     "saved_usd": 1.53
+    },
+    "it-engineering": {
+     "requests": 5011,
+     "cached": 555,
+     "spend_usd": 21.66,
+     "saved_usd": 2.72
+    },
+    "marketing": {
+     "requests": 1247,
+     "cached": 102,
+     "spend_usd": 7.94,
+     "saved_usd": 0.73
+    }
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "requests": 94973,
+   "spend_usd": 342.07,
+   "saved_usd": 49.36,
+   "fallbacks": 569,
+   "failed": 3,
+   "policy_denied": 5,
+   "pii_redacted": 667,
+   "regulated_on_prem": 7542,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.9,
+   "teams": {
+    "member-services": {
+     "requests": 35638,
+     "cached": 7759,
+     "spend_usd": 84.28,
+     "saved_usd": 24.05
+    },
+    "digital-banking": {
+     "requests": 30113,
+     "cached": 5207,
+     "spend_usd": 59.5,
+     "saved_usd": 12.5
+    },
+    "risk-analytics": {
+     "requests": 16266,
+     "cached": 624,
+     "spend_usd": 104.3,
+     "saved_usd": 4.24
+    },
+    "lending": {
+     "requests": 5994,
+     "cached": 365,
+     "spend_usd": 52.89,
+     "saved_usd": 3.47
+    },
+    "compliance": {
+     "requests": 1036,
+     "cached": 96,
+     "spend_usd": 12.62,
+     "saved_usd": 1.34
+    },
+    "it-engineering": {
+     "requests": 4715,
+     "cached": 612,
+     "spend_usd": 20.6,
+     "saved_usd": 3.0
+    },
+    "marketing": {
+     "requests": 1211,
+     "cached": 106,
+     "spend_usd": 7.88,
+     "saved_usd": 0.76
+    }
+   }
+  },
+  {
+   "date": "2026-10-02",
+   "requests": 96079,
+   "spend_usd": 348.55,
+   "saved_usd": 49.96,
+   "fallbacks": 217,
+   "failed": 6,
+   "policy_denied": 8,
+   "pii_redacted": 767,
+   "regulated_on_prem": 7448,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.5,
+   "teams": {
+    "member-services": {
+     "requests": 33884,
+     "cached": 7816,
+     "spend_usd": 78.83,
+     "saved_usd": 24.23
+    },
+    "digital-banking": {
+     "requests": 32647,
+     "cached": 5296,
+     "spend_usd": 66.99,
+     "saved_usd": 12.71
+    },
+    "risk-analytics": {
+     "requests": 15881,
+     "cached": 572,
+     "spend_usd": 102.34,
+     "saved_usd": 3.89
+    },
+    "lending": {
+     "requests": 6488,
+     "cached": 423,
+     "spend_usd": 57.21,
+     "saved_usd": 4.02
+    },
+    "compliance": {
+     "requests": 1096,
+     "cached": 106,
+     "spend_usd": 13.8,
+     "saved_usd": 1.48
+    },
+    "it-engineering": {
+     "requests": 4734,
+     "cached": 586,
+     "spend_usd": 20.58,
+     "saved_usd": 2.87
+    },
+    "marketing": {
+     "requests": 1349,
+     "cached": 105,
+     "spend_usd": 8.8,
+     "saved_usd": 0.76
+    }
+   }
+  },
+  {
+   "date": "2026-10-03",
+   "requests": 53617,
+   "spend_usd": 189.74,
+   "saved_usd": 23.75,
+   "fallbacks": 258,
+   "failed": 3,
+   "policy_denied": 1,
+   "pii_redacted": 477,
+   "regulated_on_prem": 5666,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.2,
+   "teams": {
+    "member-services": {
+     "requests": 19813,
+     "cached": 3976,
+     "spend_usd": 49.88,
+     "saved_usd": 12.33
+    },
+    "digital-banking": {
+     "requests": 18842,
+     "cached": 3107,
+     "spend_usd": 38.32,
+     "saved_usd": 7.46
+    },
+    "risk-analytics": {
+     "requests": 14166,
+     "cached": 514,
+     "spend_usd": 95.66,
+     "saved_usd": 3.5
+    },
+    "lending": {
+     "requests": 505,
+     "cached": 32,
+     "spend_usd": 4.6,
+     "saved_usd": 0.3
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 265,
+     "cached": 30,
+     "spend_usd": 1.11,
+     "saved_usd": 0.15
+    },
+    "marketing": {
+     "requests": 26,
+     "cached": 2,
+     "spend_usd": 0.17,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-10-04",
+   "requests": 51711,
+   "spend_usd": 180.15,
+   "saved_usd": 24.09,
+   "fallbacks": 303,
+   "failed": 2,
+   "policy_denied": 0,
+   "pii_redacted": 447,
+   "regulated_on_prem": 5545,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 10.1,
+   "teams": {
+    "member-services": {
+     "requests": 18675,
+     "cached": 3799,
+     "spend_usd": 47.88,
+     "saved_usd": 11.78
+    },
+    "digital-banking": {
+     "requests": 18451,
+     "cached": 3335,
+     "spend_usd": 35.58,
+     "saved_usd": 8.0
+    },
+    "risk-analytics": {
+     "requests": 13864,
+     "cached": 576,
+     "spend_usd": 91.54,
+     "saved_usd": 3.92
+    },
+    "lending": {
+     "requests": 449,
+     "cached": 26,
+     "spend_usd": 3.9,
+     "saved_usd": 0.25
+    },
+    "compliance": {
+     "requests": 0,
+     "cached": 0,
+     "spend_usd": 0.0,
+     "saved_usd": 0.0
+    },
+    "it-engineering": {
+     "requests": 245,
+     "cached": 27,
+     "spend_usd": 1.07,
+     "saved_usd": 0.13
+    },
+    "marketing": {
+     "requests": 27,
+     "cached": 2,
+     "spend_usd": 0.18,
+     "saved_usd": 0.01
+    }
+   }
+  },
+  {
+   "date": "2026-10-05",
+   "requests": 98312,
+   "spend_usd": 364.06,
+   "saved_usd": 50.12,
+   "fallbacks": 203,
+   "failed": 4,
+   "policy_denied": 11,
+   "pii_redacted": 949,
+   "regulated_on_prem": 7534,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.7,
+   "teams": {
+    "member-services": {
+     "requests": 38719,
+     "cached": 8034,
+     "spend_usd": 99.69,
+     "saved_usd": 24.91
+    },
+    "digital-banking": {
+     "requests": 29939,
+     "cached": 5400,
+     "spend_usd": 56.43,
+     "saved_usd": 12.96
+    },
+    "risk-analytics": {
+     "requests": 16369,
+     "cached": 600,
+     "spend_usd": 109.01,
+     "saved_usd": 4.08
+    },
+    "lending": {
+     "requests": 6179,
+     "cached": 341,
+     "spend_usd": 57.07,
+     "saved_usd": 3.24
+    },
+    "compliance": {
+     "requests": 987,
+     "cached": 82,
+     "spend_usd": 13.27,
+     "saved_usd": 1.15
+    },
+    "it-engineering": {
+     "requests": 4796,
+     "cached": 617,
+     "spend_usd": 19.69,
+     "saved_usd": 3.02
+    },
+    "marketing": {
+     "requests": 1323,
+     "cached": 105,
+     "spend_usd": 8.9,
+     "saved_usd": 0.76
+    }
+   }
+  },
+  {
+   "date": "2026-10-06",
+   "requests": 100541,
+   "spend_usd": 373.06,
+   "saved_usd": 51.53,
+   "fallbacks": 513,
+   "failed": 5,
+   "policy_denied": 8,
+   "pii_redacted": 754,
+   "regulated_on_prem": 7684,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 9.1,
+   "teams": {
+    "member-services": {
+     "requests": 37655,
+     "cached": 8632,
+     "spend_usd": 91.47,
+     "saved_usd": 26.76
+    },
+    "digital-banking": {
+     "requests": 32725,
+     "cached": 5108,
+     "spend_usd": 68.89,
+     "saved_usd": 12.26
+    },
+    "risk-analytics": {
+     "requests": 16725,
+     "cached": 627,
+     "spend_usd": 110.44,
+     "saved_usd": 4.26
+    },
+    "lending": {
+     "requests": 6426,
+     "cached": 354,
+     "spend_usd": 60.12,
+     "saved_usd": 3.36
+    },
+    "compliance": {
+     "requests": 994,
+     "cached": 93,
+     "spend_usd": 12.36,
+     "saved_usd": 1.3
+    },
+    "it-engineering": {
+     "requests": 4671,
+     "cached": 578,
+     "spend_usd": 20.92,
+     "saved_usd": 2.83
+    },
+    "marketing": {
+     "requests": 1345,
+     "cached": 105,
+     "spend_usd": 8.86,
+     "saved_usd": 0.76
+    }
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "requests": 97347,
+   "spend_usd": 360.85,
+   "saved_usd": 51.54,
+   "fallbacks": 428,
+   "failed": 2,
+   "policy_denied": 12,
+   "pii_redacted": 886,
+   "regulated_on_prem": 7944,
+   "anomaly_pauses": 0,
+   "p50_overhead_ms": 8.9,
+   "teams": {
+    "member-services": {
+     "requests": 36692,
+     "cached": 8331,
+     "spend_usd": 91.41,
+     "saved_usd": 25.83
+    },
+    "digital-banking": {
+     "requests": 30730,
+     "cached": 5456,
+     "spend_usd": 63.27,
+     "saved_usd": 13.09
+    },
+    "risk-analytics": {
+     "requests": 17180,
+     "cached": 688,
+     "spend_usd": 111.72,
+     "saved_usd": 4.68
+    },
+    "lending": {
+     "requests": 5690,
+     "cached": 352,
+     "spend_usd": 51.84,
+     "saved_usd": 3.34
+    },
+    "compliance": {
+     "requests": 1072,
+     "cached": 87,
+     "spend_usd": 13.33,
+     "saved_usd": 1.22
+    },
+    "it-engineering": {
+     "requests": 4623,
+     "cached": 515,
+     "spend_usd": 20.6,
+     "saved_usd": 2.52
+    },
+    "marketing": {
+     "requests": 1360,
+     "cached": 119,
+     "spend_usd": 8.68,
+     "saved_usd": 0.86
+    }
+   }
+  }
+ ],
+ "models": [
+  {
+   "model": "anthropic/claude-haiku-4-5",
+   "spend_30d_usd": 3060.54
+  },
+  {
+   "model": "openai/gpt-4.1-mini",
+   "spend_30d_usd": 2260.51
+  },
+  {
+   "model": "ollama/llama3.1:8b (on-prem)",
+   "spend_30d_usd": 1579.25
+  },
+  {
+   "model": "anthropic/claude-sonnet-4-5",
+   "spend_30d_usd": 1306.38
+  },
+  {
+   "model": "gemini/gemini-2.5-flash",
+   "spend_30d_usd": 1016.19
+  }
+ ],
+ "incidents": [
+  {
+   "date": "2026-09-16",
+   "provider": "OpenAI",
+   "duration_minutes": 47,
+   "what": "Elevated 5xx and latency on gpt-4.1-mini",
+   "handled": "Circuit breaker opened after 3 failures; traffic fell back to Claude Haiku. 99.6% of affected requests still succeeded."
+  },
+  {
+   "date": "2026-07-29",
+   "provider": "Google Gemini",
+   "duration_minutes": 12,
+   "what": "Rate-limit (429) burst in us-east",
+   "handled": "Breaker half-open probes recovered the route; no member-facing errors."
+  }
+ ],
+ "anomaly": {
+  "date": "2026-09-24",
+  "team": "risk-analytics",
+  "key": "fraud-scoring-batch",
+  "baseline_multiple": 10.2,
+  "prevented_usd": 2310.0
+ },
+ "governance": {
+  "requests_with_attribution": 1.0,
+  "audit_chain_verified_rate": 1.0,
+  "content_logging_default": "off (metadata only)",
+  "keys_rotated_90d": 14
+ },
+ "notable": [
+  {
+   "date": "2026-10-02",
+   "kind": "policy",
+   "title": "Contractor key blocked from Sonnet-class models",
+   "detail": "A vendor's code-assistant key asked for claude-sonnet-4-5; the contractors policy denied it and the request fell to an allowed alias."
+  },
+  {
+   "date": "2026-09-24",
+   "kind": "risk",
+   "title": "Runaway fraud-scoring batch paused at 10.2x its baseline",
+   "detail": "A retry loop multiplied requests; anomaly detection paused the key within the hour. Estimated spend prevented: $2,310 before the next business day."
+  },
+  {
+   "date": "2026-09-16",
+   "kind": "reliability",
+   "title": "Provider incident absorbed by fallback",
+   "detail": "47 minutes of OpenAI errors; the member assistant and online banking chat kept answering through Claude Haiku."
+  },
+  {
+   "date": "2026-09-03",
+   "kind": "finops",
+   "title": "September showback sent to department heads",
+   "detail": "CSV export by team and app; risk analytics came in 9% under budget after moving dispute triage to the cheap-batch route."
+  },
+  {
+   "date": "2026-08-11",
+   "kind": "policy",
+   "title": "Regulated workloads pinned to on-prem models",
+   "detail": "BSA and dispute-evidence prompts now route only to the on-prem Llama deployment; fallback can't reach a cloud provider."
+  }
+ ]
+}

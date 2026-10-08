@@ -29,9 +29,10 @@ TOOLS = [
 def test_example_config_validates():
     pol = mcp_policy.load(yaml.safe_load((ROOT / "config" / "mcp.example.yaml").read_text()))
     assert set(pol.servers) == {"tickets", "files"}
-    assert pol.entry("support", "tickets", "search_customers").tool == "search_*"
-    assert pol.entry("support", "files", "read_file") is None and pol.entry("data", "files", "delete_file") is None
-    assert pol.entry("data", "files", "read_file").limits.cost_usd == 0.001
+    assert pol.entry("member-services", "tickets", "search_customers").tool == "search_*"
+    assert pol.entry("member-services", "files", "read_file") is None
+    assert pol.entry("risk-analytics", "files", "delete_file") is None
+    assert pol.entry("risk-analytics", "files", "read_file").limits.cost_usd == 0.001
 
 
 @pytest.mark.parametrize(

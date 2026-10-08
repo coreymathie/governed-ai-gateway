@@ -1,6 +1,20 @@
 // Governed AI Gateway console: app shell, hash router, trace drawer and guided tour. Corey Mathie, 2026.
 import { DemoAdapter, LiveAdapter, REPO, detectMode, store } from "./adapters.js";
 import { SCREENS } from "./screens.js";
+import { crumbs, initShell, openKeys, setActive } from "./shell.js";
+
+// Sidebar groups and sub-pages (the console shell is shared in design with the portfolio's other consoles).
+const ROUTES = {
+  overview: { group: "Monitor", label: "Overview", key: "o", subs: { session: "This session" } },
+  traces: { group: "Monitor", label: "Traces", key: "t" },
+  playground: { group: "Operate", label: "Playground", key: "p" },
+  policies: { group: "Govern", label: "Policies", key: "y" },
+  budgets: { group: "Govern", label: "Budgets & Keys", key: "b" },
+  mcp: { group: "Govern", label: "MCP tools", key: "m" },
+  evals: { group: "Govern", label: "Evals", key: "e" },
+  settings: { group: "Configure", label: "Settings", key: "s" },
+};
+const GROUPS = ["Monitor", "Operate", "Govern", "Configure"];
 import { $, $$, decisionIcon, esc, errorState, loading, ms, statusPill, toast, usd } from "./ui.js";
 
 const ICONS = {
@@ -18,9 +32,13 @@ const app = { adapter: null, screen: null, cleanup: null, cache: {} };
 window.__console = app;
 
 function renderNav() {
-  $("#nav").innerHTML = SCREENS.map(
-    (s) => `<a href="#/${s.id}" data-nav="${s.id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[s.id] || ""}</svg><span>${esc(s.title)}</span></a>`,
-  ).join("");
+  $("#nav").innerHTML = GROUPS.map((g) => {
+    const items = SCREENS.filter((s) => ROUTES[s.id]?.group === g);
+    return `<div class="nav-group"><div class="nav-label" id="nl-${g.toLowerCase()}">${esc(g)}</div><div class="nav-items" role="list" aria-labelledby="nl-${g.toLowerCase()}">${items.map((s) => {
+      const subs = Object.entries(ROUTES[s.id].subs || {});
+      return `<div role="listitem"><a href="#/${s.id}" data-nav="${s.id}" data-route="${s.id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[s.id] || ""}</svg><span>${esc(s.title)}</span></a>${subs.length ? `<div class="sub">${subs.map(([k, label]) => `<a href="#/${s.id}/${k}" data-route="${s.id}" data-sub="${k}" class="sub-link"><span>${esc(label)}</span></a>`).join("")}</div>` : ""}</div>`;
+    }).join("")}</div></div>`;
+  }).join("");
 }
 
 function parseHash() {
@@ -39,16 +57,19 @@ async function route() {
   if (!app.adapter) return;
   const { id, arg, params } = parseHash();
   const screen = SCREENS.find((s) => s.id === id) || SCREENS[0];
-  $$("#nav a").forEach((a) => (a.getAttribute("data-nav") === screen.id ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
-  $("#pageTitle").textContent = screen.title;
-  document.title = `${screen.title} · Governed AI Gateway`;
+  const subs = ROUTES[screen.id]?.subs || {};
+  const sub = subs[arg] ? arg : "";
+  setActive(screen.id, sub);
+  $("#pageTitle").innerHTML = crumbs(screen.id, sub);
+  document.title = `${sub ? subs[sub] : screen.title} · Governed AI Gateway`;
   $("#sidebar").classList.remove("open");
   $("#menuBtn").setAttribute("aria-expanded", "false");
-  const sameScreen = app.screen === screen.id;
+  const screenKey = Object.keys(subs).length ? `${screen.id}/${sub}` : screen.id;
+  const sameScreen = app.screen === screenKey;
   if (!sameScreen) {
     if (app.cleanup) { try { app.cleanup(); } catch { /* ignore */ } }
     app.cleanup = null;
-    app.screen = screen.id;
+    app.screen = screenKey;
     const view = $("#view");
     view.innerHTML = loading(`Loading ${screen.title}…`);
     try {
@@ -209,6 +230,25 @@ function setBadge(text, cls = "") {
 
 async function boot() {
   renderNav();
+  initShell({
+    home: "Cypress Harbor CU",
+    storageKey: "gag",
+    navLinks: "#nav a[data-route]",
+    routes: ROUTES,
+    go: navigate,
+    commands: () => [
+      { section: "Actions", label: "Send 20 requests from every team", hint: "Overview › This session", hash: "#/overview/session" },
+      { section: "Actions", label: "Take a provider down", hint: "Playground › Resilience", hash: "#/playground?tab=resilience" },
+      { section: "Actions", label: "Send a prompt with personal data", hint: "Playground › PII redaction", hash: "#/playground?tab=chat&sample=pii" },
+      { section: "Actions", label: "Compare two routes", hint: "Playground › Compare", hash: "#/playground?tab=compare" },
+      { section: "Actions", label: "Catch a runaway key", hint: "Budgets & Keys › anomaly", hash: "#/budgets?spike=1" },
+      { section: "Actions", label: "Preview a policy change", hint: "Policies › dry run", hash: "#/policies" },
+      { section: "Actions", label: "Export showback by team", hint: "Budgets & Keys", hash: "#/budgets" },
+      { section: "Actions", label: "Take the guided tour", hint: "Help", run: () => showTour(0) },
+      { section: "Actions", label: "Show keyboard shortcuts", hint: "Help", run: openKeys },
+    ],
+  });
+  $("#keys-btn").onclick = openKeys;
   $("#repoLink").href = REPO;
   $("#menuBtn").onclick = () => {
     const open = $("#sidebar").classList.toggle("open");

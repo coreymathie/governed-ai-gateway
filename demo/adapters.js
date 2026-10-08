@@ -15,15 +15,15 @@ export const LAZY_MODULES = ["models"];
 export const REPO = "https://github.com/coreymathie/governed-ai-gateway";
 
 export const SAMPLE_PROMPTS = {
-  pii: "Summarize this ticket: customer Jordan Example (jordan@example.com, 202-555-0143) says card 4111 1111 1111 1111 was double charged. Internal note: retry with key sk-test-abcdefghijklmnopqrstuvwx.",
-  faq: "How do I export my invoices as CSV?",
-  release: "Draft a two-sentence release note for the new CSV export.",
-  triage: "A customer says they were charged twice this month. What should I check first?",
+  pii: "Summarize this case: member Jordan Example (jordan@example.com, 202-555-0143) says card 4111 1111 1111 1111 was double charged. Internal note: retry with key sk-test-abcdefghijklmnopqrstuvwx.",
+  faq: "How does a member download statements as PDF?",
+  release: "Draft a two-sentence in-app message announcing instant card lock in mobile banking.",
+  triage: "A member says their debit card was charged twice this month. What should I check first?",
 };
 const TEAM_PROMPTS = {
-  product: [SAMPLE_PROMPTS.release, "Suggest three names for a saved-search feature, one line each."],
-  support: [SAMPLE_PROMPTS.faq, SAMPLE_PROMPTS.triage, "How do I rotate an API key in the dashboard?"],
-  data: ["Classify these ticket subjects as billing, bug, how-to or feature request: invoice export fails; dark mode request; charged twice; slow search."],
+  "digital-banking": [SAMPLE_PROMPTS.release, "Suggest three names for a round-up savings feature, one line each."],
+  "member-services": [SAMPLE_PROMPTS.faq, SAMPLE_PROMPTS.triage, "How do I reset a member's online banking password?"],
+  "risk-analytics": ["Tag these dispute cases as fraud, merchant error, duplicate or member error: unknown gas station charge; cancelled subscription renewed; restaurant charged twice; ATM cash not dispensed."],
 };
 
 export class ApiError extends Error {
@@ -325,8 +325,8 @@ export class LiveAdapter {
   }
 
   async traffic(n, scenario = "mix") {
-    const teams = scenario === "spike" ? ["data"] : ["product", "support", "data", "product", "support"];
-    const aliasFor = { product: "smart-fast", support: "smart-fast", data: "cheap-batch" };
+    const teams = scenario === "spike" ? ["risk-analytics"] : ["digital-banking", "member-services", "risk-analytics", "digital-banking", "member-services"];
+    const aliasFor = { "digital-banking": "smart-fast", "member-services": "smart-fast", "risk-analytics": "cheap-batch" };
     const routes = await this.routes();
     const keys = {};
     for (const t of new Set(teams)) keys[t] = await this.ensureTeamKey(t);
@@ -339,7 +339,7 @@ export class LiveAdapter {
         const prompts = TEAM_PROMPTS[team];
         let alias = scenario === "spike" ? "smart-fast" : aliasFor[team];
         if (!routes[alias]) alias = Object.keys(routes)[0];
-        const res = await this.chat({ key: keys[team], alias, text: prompts[j % prompts.length], max_tokens: 256, temperature: team === "support" ? 0 : 0.7 });
+        const res = await this.chat({ key: keys[team], alias, text: prompts[j % prompts.length], max_tokens: 256, temperature: team === "member-services" ? 0 : 0.7 });
         const o = res.ok ? (res.cache && res.cache !== "miss" ? "cache_hit" : "ok") : res.status >= 500 ? "error" : "rejected";
         outcomes[o] = (outcomes[o] || 0) + 1;
       }
@@ -390,7 +390,7 @@ export class LiveAdapter {
   async teams() {
     const keys = await this.req("/admin/keys");
     const pol = await this.req("/admin/policies").catch(() => ({ teams: {} }));
-    return [...new Set([...keys.map((k) => k.team), ...Object.keys(pol.teams || {}), "product", "support", "data"])].sort();
+    return [...new Set([...keys.map((k) => k.team), ...Object.keys(pol.teams || {}), "digital-banking", "member-services", "risk-analytics"])].sort();
   }
   async playgroundKeys() {
     return Object.entries(this.appKeys).map(([label, e]) => ({ label, team: e.team }));

@@ -8,7 +8,7 @@
 
 ### ▶ [Open the live console](https://coreymathie.github.io/governed-ai-gateway/demo/)
 
-[![The Governed AI Gateway console: spend per hour against the 7-day average, fallback rate, cache savings, anomaly flags and circuit breakers](docs/img/console.png)](https://coreymathie.github.io/governed-ai-gateway/demo/)
+[![The Governed AI Gateway console: AI spend against team budgets, requests served, cost per 1,000 requests, cache savings, success rate, spend stopped by an anomaly pause and daily spend by team for a sample credit union](docs/img/console.png)](https://coreymathie.github.io/governed-ai-gateway/demo/)
 
 The hosted console runs this repo's actual `router/*.py` modules (policy, budgets, breakers, fallback chain, anomaly thresholds, PII hooks, caches, MCP tool policy, showback, config validation) in your browser via Pyodide, against **simulated** providers. No API keys, no provider calls. The same console runs **live** against the real gateway: `docker compose up`, then open http://localhost:4000/console/.
 
@@ -16,11 +16,16 @@ The gateway sits in front of OpenAI, Anthropic, Gemini and local Ollama with the
 
 ## Console
 
+The console is set in a sample business so the gateway can be judged at the scale it would run at: **Cypress Harbor Credit Union**, a *fictional* credit union whose seven teams (member services, digital banking, risk analytics, lending, compliance, IT, marketing) run ten AI applications through the gateway with monthly budgets. Its 90 days of traffic and spend come from [scripts/generate_sample_company.py](scripts/generate_sample_company.py) (seeded, checked in CI) and are labelled **Sample** everywhere, apart from **measured** results and the **simulated** requests sent in the tab. The demo's app keys and teams use the same setting (`online-banking` and `mobile-banking` for digital banking, `member-assistant` for member services, `fraud-scoring-batch` for risk analytics).
+
+Navigation follows modern operations consoles: screens grouped by job (Monitor, Operate, Govern, Configure) with sub-pages in the sidebar, breadcrumbs in the header, a command palette (<kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd> or <kbd>/</kbd>) over screens and actions, `g` + letter shortcuts (<kbd>?</kbd> lists them), and a collapsible sidebar.
+
 One static app in [demo/](demo/) with two adapters behind the same interface: `DemoAdapter` (Pyodide + [demo/engine.py](demo/engine.py)) and `LiveAdapter` (the gateway's HTTP API). The header badge says which one is running: "Demo · runs in your browser" or "Live · connected to *host*". Anything simulated is labelled so.
 
 | Screen | What it does | Live endpoints |
 |---|---|---|
-| **Overview** | Spend by team and model, requests, fallback rate, cache savings, anomaly flags, open circuits; spend per hour vs. each hour's 7-day average; guided "what to try" cards | `GET /admin/overview` |
+| **Overview › Business impact** | For the sample credit union over 7, 30 or 90 days: AI spend against team budgets, requests served, cost per 1,000 requests, cache savings, success rate with fallback rescues, spend stopped by an anomaly pause, policy decisions enforced and regulated requests kept on-prem, each against the previous period; daily spend by team; budgets by team; spend by model; provider incidents; governance checks; recent activity | `demo/data/sample_company.json` |
+| **Overview › This session** | Spend by team and model, requests, fallback rate, cache savings, anomaly flags, open circuits; spend per hour vs. each hour's 7-day average; guided "what to try" cards | `GET /admin/overview` |
 | **Playground** | Send a chat request as any app key and alias and see who answered, what it cost and each stage it passed; compare two routes side by side over N runs; take a simulated provider down (outage, 429s, error rate, latency) and watch breakers open, fall back and recover; semantic-cache playground (demo) | `/v1/chat/completions`, `/admin/mock/providers`, `/admin/circuits`, `/admin/circuits/reset` |
 | **Traces** | Every request, filterable by team, outcome and free text; a drawer with the full decision timeline: auth → policy/OPA → budgets → anomaly → PII hooks → exact and semantic cache → TPM → each fallback attempt with its breaker state → cost settle → response hooks → content log. Deep-linkable (`#/traces/<id>`), browser back closes it | `GET /admin/traces`, `GET /admin/traces/{id}` |
 | **Policies** | Edit `config/policies.yaml`, `routes.yaml` and the MCP file; validate with the gateway's own loaders (errors inline with line numbers); preview every team × route decision against the active policy before applying; apply and re-run a request | `GET/PUT /admin/config/{name}`, `POST /admin/config/{name}/validate`, `POST /admin/policies/dry-run` |
@@ -260,7 +265,7 @@ resilience:
 budgets:
   org:   { daily_usd: 2000, monthly_usd: 40000 }
   teams: { data: { daily_usd: 200, tpm: 400000 } }
-  keys:  { nightly-batch: { monthly_usd: 300 } }
+  keys:  { fraud-scoring-batch: { monthly_usd: 300 } }
 ```
 
 Full annotated file: [config/routes.yaml](config/routes.yaml) (the budget figures above are examples; the shipped file leaves org/team overrides empty).
@@ -354,7 +359,7 @@ Create a key for an application, then use any OpenAI client:
 ```bash
 curl -X POST http://localhost:4000/admin/keys \
   -H "Authorization: Bearer $ROUTER_ADMIN_KEY" -H "Content-Type: application/json" \
-  -d '{"label": "web-app", "team": "product"}'
+  -d '{"label": "online-banking", "team": "digital-banking"}'
 ```
 
 ```python
