@@ -24,7 +24,7 @@ def restore_prices():
     costs.set_price_overrides(before)
 
 
-def ask(e, key="web-app", alias="smart-fast", text=PROMPT, max_tokens=256, temperature=0.7):
+def ask(e, key="online-banking", alias="smart-fast", text=PROMPT, max_tokens=256, temperature=0.7):
     return run_sync(e.request(key, alias, text, max_tokens, temperature))
 
 
@@ -87,45 +87,45 @@ def test_policy_residency_deny_and_latency_route():
     )
     assert "pii_redact" in stages(local)["pre_hooks"]["summary"]
     assert ask(e, alias="nope")["status"] == 400
-    assert ask(e, "mobile-app", "fast-chat")["status"] == 200
+    assert ask(e, "mobile-banking", "fast-chat")["status"] == 200
 
 
 def test_exact_and_semantic_cache():
     e = Engine()
-    miss = ask(e, "support-bot", temperature=0)
-    hit = ask(e, "support-bot", temperature=0)
+    miss = ask(e, "member-assistant", temperature=0)
+    hit = ask(e, "member-assistant", temperature=0)
     assert stages(miss)["cache"]["decision"] == "miss" and hit["outcome"] == "cache_hit"
     assert hit["cost_usd"] == 0 and hit["saved_usd"] == pytest.approx(miss["cost_usd"])
-    e.set_semantic_team("support", True)
-    ask(e, "support-bot", text="How do I rotate an API key in the dashboard?", temperature=0)
-    sem = ask(e, "support-bot", text="how do i rotate an api key in the dashboard", temperature=0)
+    e.set_semantic_team("member-services", True)
+    ask(e, "member-assistant", text="How do I rotate an API key in the dashboard?", temperature=0)
+    sem = ask(e, "member-assistant", text="how do i rotate an api key in the dashboard", temperature=0)
     assert sem["cache"] == "semantic-hit" and stages(sem)["semantic_cache"]["decision"] == "hit"
     e.set_cache(False)
-    assert stages(ask(e, "support-bot", temperature=0))["cache"]["decision"] == "skip"
+    assert stages(ask(e, "member-assistant", temperature=0))["cache"]["decision"] == "skip"
     ov = e.overview()
     assert ov["kpis"]["cache"]["hits"] == 2 and ov["kpis"]["cache"]["saved_usd"] > 0
 
 
 def test_keys_holds_revocation_and_budgets():
     e = Engine()
-    e.pause_key("web-app")
+    e.pause_key("online-banking")
     paused = ask(e)
     assert paused["status"] == 429 and paused["stages"][-1]["stage"] == "anomaly"
-    assert e.unpause_key("web-app") == "unpaused" and ask(e)["status"] == 200
-    assert e.unpause_key("web-app") == "not_paused"
-    e.revoke_key("web-app")
+    assert e.unpause_key("online-banking") == "unpaused" and ask(e)["status"] == 200
+    assert e.unpause_key("online-banking") == "not_paused"
+    e.revoke_key("online-banking")
     assert ask(e)["status"] == 401
-    created = e.create_key("new-app", "product")
+    created = e.create_key("new-app", "digital-banking")
     assert created["key"].startswith("sk-demo-") and created["simulated"]
     with pytest.raises(ValueError):
-        e.create_key("new-app", "product")
-    e.set_team_cap("product", 0.0000001)
+        e.create_key("new-app", "digital-banking")
+    e.set_team_cap("digital-banking", 0.0000001)
     capped = ask(e, "new-app")
     assert capped["status"] == 402 and capped["stages"][-1]["stage"] == "budgets"
     b = e.budgets_view()
-    assert next(t for t in b["teams"] if t["team"] == "product")["cap_usd"] == 0.0000001
+    assert next(t for t in b["teams"] if t["team"] == "digital-banking")["cap_usd"] == 0.0000001
     keys = {k["label"]: k for k in e.keys_view()}
-    assert keys["web-app"]["revoked_at"] and keys["new-app"]["team"] == "product"
+    assert keys["online-banking"]["revoked_at"] and keys["new-app"]["team"] == "digital-banking"
 
 
 def test_spike_is_flagged_then_paused_and_can_be_overridden():
@@ -135,9 +135,9 @@ def test_spike_is_flagged_then_paused_and_can_be_overridden():
     paused = [t for t in e.traces if t["status"] == 429]
     assert paused and paused[0]["stages"][-1]["stage"] == "anomaly"
     ov = e.overview()
-    assert ov["anomalies"][0]["label"] == "nightly-batch" and ov["anomalies"][0]["verdict"] == "pause"
-    assert e.unpause_key("nightly-batch") == "override"
-    tr = ask(e, "nightly-batch", "cheap-batch")
+    assert ov["anomalies"][0]["label"] == "fraud-scoring-batch" and ov["anomalies"][0]["verdict"] == "pause"
+    assert e.unpause_key("fraud-scoring-batch") == "override"
+    tr = ask(e, "fraud-scoring-batch", "cheap-batch")
     assert tr["status"] == 200 and "admin override" in stages(tr)["anomaly"]["summary"]
 
 
@@ -150,7 +150,7 @@ def test_overview_chart_history_is_simulated_and_current_hour_is_live():
     assert all(v > 0 for v in today[:NOW_HOUR]) and all(v == 0 for v in today[NOW_HOUR + 1 :])
     assert today[NOW_HOUR] >= ov["kpis"]["spend_usd"]
     assert ov["kpis"]["requests"] >= 1 and ov["traces"]["requests"] == 20
-    assert {r["team"] for r in ov["by_team"]} <= {"product", "support", "data"}
+    assert {r["team"] for r in ov["by_team"]} <= {"digital-banking", "member-services", "risk-analytics"}
 
 
 def test_config_screens_use_the_gateway_loaders():
@@ -164,11 +164,11 @@ def test_config_screens_use_the_gateway_loaders():
     assert e.validate_config("routes", "aliases: [")["errors"][0]["line"] is not None
     assert e.apply_config("routes", "aliases:\n  a:\n    - { provider: nope, model: x }\n")["ok"] is False
 
-    before = e.dry_run(["product"], ["local-first"])["results"][0]
+    before = e.dry_run(["digital-banking"], ["local-first"])["results"][0]
     assert before["allow"] is True
     tighter = e.config("policies")["text"] + "\n"
-    tighter = tighter.replace("teams:\n", "teams:\n  product:\n    deny_aliases: [local-first]\n", 1)
-    preview = e.dry_run(["product"], ["local-first"], text=tighter)["results"][0]
+    tighter = tighter.replace("teams:\n", "teams:\n  digital-banking:\n    deny_aliases: [local-first]\n", 1)
+    preview = e.dry_run(["digital-banking"], ["local-first"], text=tighter)["results"][0]
     assert preview["allow"] is False and preview["status"] == 403
     assert e.apply_config("policies", tighter)["ok"]
     assert ask(e, alias="local-first")["status"] == 403
@@ -182,7 +182,9 @@ def test_config_screens_use_the_gateway_loaders():
 
 def test_api_dispatch_is_an_allow_list_and_json_in_json_out():
     b = JsBridge()
-    tr = json.loads(b.api("request", json.dumps({"key_label": "web-app", "alias": "smart-fast", "text": PROMPT})))
+    tr = json.loads(
+        b.api("request", json.dumps({"key_label": "online-banking", "alias": "smart-fast", "text": PROMPT}))
+    )
     assert tr["status"] == 200
     rows = json.loads(b.api("trace_rows", json.dumps({"limit": 5})))
     assert rows[0]["id"] == tr["id"]

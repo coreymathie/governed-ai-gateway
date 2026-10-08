@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+The console is set in a business. 282 tests and a 131-check browser smoke test across both console modes.
+
+### Console
+- **Overview › Business impact** for a sample company, Cypress Harbor Credit Union (fictional: seven teams, ten AI applications, four providers, monthly budgets). Over 7, 30 or 90 days: AI spend against team budgets, requests served, cost per 1,000 requests, cache savings, success rate with fallback rescues, spend stopped by an anomaly pause, policy decisions enforced and regulated requests kept on-prem, each against the previous period with trend lines; daily spend by team; budgets by team; spend by model; provider incidents; governance checks; recent activity. The previous Overview is now **Overview › This session**.
+- **Navigation**: screens grouped by job (Monitor, Operate, Govern, Configure) with sub-pages, breadcrumbs in the header, a command palette (Ctrl/Cmd+K or `/`) over screens and actions, `g` + letter shortcuts with a `?` sheet, a workspace label for the sample company, and a collapsible sidebar (`demo/shell.js`, shared in design with the portfolio's other consoles).
+- New chart: stacked daily columns (`stackedDaily` in `demo/ui.js`).
+
+### Demo data
+- `scripts/generate_sample_company.py` writes `demo/data/sample_company.json` from a fixed seed and stated assumptions; CI checks it's current, and `tests/test_sample_company.py` checks that daily totals are the sum of the teams and that it's labelled fictional.
+- The demo's teams and app keys are named for the setting: `product` → `digital-banking` (`web-app` → `online-banking`, `mobile-app` → `mobile-banking`), `support` → `member-services` (`support-bot` → `member-assistant`), `data` → `risk-analytics` (`nightly-batch` → `fraud-scoring-batch`); sample prompts are credit-union work (card disputes, statements, member messages). `config/mcp.example.yaml` and `config/mcp.mock.yaml` use the same team names. Core tests keep their own fixtures.
+
 ## [0.7.0] — 2026-10
 
 Renamed: the project is now **governed-ai-gateway** ("Governed AI Gateway"); repository, badges and Pages URLs changed. Python package and import paths (`router`) are unchanged.

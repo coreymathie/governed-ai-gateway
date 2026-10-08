@@ -23,9 +23,9 @@ defaults:
   forward_redacted: false
 
 teams:
-  support:
+  member-services:
     - { server: tickets, tool: "search_*" }
     - { server: tickets, tool: get_ticket }
     - { server: tickets, tool: close_ticket, per_minute: 5, per_day: 200 }
-  data:
+  risk-analytics:
     - { server: files, tool: read_file, per_minute: 30, cost_usd: 0.001, daily_usd: 2.0 }
