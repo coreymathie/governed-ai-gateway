@@ -71,7 +71,8 @@
   {
    "team": "compliance",
    "apps": [
-    "reg-change-digest"
+    "reg-change-digest",
+    "bsa-case-notes"
    ],
    "monthly_budget_usd": 700,
    "cache_hit_rate": 0.09
@@ -103,7 +104,7 @@
    "failed": 3,
    "policy_denied": 18,
    "pii_redacted": 682,
-   "regulated_on_prem": 6573,
+   "regulated_on_prem": 5961,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.6,
    "teams": {
@@ -274,7 +275,7 @@
    "failed": 3,
    "policy_denied": 12,
    "pii_redacted": 788,
-   "regulated_on_prem": 6225,
+   "regulated_on_prem": 5620,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.7,
    "teams": {
@@ -331,7 +332,7 @@
    "failed": 3,
    "policy_denied": 14,
    "pii_redacted": 730,
-   "regulated_on_prem": 6937,
+   "regulated_on_prem": 6373,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.7,
    "teams": {
@@ -388,7 +389,7 @@
    "failed": 3,
    "policy_denied": 12,
    "pii_redacted": 640,
-   "regulated_on_prem": 6740,
+   "regulated_on_prem": 6138,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.0,
    "teams": {
@@ -445,7 +446,7 @@
    "failed": 5,
    "policy_denied": 7,
    "pii_redacted": 662,
-   "regulated_on_prem": 6775,
+   "regulated_on_prem": 6203,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.0,
    "teams": {
@@ -502,7 +503,7 @@
    "failed": 4,
    "policy_denied": 10,
    "pii_redacted": 779,
-   "regulated_on_prem": 6703,
+   "regulated_on_prem": 6068,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.5,
    "teams": {
@@ -673,7 +674,7 @@
    "failed": 3,
    "policy_denied": 5,
    "pii_redacted": 640,
-   "regulated_on_prem": 7078,
+   "regulated_on_prem": 6469,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.5,
    "teams": {
@@ -730,7 +731,7 @@
    "failed": 2,
    "policy_denied": 8,
    "pii_redacted": 543,
-   "regulated_on_prem": 6397,
+   "regulated_on_prem": 5768,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.2,
    "teams": {
@@ -787,7 +788,7 @@
    "failed": 6,
    "policy_denied": 16,
    "pii_redacted": 689,
-   "regulated_on_prem": 6255,
+   "regulated_on_prem": 5646,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.4,
    "teams": {
@@ -844,7 +845,7 @@
    "failed": 4,
    "policy_denied": 14,
    "pii_redacted": 757,
-   "regulated_on_prem": 6682,
+   "regulated_on_prem": 6053,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.1,
    "teams": {
@@ -901,7 +902,7 @@
    "failed": 5,
    "policy_denied": 8,
    "pii_redacted": 665,
-   "regulated_on_prem": 6615,
+   "regulated_on_prem": 6041,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.8,
    "teams": {
@@ -1072,7 +1073,7 @@
    "failed": 1,
    "policy_denied": 6,
    "pii_redacted": 620,
-   "regulated_on_prem": 6588,
+   "regulated_on_prem": 5963,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.0,
    "teams": {
@@ -1129,7 +1130,7 @@
    "failed": 4,
    "policy_denied": 15,
    "pii_redacted": 727,
-   "regulated_on_prem": 7042,
+   "regulated_on_prem": 6442,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.6,
    "teams": {
@@ -1186,7 +1187,7 @@
    "failed": 5,
    "policy_denied": 4,
    "pii_redacted": 660,
-   "regulated_on_prem": 7224,
+   "regulated_on_prem": 6584,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.3,
    "teams": {
@@ -1243,7 +1244,7 @@
    "failed": 6,
    "policy_denied": 5,
    "pii_redacted": 873,
-   "regulated_on_prem": 7066,
+   "regulated_on_prem": 6449,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.9,
    "teams": {
@@ -1300,7 +1301,7 @@
    "failed": 6,
    "policy_denied": 12,
    "pii_redacted": 572,
-   "regulated_on_prem": 6837,
+   "regulated_on_prem": 6234,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.0,
    "teams": {
@@ -1471,7 +1472,7 @@
    "failed": 4,
    "policy_denied": 19,
    "pii_redacted": 798,
-   "regulated_on_prem": 7171,
+   "regulated_on_prem": 6591,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.4,
    "teams": {
@@ -1528,7 +1529,7 @@
    "failed": 4,
    "policy_denied": 19,
    "pii_redacted": 726,
-   "regulated_on_prem": 6777,
+   "regulated_on_prem": 6126,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.5,
    "teams": {
@@ -1585,7 +1586,7 @@
    "failed": 6,
    "policy_denied": 10,
    "pii_redacted": 634,
-   "regulated_on_prem": 6512,
+   "regulated_on_prem": 5871,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.5,
    "teams": {
@@ -1642,7 +1643,7 @@
    "failed": 3,
    "policy_denied": 4,
    "pii_redacted": 740,
-   "regulated_on_prem": 6628,
+   "regulated_on_prem": 6013,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.7,
    "teams": {
@@ -1699,7 +1700,7 @@
    "failed": 3,
    "policy_denied": 13,
    "pii_redacted": 824,
-   "regulated_on_prem": 7117,
+   "regulated_on_prem": 6539,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.8,
    "teams": {
@@ -1870,7 +1871,7 @@
    "failed": 5,
    "policy_denied": 14,
    "pii_redacted": 642,
-   "regulated_on_prem": 6751,
+   "regulated_on_prem": 6144,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.5,
    "teams": {
@@ -1927,7 +1928,7 @@
    "failed": 7,
    "policy_denied": 13,
    "pii_redacted": 788,
-   "regulated_on_prem": 7325,
+   "regulated_on_prem": 6735,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.1,
    "teams": {
@@ -1984,7 +1985,7 @@
    "failed": 5,
    "policy_denied": 11,
    "pii_redacted": 782,
-   "regulated_on_prem": 7099,
+   "regulated_on_prem": 6503,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.9,
    "teams": {
@@ -2041,7 +2042,7 @@
    "failed": 4,
    "policy_denied": 19,
    "pii_redacted": 740,
-   "regulated_on_prem": 7229,
+   "regulated_on_prem": 6584,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.2,
    "teams": {
@@ -2098,7 +2099,7 @@
    "failed": 5,
    "policy_denied": 15,
    "pii_redacted": 730,
-   "regulated_on_prem": 6947,
+   "regulated_on_prem": 6288,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.1,
    "teams": {
@@ -2269,7 +2270,7 @@
    "failed": 6,
    "policy_denied": 18,
    "pii_redacted": 683,
-   "regulated_on_prem": 7276,
+   "regulated_on_prem": 6647,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.7,
    "teams": {
@@ -2326,7 +2327,7 @@
    "failed": 2,
    "policy_denied": 12,
    "pii_redacted": 701,
-   "regulated_on_prem": 7364,
+   "regulated_on_prem": 6683,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.1,
    "teams": {
@@ -2383,7 +2384,7 @@
    "failed": 6,
    "policy_denied": 6,
    "pii_redacted": 863,
-   "regulated_on_prem": 7288,
+   "regulated_on_prem": 6646,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.7,
    "teams": {
@@ -2440,7 +2441,7 @@
    "failed": 4,
    "policy_denied": 5,
    "pii_redacted": 665,
-   "regulated_on_prem": 7226,
+   "regulated_on_prem": 6573,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.9,
    "teams": {
@@ -2497,7 +2498,7 @@
    "failed": 2,
    "policy_denied": 5,
    "pii_redacted": 835,
-   "regulated_on_prem": 7517,
+   "regulated_on_prem": 6847,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.8,
    "teams": {
@@ -2668,7 +2669,7 @@
    "failed": 6,
    "policy_denied": 12,
    "pii_redacted": 742,
-   "regulated_on_prem": 7008,
+   "regulated_on_prem": 6364,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.3,
    "teams": {
@@ -2725,7 +2726,7 @@
    "failed": 6,
    "policy_denied": 11,
    "pii_redacted": 759,
-   "regulated_on_prem": 7046,
+   "regulated_on_prem": 6373,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.5,
    "teams": {
@@ -2782,7 +2783,7 @@
    "failed": 1,
    "policy_denied": 14,
    "pii_redacted": 811,
-   "regulated_on_prem": 6886,
+   "regulated_on_prem": 6251,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.7,
    "teams": {
@@ -2839,7 +2840,7 @@
    "failed": 3,
    "policy_denied": 16,
    "pii_redacted": 651,
-   "regulated_on_prem": 6736,
+   "regulated_on_prem": 6093,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.9,
    "teams": {
@@ -2896,7 +2897,7 @@
    "failed": 3,
    "policy_denied": 13,
    "pii_redacted": 644,
-   "regulated_on_prem": 7487,
+   "regulated_on_prem": 6808,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.6,
    "teams": {
@@ -3067,7 +3068,7 @@
    "failed": 5,
    "policy_denied": 14,
    "pii_redacted": 791,
-   "regulated_on_prem": 6953,
+   "regulated_on_prem": 6317,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.8,
    "teams": {
@@ -3124,7 +3125,7 @@
    "failed": 7,
    "policy_denied": 8,
    "pii_redacted": 758,
-   "regulated_on_prem": 7398,
+   "regulated_on_prem": 6753,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.3,
    "teams": {
@@ -3181,7 +3182,7 @@
    "failed": 4,
    "policy_denied": 6,
    "pii_redacted": 627,
-   "regulated_on_prem": 7654,
+   "regulated_on_prem": 7038,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.2,
    "teams": {
@@ -3238,7 +3239,7 @@
    "failed": 2,
    "policy_denied": 6,
    "pii_redacted": 772,
-   "regulated_on_prem": 7063,
+   "regulated_on_prem": 6437,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.0,
    "teams": {
@@ -3295,7 +3296,7 @@
    "failed": 3,
    "policy_denied": 17,
    "pii_redacted": 829,
-   "regulated_on_prem": 6927,
+   "regulated_on_prem": 6255,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.1,
    "teams": {
@@ -3523,7 +3524,7 @@
    "failed": 2,
    "policy_denied": 8,
    "pii_redacted": 635,
-   "regulated_on_prem": 7065,
+   "regulated_on_prem": 6366,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.1,
    "teams": {
@@ -3580,7 +3581,7 @@
    "failed": 7,
    "policy_denied": 14,
    "pii_redacted": 867,
-   "regulated_on_prem": 7625,
+   "regulated_on_prem": 6953,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.7,
    "teams": {
@@ -3637,7 +3638,7 @@
    "failed": 2,
    "policy_denied": 19,
    "pii_redacted": 734,
-   "regulated_on_prem": 7613,
+   "regulated_on_prem": 6937,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.7,
    "teams": {
@@ -3694,7 +3695,7 @@
    "failed": 2,
    "policy_denied": 11,
    "pii_redacted": 699,
-   "regulated_on_prem": 7705,
+   "regulated_on_prem": 7069,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.6,
    "teams": {
@@ -3865,7 +3866,7 @@
    "failed": 1,
    "policy_denied": 15,
    "pii_redacted": 831,
-   "regulated_on_prem": 7601,
+   "regulated_on_prem": 6941,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.2,
    "teams": {
@@ -3922,7 +3923,7 @@
    "failed": 2,
    "policy_denied": 8,
    "pii_redacted": 715,
-   "regulated_on_prem": 6963,
+   "regulated_on_prem": 6340,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.4,
    "teams": {
@@ -3979,7 +3980,7 @@
    "failed": 35,
    "policy_denied": 19,
    "pii_redacted": 688,
-   "regulated_on_prem": 7010,
+   "regulated_on_prem": 6348,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.8,
    "teams": {
@@ -4036,7 +4037,7 @@
    "failed": 5,
    "policy_denied": 15,
    "pii_redacted": 861,
-   "regulated_on_prem": 7304,
+   "regulated_on_prem": 6611,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.2,
    "teams": {
@@ -4093,7 +4094,7 @@
    "failed": 4,
    "policy_denied": 13,
    "pii_redacted": 678,
-   "regulated_on_prem": 7228,
+   "regulated_on_prem": 6587,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.9,
    "teams": {
@@ -4264,7 +4265,7 @@
    "failed": 4,
    "policy_denied": 16,
    "pii_redacted": 910,
-   "regulated_on_prem": 7821,
+   "regulated_on_prem": 7103,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.3,
    "teams": {
@@ -4321,7 +4322,7 @@
    "failed": 5,
    "policy_denied": 6,
    "pii_redacted": 655,
-   "regulated_on_prem": 7006,
+   "regulated_on_prem": 6379,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.5,
    "teams": {
@@ -4378,7 +4379,7 @@
    "failed": 4,
    "policy_denied": 13,
    "pii_redacted": 641,
-   "regulated_on_prem": 7710,
+   "regulated_on_prem": 7067,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.0,
    "teams": {
@@ -4435,7 +4436,7 @@
    "failed": 3,
    "policy_denied": 8,
    "pii_redacted": 835,
-   "regulated_on_prem": 16183,
+   "regulated_on_prem": 15468,
    "anomaly_pauses": 1,
    "p50_overhead_ms": 8.7,
    "teams": {
@@ -4492,7 +4493,7 @@
    "failed": 7,
    "policy_denied": 10,
    "pii_redacted": 721,
-   "regulated_on_prem": 7750,
+   "regulated_on_prem": 7062,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.7,
    "teams": {
@@ -4663,7 +4664,7 @@
    "failed": 3,
    "policy_denied": 14,
    "pii_redacted": 691,
-   "regulated_on_prem": 8000,
+   "regulated_on_prem": 7342,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.5,
    "teams": {
@@ -4720,7 +4721,7 @@
    "failed": 2,
    "policy_denied": 7,
    "pii_redacted": 678,
-   "regulated_on_prem": 7927,
+   "regulated_on_prem": 7288,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 10.5,
    "teams": {
@@ -4777,7 +4778,7 @@
    "failed": 5,
    "policy_denied": 5,
    "pii_redacted": 775,
-   "regulated_on_prem": 7810,
+   "regulated_on_prem": 7090,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.6,
    "teams": {
@@ -4834,7 +4835,7 @@
    "failed": 3,
    "policy_denied": 5,
    "pii_redacted": 667,
-   "regulated_on_prem": 7542,
+   "regulated_on_prem": 6869,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.9,
    "teams": {
@@ -4891,7 +4892,7 @@
    "failed": 6,
    "policy_denied": 8,
    "pii_redacted": 767,
-   "regulated_on_prem": 7448,
+   "regulated_on_prem": 6736,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.5,
    "teams": {
@@ -5062,7 +5063,7 @@
    "failed": 4,
    "policy_denied": 11,
    "pii_redacted": 949,
-   "regulated_on_prem": 7534,
+   "regulated_on_prem": 6893,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.7,
    "teams": {
@@ -5115,11 +5116,11 @@
    "requests": 100541,
    "spend_usd": 373.06,
    "saved_usd": 51.53,
-   "fallbacks": 513,
+   "fallbacks": 965,
    "failed": 5,
    "policy_denied": 8,
    "pii_redacted": 754,
-   "regulated_on_prem": 7684,
+   "regulated_on_prem": 7037,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 9.1,
    "teams": {
@@ -5176,7 +5177,7 @@
    "failed": 2,
    "policy_denied": 12,
    "pii_redacted": 886,
-   "regulated_on_prem": 7944,
+   "regulated_on_prem": 7247,
    "anomaly_pauses": 0,
    "p50_overhead_ms": 8.9,
    "teams": {
@@ -5249,6 +5250,13 @@
  ],
  "incidents": [
   {
+   "date": "2026-10-06",
+   "provider": "Anthropic",
+   "duration_minutes": 12,
+   "what": "Overloaded (529) responses on claude-haiku-4-5",
+   "handled": "Each failed attempt fell through to gpt-4.1-mini within the same request; members saw about a second of extra latency and no errors."
+  },
+  {
    "date": "2026-09-16",
    "provider": "OpenAI",
    "duration_minutes": 47,
@@ -5277,6 +5285,12 @@
   "keys_rotated_90d": 14
  },
  "notable": [
+  {
+   "date": "2026-10-06",
+   "kind": "reliability",
+   "title": "Twelve minutes of Anthropic overload, no member-facing errors",
+   "detail": "claude-haiku-4-5 returned 529s from 2:05 to 2:17 pm; smart-fast requests fell back to gpt-4.1-mini within the same call."
+  },
   {
    "date": "2026-10-02",
    "kind": "policy",

@@ -20,6 +20,7 @@ jobs:
       - run: ruff format --check .
       - run: pytest -q
       - run: python scripts/generate_sample_company.py --check
+      - run: python scripts/sample_requests.py --check
 
   console-smoke:
     # Headless Chromium over the console (demo/). Live mode needs no network beyond installs; demo mode loads

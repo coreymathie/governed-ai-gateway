@@ -5,8 +5,9 @@ import { crumbs, initShell, openKeys, setActive } from "./shell.js";
 
 // Sidebar groups and sub-pages (the console shell is shared in design with the portfolio's other consoles).
 const ROUTES = {
-  overview: { group: "Monitor", label: "Overview", key: "o", subs: { session: "This session" } },
-  traces: { group: "Monitor", label: "Traces", key: "t" },
+  overview: { group: "Monitor", label: "Spend", key: "o", subs: { session: "This session" } },
+  requests: { group: "Monitor", label: "Requests", key: "r", subs: { session: "This session" } },
+  traces: { group: "Monitor", label: "Session traces", key: "t", hidden: true },
   playground: { group: "Operate", label: "Playground", key: "p" },
   policies: { group: "Govern", label: "Policies", key: "y" },
   budgets: { group: "Govern", label: "Budgets & Keys", key: "b" },
@@ -21,6 +22,7 @@ const ICONS = {
   overview: '<path d="M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 8h6V4h-6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
   playground: '<path d="M5 4l14 8-14 8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
   traces: '<path d="M4 6h16M4 12h10M4 18h13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="19" cy="12" r="2" fill="currentColor"/>',
+  requests: '<path d="M4 6h16M4 12h10M4 18h13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="19" cy="12" r="2" fill="currentColor"/>',
   policies: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/>',
   budgets: '<rect x="3" y="6" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M7 15h4" stroke="currentColor" stroke-width="1.8"/>',
   mcp: '<path d="M14 7l3-3 3 3-3 3M10 17l-3 3-3-3 3-3M17 4L7 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -28,21 +30,23 @@ const ICONS = {
   settings: '<circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
 };
 
-const app = { adapter: null, screen: null, cleanup: null, cache: {} };
+const app = { adapter: null, screen: null, cleanup: null, cache: {}, ready: false, engineError: null };
+// Screens that read committed sample data and render before the in-browser engine has started.
+const STATIC = new Set(["overview", "requests"]);
 window.__console = app;
 
 function renderNav() {
   $("#nav").innerHTML = GROUPS.map((g) => {
-    const items = SCREENS.filter((s) => ROUTES[s.id]?.group === g);
+    const items = SCREENS.filter((s) => ROUTES[s.id]?.group === g && !ROUTES[s.id].hidden);
     return `<div class="nav-group"><div class="nav-label" id="nl-${g.toLowerCase()}">${esc(g)}</div><div class="nav-items" role="list" aria-labelledby="nl-${g.toLowerCase()}">${items.map((s) => {
       const subs = Object.entries(ROUTES[s.id].subs || {});
-      return `<div role="listitem"><a href="#/${s.id}" data-nav="${s.id}" data-route="${s.id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[s.id] || ""}</svg><span>${esc(s.title)}</span></a>${subs.length ? `<div class="sub">${subs.map(([k, label]) => `<a href="#/${s.id}/${k}" data-route="${s.id}" data-sub="${k}" class="sub-link"><span>${esc(label)}</span></a>`).join("")}</div>` : ""}</div>`;
+      return `<div role="listitem"><a href="#/${s.id}" data-nav="${s.id}" data-route="${s.id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[s.id] || ""}</svg><span>${esc(ROUTES[s.id].label)}</span></a>${subs.length ? `<div class="sub">${subs.map(([k, label]) => `<a href="#/${s.id}/${k}" data-route="${s.id}" data-sub="${k}" class="sub-link"><span>${esc(label)}</span></a>`).join("")}</div>` : ""}</div>`;
     }).join("")}</div></div>`;
   }).join("");
 }
 
 function parseHash() {
-  const raw = (location.hash || "#/overview").replace(/^#\/?/, "");
+  const raw = (location.hash || "#/overview").replace(/^#\/?/, "") || "overview";
   const [path, query = ""] = raw.split("?");
   const [id, ...rest] = path.split("/");
   return { id: id || "overview", arg: rest.join("/") ? decodeURIComponent(rest.join("/")) : "", params: new URLSearchParams(query) };
@@ -53,25 +57,55 @@ export function navigate(hash) {
   else location.hash = hash;
 }
 
-async function route() {
+function engineWait(view) {
+  if (app.engineError) {
+    view.innerHTML = `<div class="card engine-wait error" role="alert"><h2>This screen couldn't start</h2>
+      <p>It runs the gateway's real Python code in your browser, which downloads about 15 MB the first time. Some company networks block that download.</p>
+      <p class="muted small">Spend and Requests still work.<span class="tech-only"> Error: ${esc(app.engineError.message || app.engineError)}</span></p>
+      <div class="row"><button class="primary" type="button" onclick="location.reload()">Try again</button><a class="btn" href="#/overview">Spend</a><a class="btn" href="#/requests">Requests</a></div></div>`;
+    return;
+  }
+  view.innerHTML = `<div class="card engine-wait"><span class="spin" aria-hidden="true"></span><h2>Starting the gateway</h2><p class="muted">This screen runs the gateway's real code in your browser. It takes a few seconds the first time.</p><p class="small faint" id="bootText"></p></div>`;
+}
+
+let routing = Promise.resolve();
+function route() {
+  routing = routing.then(renderRoute, renderRoute);
+  return routing;
+}
+
+async function renderRoute() {
   if (!app.adapter) return;
-  const { id, arg, params } = parseHash();
-  const screen = SCREENS.find((s) => s.id === id) || SCREENS[0];
+  let { id, arg, params } = parseHash();
+  if (id === "requests" && arg === "session") { history.replaceState(null, "", "#/traces"); id = "traces"; arg = ""; }
+  const screen = SCREENS.find((s) => s.id === id);
+  if (!screen) return notFound();
   const subs = ROUTES[screen.id]?.subs || {};
   const sub = subs[arg] ? arg : "";
-  setActive(screen.id, sub);
-  $("#pageTitle").innerHTML = crumbs(screen.id, sub);
-  document.title = `${sub ? subs[sub] : screen.title} · Governed AI Gateway`;
+  const navId = screen.id === "traces" ? "requests" : screen.id, navSub = screen.id === "traces" ? "session" : sub;
+  setActive(navId, navSub);
+  $("#pageTitle").innerHTML = crumbs(navId, navSub);
+  document.title = `${navSub ? ROUTES[navId].subs[navSub] : ROUTES[navId].label} · Governed AI Gateway`;
+  const needsEngine = !(STATIC.has(screen.id) && !(screen.id === "overview" && sub)) && !app.ready;
   $("#sidebar").classList.remove("open");
   $("#menuBtn").setAttribute("aria-expanded", "false");
-  const screenKey = Object.keys(subs).length ? `${screen.id}/${sub}` : screen.id;
+  const screenKey = (screen.id === "requests" ? `requests/${arg}?${params}` : Object.keys(subs).length ? `${screen.id}/${sub}` : screen.id) + (needsEngine ? "#wait" : "");
   const sameScreen = app.screen === screenKey;
+  if (needsEngine) {
+    if (!sameScreen) {
+      if (app.cleanup) { try { app.cleanup(); } catch { /* ignore */ } }
+      app.cleanup = null;
+      app.screen = screenKey;
+      engineWait($("#view"));
+    }
+    return;
+  }
   if (!sameScreen) {
     if (app.cleanup) { try { app.cleanup(); } catch { /* ignore */ } }
     app.cleanup = null;
     app.screen = screenKey;
     const view = $("#view");
-    view.innerHTML = loading(`Loading ${screen.title}…`);
+    view.innerHTML = loading("Loading…");
     try {
       app.cleanup = (await screen.render(view, { app, arg, params, navigate, openTrace })) || null;
     } catch (e) {
@@ -82,11 +116,20 @@ async function route() {
     }
     view.focus({ preventScroll: true });
     window.scrollTo(0, 0);
+    document.dispatchEvent(new CustomEvent("screen:rendered", { detail: { id: screen.id } }));
   } else if (screen.onParams) {
     screen.onParams({ arg, params });
   }
   if (screen.id === "traces" && arg) openTrace(arg, { fromRoute: true });
   else if (screen.id === "traces" && !arg) closeDrawer({ fromRoute: true });
+}
+
+function notFound() {
+  app.screen = null;
+  setActive("", "");
+  $("#pageTitle").textContent = "Not found";
+  document.title = "Not found · Governed AI Gateway";
+  $("#view").innerHTML = `<div class="card engine-wait"><h2>There's no page here</h2><p class="muted">The link may be out of date.</p><div class="row"><a class="btn primary" href="#/overview">Spend</a><a class="btn" href="#/requests">Requests</a></div></div>`;
 }
 
 // ---------- trace drawer ----------
@@ -179,11 +222,11 @@ export function closeDrawer({ fromRoute = false } = {}) {
 // ---------- guided tour ----------
 
 const TOUR = [
-  { nav: "overview", title: "Overview", body: "Spend today by team and model, fallback rate, cache savings and anomaly flags, with spend per hour against each hour's 7-day average." },
-  { nav: "playground", title: "Playground", body: "Send a request as any key, compare two routes side by side, or take a simulated provider down and watch the circuit breakers and fallback." },
-  { nav: "traces", title: "Traces", body: "Every request with its full decision timeline: auth, policy, budgets, anomaly pause, PII hooks, caches, TPM, each fallback attempt and the cost settled." },
+  { nav: "overview", title: "Spend", body: "What AI costs each team this month against its budget, the forecast for the month, cache savings, and what the gateway stopped: refused requests, a runaway batch job, provider outages." },
+  { nav: "requests", title: "Requests", body: "Every call with the app that made it, the model that answered, its cost and each control it passed. Open one to see why it was allowed, refused or rerouted." },
+  { nav: "playground", title: "Playground", body: "Send a request as any app, compare two routes side by side, or take a simulated provider down and watch the fallback." },
   { nav: "policies", title: "Policies", body: "Edit the real config/policies.yaml and routes.yaml, validate them with the gateway's own loaders, preview the decisions, then apply." },
-  { nav: "budgets", title: "Budgets & Keys", body: "Team caps, keys, anomaly pause and unpause, and the showback CSV your finance team asks for." },
+  { nav: "budgets", title: "Budgets & Keys", body: "Team caps, app keys, anomaly pause and unpause, and the showback CSV finance asks for." },
 ];
 let tourStep = 0;
 
@@ -213,6 +256,8 @@ function showTour(step = 0) {
   el.querySelector(".scrim2").onclick = endTour;
 }
 
+function startTour() { $("#tourInvite").hidden = true; showTour(0); }
+
 function endTour() {
   $("#tour").classList.remove("open");
   $("#tour").innerHTML = "";
@@ -220,16 +265,60 @@ function endTour() {
   store.set("gag.tourDone", "1");
 }
 
-// ---------- boot ----------
+// ---------- business / technical view, theme, mode badge ----------
 
-function setBadge(text, cls = "") {
-  $("#modeBadge").className = "mode-badge " + cls;
-  $("#modeText").textContent = text;
-  $("#footMode").textContent = text;
+function setView(v, remember = true) {
+  const tech = v === "technical";
+  document.body.classList.toggle("tech", tech);
+  $$("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === v)));
+  if (remember) store.set("gag.view", v);
+  paintBadge();
 }
+function initView() {
+  const q = new URLSearchParams(location.search).get("view");
+  const v = q === "technical" || q === "business" ? q : store.get("gag.view") === "technical" ? "technical" : "business";
+  setView(v, q === "technical" || q === "business");
+  $$("[data-view]").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
+}
+function initTheme() {
+  const saved = store.get("gag.theme");
+  if (saved === "dark" || saved === "light") document.documentElement.dataset.theme = saved;
+  const btn = $("#themeBtn");
+  const current = () => document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  const paint = () => {
+    const dark = current() === "dark";
+    btn.setAttribute("aria-pressed", String(dark));
+    btn.title = dark ? "Switch to light mode" : "Switch to dark mode";
+    btn.setAttribute("aria-label", btn.title);
+  };
+  btn.onclick = () => {
+    const next = current() === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    store.set("gag.theme", next);
+    paint();
+    app.screen = null;
+    route(); // charts read colours when drawn
+  };
+  paint();
+}
+
+function paintBadge() {
+  const A = app.adapter;
+  if (!A) return;
+  const tech = document.body.classList.contains("tech");
+  const state = app.engineError ? "err" : A.mode === "live" ? "live" : app.ready ? "" : "starting";
+  $("#modeBadge").className = "mode-badge " + state;
+  const text = app.engineError ? "Demo · offline" : A.mode === "live" ? A.label : tech ? (app.ready ? A.label : "Demo · starting Python…") : "Demo workspace";
+  $("#modeText").textContent = text;
+  $("#footMode").textContent = A.mode === "live" ? A.label : "Demo workspace: the gateway's Python code runs in your browser against simulated providers.";
+}
+
+// ---------- boot ----------
 
 async function boot() {
   renderNav();
+  initView();
+  initTheme();
   initShell({
     home: "Cypress Harbor CU",
     storageKey: "gag",
@@ -237,14 +326,17 @@ async function boot() {
     routes: ROUTES,
     go: navigate,
     commands: () => [
-      { section: "Actions", label: "Send 20 requests from every team", hint: "Overview › This session", hash: "#/overview/session" },
+      { section: "Actions", label: "Requests refused by policy", hint: "Requests", hash: "#/requests?outcome=refused" },
+      { section: "Actions", label: "Requests rescued by fallback", hint: "Requests", hash: "#/requests?outcome=fallback" },
+      { section: "Actions", label: "Requests with personal data redacted", hint: "Requests", hash: "#/requests?outcome=redacted" },
+      { section: "Actions", label: "Send 20 requests from every team", hint: "Spend › This session", hash: "#/overview/session" },
       { section: "Actions", label: "Take a provider down", hint: "Playground › Resilience", hash: "#/playground?tab=resilience" },
       { section: "Actions", label: "Send a prompt with personal data", hint: "Playground › PII redaction", hash: "#/playground?tab=chat&sample=pii" },
       { section: "Actions", label: "Compare two routes", hint: "Playground › Compare", hash: "#/playground?tab=compare" },
       { section: "Actions", label: "Catch a runaway key", hint: "Budgets & Keys › anomaly", hash: "#/budgets?spike=1" },
       { section: "Actions", label: "Preview a policy change", hint: "Policies › dry run", hash: "#/policies" },
       { section: "Actions", label: "Export showback by team", hint: "Budgets & Keys", hash: "#/budgets" },
-      { section: "Actions", label: "Take the guided tour", hint: "Help", run: () => showTour(0) },
+      { section: "Actions", label: "Take the guided tour", hint: "Help", run: startTour },
       { section: "Actions", label: "Show keyboard shortcuts", hint: "Help", run: openKeys },
     ],
   });
@@ -254,7 +346,9 @@ async function boot() {
     const open = $("#sidebar").classList.toggle("open");
     $("#menuBtn").setAttribute("aria-expanded", String(open));
   };
-  $("#tourBtn").onclick = () => showTour(0);
+  $("#tourBtn").onclick = startTour;
+  $("#tourInviteStart").onclick = startTour;
+  $("#tourInviteNo").onclick = () => { $("#tourInvite").hidden = true; store.set("gag.tourDone", "1"); };
   $("#scrim").onclick = () => closeDrawer();
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -265,27 +359,37 @@ async function boot() {
   window.addEventListener("hashchange", route);
 
   const detected = await detectMode();
+  const skipTour = new URLSearchParams(location.search).has("notour") || new URLSearchParams(location.search).get("tour") === "0";
+  const invite = () => { if (!skipTour && !store.get("gag.tourDone")) $("#tourInvite").hidden = false; };
   if (detected.mode === "live") {
     app.adapter = new LiveAdapter(detected.info);
-    setBadge(app.adapter.label, "live");
+    app.ready = true;
   } else {
     if (detected.mode === "live-unreachable") toast("No gateway answered at ./api-mode; running the in-browser demo instead.", "bad");
     app.adapter = new DemoAdapter();
-    setBadge("Demo · starting Python…");
-    try {
-      await app.adapter.init((msg) => ($("#bootText").textContent = msg));
-    } catch (e) {
-      console.error(e);
-      setBadge("Demo · Python failed to load", "err");
-      $("#view").innerHTML = errorState(new Error(`${e.message} The same code runs in CI: see tests/test_demo_engine.py and tests/test_demo_console.py.`));
-      return;
-    }
-    setBadge(app.adapter.label);
   }
   document.body.dataset.mode = app.adapter.mode;
+  paintBadge();
+  await route(); // Spend and Requests render now; other screens wait for the engine
+  if (!app.ready) {
+    invite();
+    try {
+      await app.adapter.init((msg) => { const t = $("#bootText"); if (t) t.textContent = msg; });
+      app.ready = true;
+    } catch (e) {
+      console.error(e);
+      app.engineError = e;
+      paintBadge();
+      app.screen = null;
+      await route();
+      document.body.dataset.ready = "error";
+      return;
+    }
+  } else invite();
+  paintBadge();
   window.__consoleReady = true;
-  await route();
-  if (!store.get("gag.tourDone") && !new URLSearchParams(location.search).has("notour")) showTour(0);
+  document.body.dataset.ready = "true";
+  if (String(app.screen || "").endsWith("#wait")) { app.screen = null; await route(); }
 }
 
 boot();
