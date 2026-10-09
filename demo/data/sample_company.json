@@ -463,7 +463,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -497,7 +497,7 @@
     "online-banking": {
      "requests": 1542,
      "cached": 241,
-     "spend_usd": 2.9865,
+     "spend_usd": 2.9866,
      "fallbacks": 5,
      "failed": 0
     },
@@ -532,14 +532,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -626,7 +626,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -695,14 +695,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -1612,7 +1612,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -1681,14 +1681,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -1775,7 +1775,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -1844,14 +1844,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -2765,7 +2765,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -2834,14 +2834,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -2928,7 +2928,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -2997,14 +2997,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -3924,7 +3924,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -3993,14 +3993,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -4087,7 +4087,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -4156,14 +4156,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -5081,7 +5081,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -5150,14 +5150,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -5244,7 +5244,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -5313,14 +5313,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -5938,14 +5938,14 @@
     "online-banking": {
      "requests": 2886,
      "cached": 517,
-     "spend_usd": 5.4362,
+     "spend_usd": 5.4363,
      "fallbacks": 9,
      "failed": 0
     },
     "mobile-banking": {
      "requests": 2333,
      "cached": 433,
-     "spend_usd": 4.1094,
+     "spend_usd": 4.1095,
      "fallbacks": 7,
      "failed": 0
     },
@@ -6238,7 +6238,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -6307,14 +6307,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -6401,7 +6401,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -6435,7 +6435,7 @@
     "online-banking": {
      "requests": 1784,
      "cached": 313,
-     "spend_usd": 3.3753,
+     "spend_usd": 3.3752,
      "fallbacks": 6,
      "failed": 0
     },
@@ -6470,14 +6470,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -6928,7 +6928,7 @@
     "online-banking": {
      "requests": 2859,
      "cached": 517,
-     "spend_usd": 5.3725,
+     "spend_usd": 5.3726,
      "fallbacks": 6,
      "failed": 0
     },
@@ -7258,7 +7258,7 @@
     "online-banking": {
      "requests": 2732,
      "cached": 489,
-     "spend_usd": 5.1468,
+     "spend_usd": 5.1467,
      "fallbacks": 5,
      "failed": 0
     },
@@ -7391,7 +7391,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -7425,7 +7425,7 @@
     "online-banking": {
      "requests": 1770,
      "cached": 326,
-     "spend_usd": 3.3158,
+     "spend_usd": 3.3159,
      "fallbacks": 5,
      "failed": 0
     },
@@ -7460,14 +7460,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -7554,7 +7554,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -7623,14 +7623,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -8544,7 +8544,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -8613,14 +8613,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -8707,7 +8707,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -8776,14 +8776,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -9697,7 +9697,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -9766,14 +9766,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -9860,7 +9860,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -9929,14 +9929,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -10023,7 +10023,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -10092,14 +10092,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -10846,7 +10846,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -10915,14 +10915,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -11009,7 +11009,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -11078,14 +11078,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -12001,7 +12001,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -12070,14 +12070,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -12164,7 +12164,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -12233,14 +12233,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -13162,7 +13162,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -13231,14 +13231,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -13325,7 +13325,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -13394,14 +13394,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -14319,7 +14319,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -14388,14 +14388,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
@@ -14482,7 +14482,7 @@
     "compliance": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "saved_usd": 0.0
     },
     "it-engineering": {
@@ -14551,14 +14551,14 @@
     "reg-change-digest": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },
     "bsa-case-notes": {
      "requests": 0,
      "cached": 0,
-     "spend_usd": 0,
+     "spend_usd": 0.0,
      "fallbacks": 0,
      "failed": 0
     },

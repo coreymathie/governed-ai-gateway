@@ -32,6 +32,7 @@ import json
 import random
 import sys
 from datetime import date, datetime, timedelta
+from math import fsum
 from pathlib import Path
 
 import yaml
@@ -87,8 +88,8 @@ def clock(hhmm: str) -> int:
 def hour_share(app: str, h0: float, h1: float) -> float:
     """Share of an app's daily traffic between local hours h0 and h1 (fractions allowed)."""
     w = ch.hour_weights(app)
-    total = sum(w) or 1.0
-    return sum(w[h] * max(0.0, min(h1, h + 1) - max(h0, h)) for h in range(24)) / total
+    total = fsum(w) or 1.0
+    return fsum(w[h] * max(0.0, min(h1, h + 1) - max(h0, h)) for h in range(24)) / total
 
 
 def window_share(app: str, start: str, minutes: int) -> float:
@@ -108,7 +109,7 @@ def expected_cost(app: str, routes: dict[str, list[str]]) -> float:
     for alias, share in ch.APPS[app]["routes"]:
         targets = routes[alias]
         firsts = ch.first_choice_shares(alias, targets)
-        total += share * sum(f * unit_cost(app, alias, t) for f, t in zip(firsts, targets, strict=True))
+        total += share * fsum(f * unit_cost(app, alias, t) for f, t in zip(firsts, targets, strict=True))
     return total
 
 
@@ -186,7 +187,7 @@ def app_day(app: str, d: date, i: int, rng: random.Random, routes: dict[str, lis
     return {
         "requests": n,
         "cached": cached,
-        "spend_usd": round(sum(v[1] for v in models.values()), 4),
+        "spend_usd": round(fsum(v[1] for v in models.values()), 4),
         "saved_usd": round(cached * expected_cost(app, routes), 4),
         "fallbacks": s["fallbacks"],
         "failed": s["failed"],
@@ -203,8 +204,8 @@ def make_day(rng: random.Random, d: date, i: int, routes: dict[str, list[str]]) 
         teams[team] = {
             "requests": sum(r["requests"] for r in rows),
             "cached": sum(r["cached"] for r in rows),
-            "spend_usd": round(sum(r["spend_usd"] for r in rows), 2),
-            "saved_usd": round(sum(r["saved_usd"] for r in rows), 2),
+            "spend_usd": round(fsum(r["spend_usd"] for r in rows), 2),
+            "saved_usd": round(fsum(r["saved_usd"] for r in rows), 2),
         }
     models: dict[str, dict] = {}
     for a in apps.values():
@@ -218,8 +219,8 @@ def make_day(rng: random.Random, d: date, i: int, routes: dict[str, list[str]]) 
     return {
         "date": d.isoformat(),
         "requests": sum(t["requests"] for t in teams.values()),
-        "spend_usd": round(sum(t["spend_usd"] for t in teams.values()), 2),
-        "saved_usd": round(sum(t["saved_usd"] for t in teams.values()), 2),
+        "spend_usd": round(fsum(t["spend_usd"] for t in teams.values()), 2),
+        "saved_usd": round(fsum(t["saved_usd"] for t in teams.values()), 2),
         "fallbacks": sum(a["fallbacks"] for a in apps.values()),
         "failed": sum(a["failed"] for a in apps.values()),
         "policy_denied": rng.randint(4, 19) if workday else rng.randint(0, 4),
@@ -244,7 +245,7 @@ def make_day(rng: random.Random, d: date, i: int, routes: dict[str, list[str]]) 
 def baseline(days: list[dict], app: str) -> tuple[float, int]:
     """router/anomaly.py's baseline over the 7 days before: spend per hour in which the key had any requests."""
     w = ch.hour_weights(app)
-    total = sum(w)
+    total = fsum(w)
     hourly: list[float] = []
     for d in days[-7:]:
         a = d["apps"][app]
@@ -255,7 +256,7 @@ def baseline(days: list[dict], app: str) -> tuple[float, int]:
 
 def spend_between(day: dict, apps: list[str], h0: float, h1: float) -> float:
     """Normal spend of these apps between local hours h0 and h1 of a day, from each app's hours of use."""
-    return sum(day["apps"][a]["spend_usd"] * hour_share(a, h0, h1) for a in apps)
+    return fsum(day["apps"][a]["spend_usd"] * hour_share(a, h0, h1) for a in apps)
 
 
 def runaway(days: list[dict], today: dict, cfg: dict) -> dict:
@@ -287,8 +288,8 @@ def runaway(days: list[dict], today: dict, cfg: dict) -> dict:
     }
     month = [x for x in days if x["date"][:7] == r["date"][:7]] + [today]
     monthly = {
-        "team monthly budget": b["teams"][team]["monthly_usd"] - sum(x["teams"][team]["spend_usd"] for x in month),
-        "org monthly budget": b["org"]["monthly_usd"] - sum(x["spend_usd"] for x in month),
+        "team monthly budget": b["teams"][team]["monthly_usd"] - fsum(x["teams"][team]["spend_usd"] for x in month),
+        "org monthly budget": b["org"]["monthly_usd"] - fsum(x["spend_usd"] for x in month),
     }
     # Spend already in the current UTC day for each daily cap: last evening after 8 pm, today until the pause.
     used = {
@@ -420,7 +421,7 @@ def stories(days: list[dict], cfg: dict, info: dict) -> tuple[list[dict], list[d
 
     aug = [d for d in days if d["date"][:7] == "2026-08"]
     budget = {t: cfg["budgets"]["teams"][t]["monthly_usd"] for t in ch.TEAMS}
-    spent = {t: sum(d["teams"][t]["spend_usd"] for d in aug) for t in ch.TEAMS}
+    spent = {t: fsum(d["teams"][t]["spend_usd"] for d in aug) for t in ch.TEAMS}
     under = {t: 1 - spent[t] / budget[t] for t in ch.TEAMS}
     most, least = max(under, key=under.get), min(under, key=under.get)
     o6, s16 = facts["2026-10-06"], facts["2026-09-16"]
@@ -467,8 +468,8 @@ def stories(days: list[dict], cfg: dict, info: dict) -> tuple[list[dict], list[d
             "date": "2026-09-03",
             "kind": "finops",
             "title": "August showback sent to department heads",
-            "detail": f"CSV export by team, app and model: {money(sum(spent.values()))} in August against "
-            f"{money(sum(budget.values()))} in team budgets ({sum(spent.values()) / sum(budget.values()):.0%}). "
+            "detail": f"CSV export by team, app and model: {money(fsum(spent.values()))} in August against "
+            f"{money(fsum(budget.values()))} in team budgets ({fsum(spent.values()) / fsum(budget.values()):.0%}). "
             f"{ch.TEAMS[most]} finished {under[most]:.0%} under budget; {ch.TEAMS[least].lower()} came closest, at "
             f"{1 - under[least]:.0%} of its budget.",
         },
