@@ -8,10 +8,10 @@ config/mcp.yaml (schema validated here; unknown keys are errors):
 
     version: 1
     servers:
-      tickets:
+      cases:
         url: http://127.0.0.1:9101/mcp        # upstream MCP server, Streamable HTTP
         timeout_s: 10
-        headers_from_env: { Authorization: MCP_TICKETS_AUTH }   # header -> env var read per call
+        headers_from_env: { Authorization: MCP_CASES_AUTH }   # header -> env var read per call
     defaults:                                  # limits for every allow entry unless it sets its own
       per_minute: 60                           # calls per key per tool (sliding 60 s)
       team_per_minute: 0                       # calls per team per tool (0 = no limit)
@@ -22,9 +22,9 @@ config/mcp.yaml (schema validated here; unknown keys are errors):
       redact_args: true                        # PII-redact argument values in the audit log
       forward_redacted: false                  # send redacted arguments upstream instead of the originals
     teams:
-      support:
-        - { server: tickets, tool: "search_*" }
-        - { server: tickets, tool: close_ticket, per_minute: 5, per_day: 200 }
+      member-services:
+        - { server: cases, tool: "search_*" }
+        - { server: cases, tool: close_case, per_minute: 5, per_day: 200 }
 
 Nothing is allowed unless an entry allows it (default deny). Tool names match
 entries with fnmatch globs; the first matching entry applies.

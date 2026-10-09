@@ -85,12 +85,12 @@ resilience:
   latency: { alpha: 0.3, min_samples: 3, tolerance: 0.10 }
 
 budgets:
-  org:   { daily_usd: 2000, monthly_usd: 40000 }
-  teams: { data: { daily_usd: 200, tpm: 400000 } }
-  keys:  { fraud-scoring-batch: { monthly_usd: 300 } }
+  org:   { daily_usd: 100, monthly_usd: 1500 }
+  teams: { member-services: { daily_usd: 45, monthly_usd: 450 } }
+  keys:  { code-assistant: { daily_usd: 7.5 } }
 ```
 
-The full annotated file is [config/routes.yaml](../config/routes.yaml). The budget figures above are examples; the shipped file leaves org and team overrides empty. Design rationale: [ADR 0002](adr/0002-ordered-fallback-and-circuit-breakers.md).
+The full annotated file is [config/routes.yaml](../config/routes.yaml): the route config of the sample credit union, with a monthly and daily cap for each of its seven teams and a daily cap on each application key (about three times that app's busiest day). The console's Spend screen shows those monthly caps as team budgets, and the request log shows each request's key against its daily cap. Design rationale: [ADR 0002](adr/0002-ordered-fallback-and-circuit-breakers.md).
 
 ## Privacy and audit controls
 
@@ -111,11 +111,11 @@ The audit trail is distinct from **decision traces**: a trace ([router/traces.py
 
 ```yaml
 servers:
-  tickets: { url: http://127.0.0.1:9101/mcp, headers_from_env: { Authorization: MCP_TICKETS_AUTH } }
+  cases: { url: http://127.0.0.1:9101/mcp, headers_from_env: { Authorization: MCP_CASES_AUTH } }   # member-case system
 teams:
-  support:
-    - { server: tickets, tool: "search_*" }
-    - { server: tickets, tool: close_ticket, per_minute: 5, per_day: 200 }
+  member-services:
+    - { server: cases, tool: "search_*" }
+    - { server: cases, tool: close_case, per_minute: 5, per_day: 200 }
 ```
 
 | Control | Behaviour | Evidence |

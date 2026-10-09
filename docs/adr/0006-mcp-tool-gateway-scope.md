@@ -6,7 +6,7 @@ Accepted (0.6.0). Date: 2026-10.
 
 ## Context
 
-Agents increasingly call tools through the Model Context Protocol. A tool call can do more damage than a completion (close a ticket, read a file, move money), and agent loops repeat calls quickly. The controls a platform team applies to model spend apply equally to tools: who may call what, how fast, how much, and an audit trail. A full MCP proxy (every transport, server-initiated messages, OAuth) is a large surface.
+Agents increasingly call tools through the Model Context Protocol. A tool call can do more damage than a completion (close a member case, read a procedure file, move money), and agent loops repeat calls quickly. The controls a platform team applies to model spend apply equally to tools: who may call what, how fast, how much, and an audit trail. A full MCP proxy (every transport, server-initiated messages, OAuth) is a large surface.
 
 ## Decision
 

@@ -1,7 +1,7 @@
 {
  "files": [
   {
-   "about": "",
+   "about": "Spend-anomaly verdicts per key: new keys not judged, flagged at 3x and paused at 10x the 7-day hourly baseline,",
    "file": "tests/test_anomaly.py",
    "tests": 4
   },
@@ -16,7 +16,7 @@
    "tests": 17
   },
   {
-   "about": "",
+   "about": "Routes file loading (policies; unknown providers fail at load) and the store's spend windows and totals.",
    "file": "tests/test_config_and_store.py",
    "tests": 4
   },
@@ -38,7 +38,7 @@
   {
    "about": "The browser demo's engine, run under CPython: same router modules Pyodide loads, simulated providers.",
    "file": "tests/test_demo_engine.py",
-   "tests": 19
+   "tests": 21
   },
   {
    "about": "Eval harness (simulated providers only: no real model is called here) and shadow mode through the API.",
@@ -76,6 +76,11 @@
    "tests": 4
   },
   {
+   "about": "One story across the console: the sample company's usage file, request log, in-browser engine, route evals,",
+   "file": "tests/test_sample_consistency.py",
+   "tests": 13
+  },
+  {
    "about": "The console's sample request log: reproducible, priced from tokens, and consistent with the sample company.",
    "file": "tests/test_sample_requests.py",
    "tests": 8
@@ -102,10 +107,11 @@
   }
  ],
  "last_run": {
+  "collected": 305,
   "date": "2026-10-09",
   "exit_code": 0,
-  "summary": "289 passed, 1 skipped, 2 warnings"
+  "summary": "304 passed, 1 skipped, 2 warnings"
  },
  "measured": "counted from the test sources; CI runs pytest -q on every push",
- "total": 240
+ "total": 255
 }

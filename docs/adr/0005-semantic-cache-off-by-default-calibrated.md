@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (0.6.0). Builds on [ADR 0004](0004-exact-match-cache-now-semantic-later.md). Date: 2026-10.
+Accepted (0.6.0); measured result revised with the credit-union pair set (Unreleased). Builds on [ADR 0004](0004-exact-match-cache-now-semantic-later.md). Date: 2026-10.
 
 ## Context
 
@@ -18,21 +18,23 @@ ADR 0004 allowed a semantic cache only with a labelled replay set, a calibrated 
 
 ### Measured result (bundled pairs, hashing embedder)
 
-160 fictional, hand-written pairs (80 same-meaning, 80 different, many of them deliberately near-identical). Target: at most 1% of hits wrong.
+160 fictional, hand-written pairs of credit-union member questions (80 same-meaning, 80 different, many of them deliberately near-identical: a 12-month vs an 18-month certificate, "lock" vs "unlock" a debit card, loan 5521 vs loan 5512). Target: at most 1% of hits wrong.
 
 | | Threshold | Hit rate | False-hit rate |
 |---|---|---|---|
-| Calibration half (80 pairs) | 0.88 (chosen) | 30.9% (13 of 42) | 0.0% (0 of 13 hits) |
-| Held-out half (80 pairs) | 0.88 | 26.3% (10 of 38) | 9.1% (1 of 11 hits; 95% upper bound 37.7%) |
-| Held-out, guards off | 0.88 | 26.3% | 28.6% (4 of 14 hits) |
+| Calibration half (80 pairs) | 0.90 (chosen) | 28.6% (12 of 42) | 0.0% (0 of 12 hits) |
+| Held-out half (80 pairs) | 0.90 | 26.3% (10 of 38) | 0.0% (0 of 10 hits; 95% upper bound 27.8%) |
+| Held-out, guards off | 0.90 | 26.3% | 0.0% (0 of 10 hits) |
 
-The held-out false hit is "How do I rotate an API key in the dashboard?" vs. "How do I revoke an API key in the dashboard?": one word changes the intent, and the lexical embedder cannot see it. The guards removed three of four wrong hits at this threshold. Requiring the 95% upper bound to meet 1% selects no threshold at all: this set is too small to certify a 1% rate. These figures come from `test_bundled_pairs_calibration_numbers` and describe this embedder on this set, not production traffic.
+No held-out hit is wrong, but the margin is thin and the sample is small. One step looser, at 0.85, the calibration half has 4 wrong hits in 25 (16%); "How do I turn on two-step verification for online banking?" vs. "...turn off..." scores 0.894, one word from a confident wrong answer that the lexical embedder cannot see and the negation guard does not cover. At 0.90 the number and negation guards remove no additional wrong hits on the held-out half. Requiring the 95% upper bound to meet 1% selects no threshold at all: 10 hits cannot certify a 1% rate. These figures come from `test_bundled_pairs_calibration_numbers` and describe this embedder on this set, not production traffic.
+
+The bundled set replaced an earlier generic one (shopping and SaaS questions) in the sample-data revision; on that set the same method chose 0.88 and measured 9.1% (1 of 11) held out. The decision below did not depend on that particular miss.
 
 ## Consequences
 
 ### Positive
 
-- The published result shows the control working as designed: the measured miss against the target is the reason the cache is off, not a hidden risk.
+- The published result shows the control working as designed: a held-out sample too small to certify the target is the reason the cache is off, not a hidden risk.
 - An embedder failure skips the cache and routes normally (the cache is an optimisation), so the cache cannot cause an outage.
 
 ### Negative
@@ -43,5 +45,5 @@ The held-out false hit is "How do I rotate an API key in the dashboard?" vs. "Ho
 
 ## Alternatives considered
 
-- **Enable by default at the calibrated threshold.** Rejected: the held-out false-hit rate (9.1%) misses the 1% target by a wide margin.
+- **Enable by default at the calibrated threshold.** Rejected: the held-out point estimate (0.0%) meets the 1% target, but its 95% upper bound (27.8%) does not, and a looser threshold is wrong 16% of the time on the calibration half. A default has to hold for traffic nobody has labelled.
 - **A fixed, uncalibrated threshold.** Rejected in ADR 0004: the right number differs by embedding model and workload.

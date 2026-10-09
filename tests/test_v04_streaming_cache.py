@@ -37,7 +37,7 @@ def providers(monkeypatch):
     return calls
 
 
-def _key(client, label="web", team="product"):
+def _key(client, label="web", team="digital-banking"):
     r = client.post("/admin/keys", json={"label": label, "team": team}, headers=ADMIN)
     return {"Authorization": f"Bearer {r.json()['key']}"}
 
@@ -122,11 +122,11 @@ def test_deterministic_repeat_is_served_from_cache(client, providers, cache_on):
 
 def test_cache_skips_creative_requests_and_other_teams(client, providers, cache_on):
     body0 = {**BODY, "temperature": 0}
-    client.post("/v1/chat/completions", json=body0, headers=_key(client, team="product"))
-    other_team = client.post("/v1/chat/completions", json=body0, headers=_key(client, label="b", team="data"))
+    client.post("/v1/chat/completions", json=body0, headers=_key(client, team="digital-banking"))
+    other_team = client.post("/v1/chat/completions", json=body0, headers=_key(client, label="b", team="risk-analytics"))
     assert other_team.headers["x-router-cache"] == "miss"  # cache is scoped per team
     warm = {**BODY, "temperature": 0.7}
-    h = _key(client, label="c", team="product")
+    h = _key(client, label="c", team="digital-banking")
     client.post("/v1/chat/completions", json=warm, headers=h)
     assert client.post("/v1/chat/completions", json=warm, headers=h).headers["x-router-cache"] == "miss"
 

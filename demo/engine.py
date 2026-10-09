@@ -21,6 +21,12 @@ knobs in the UI), the request mix, the 7-day spend history behind each key's
 anomaly baseline, and time itself (a virtual clock, so a "30 s cooldown" doesn't
 make you wait). Nothing here calls a network or needs an API key.
 
+The keys, their teams, aliases, prompt sizes, temperatures and hours come from
+demo/cypress_harbor.py, the same table the sample company's usage file and request
+log are generated from; aliases, budgets and per-key caps equal config/routes.yaml.
+This tab runs dozens of requests where the credit union runs thousands an hour, so
+caps and 7-day anomaly baselines are the credit union's divided by ENGINE_SCALE.
+
 The console (`request()`, used by every screen of demo/) follows router/routing.py
 stage by stage: auth -> policy -> budgets -> anomaly pause -> pre_request hooks ->
 exact cache -> semantic cache -> TPM reservation -> fallback chain -> settle ->
@@ -56,6 +62,11 @@ from router.latency import LatencyConfig, LatencyTracker
 from router.tokens import TokenLimitExceeded, TokenRateLimiter, estimate_request_tokens, estimator_name
 from router.traces import LABELS as STAGE_LABELS
 
+try:  # CPython (tests, scripts): the demo package; Pyodide: the page writes the module next to this file
+    from demo import cypress_harbor as ch
+except ImportError:  # pragma: no cover - the browser
+    import cypress_harbor as ch
+
 ALIAS = "smart-fast"
 REAL_MODULES = [
     "breaker", "fallback", "latency", "tokens", "budgets", "anomaly", "costs", "showback", "pii", "policy", "semcache",
@@ -73,6 +84,35 @@ DEMO_ALIASES = {
     "fast-chat": {
         "strategy": "latency",
         "targets": ["anthropic/claude-haiku-4-5", "openai/gpt-4.1-mini", "gemini/gemini-2.5-flash"],
+    },
+    "regulated-fast": {"strategy": "ordered", "targets": ["ollama/llama3.1:8b"]},
+}
+# Same budgets as config/routes.yaml (tests/test_demo_engine.py fails if they drift); the engine divides them by
+# ch.ENGINE_SCALE.
+DEMO_BUDGETS = {
+    "defaults": {"per_key_daily_usd": 5.0, "per_team_daily_usd": 20.0},
+    "org": {"daily_usd": 100, "monthly_usd": 1500},
+    "teams": {
+        "member-services": {"daily_usd": 45, "monthly_usd": 450},
+        "digital-banking": {"daily_usd": 30, "monthly_usd": 325},
+        "risk-analytics": {"daily_usd": 2, "monthly_usd": 15},
+        "lending": {"daily_usd": 30, "monthly_usd": 200},
+        "compliance": {"daily_usd": 3, "monthly_usd": 25},
+        "it-engineering": {"daily_usd": 10, "monthly_usd": 60},
+        "marketing": {"daily_usd": 4, "monthly_usd": 24},
+    },
+    "keys": {
+        "member-assistant": {"daily_usd": 35},
+        "agent-assist": {"daily_usd": 20},
+        "online-banking": {"daily_usd": 20},
+        "mobile-banking": {"daily_usd": 15},
+        "fraud-alert-narratives": {"daily_usd": 1},
+        "dispute-triage": {"daily_usd": 0.5},
+        "loan-doc-extraction": {"daily_usd": 25},
+        "reg-change-digest": {"daily_usd": 2.5},
+        "bsa-case-notes": {"daily_usd": 0.5},
+        "code-assistant": {"daily_usd": 7.5},
+        "content-drafts": {"daily_usd": 3.5},
     },
 }
 # Same invented profiles as evals/sim_profiles.json (latency, error rate, USD per 1M tokens), for deployments the
@@ -137,19 +177,10 @@ SIM_PROFILES = {
 }
 PROVIDER_LABELS = {"anthropic": "Anthropic", "openai": "OpenAI", "gemini": "Gemini", "ollama": "Ollama (local)"}
 NOW_HOUR = 14  # the simulated time of day the overview chart is drawn at
-# Which hours of the day each demo key is active (simulated history for the overview chart).
-ACTIVE_HOURS = {
-    "online-banking": range(8, 22),
-    "mobile-banking": range(7, 23),
-    "member-assistant": range(0, 24),
-    "fraud-scoring-batch": range(0, 6),
-}
-KEY_ALIAS = {
-    "online-banking": "smart-fast",
-    "mobile-banking": "fast-chat",
-    "member-assistant": "smart-fast",
-    "fraud-scoring-batch": "cheap-batch",
-}
+# Which hours each demo key mostly runs in, and the alias it calls, from the credit union's app table.
+ACTIVE_HOURS = {k: ch.active_hours(k) for k in ch.ENGINE_KEYS}
+KEY_ALIAS = {k: ch.primary_alias(k) for k in ch.ENGINE_KEYS}
+RUNAWAY = ch.RUNAWAY  # the "Simulate a looping coding agent" scenario: key, alias and pace
 SAMPLE_PROMPTS = {
     "digital-banking": [
         "Draft a two-sentence in-app message announcing instant card lock in mobile banking.",
@@ -164,33 +195,35 @@ SAMPLE_PROMPTS = {
         "How do I reset a member's online banking password?",
     ],
     "risk-analytics": [
-        "Summarize each of these 40 card-dispute cases in one line and tag it fraud, merchant error, "
-        "duplicate or member error. "
+        "Write a two-sentence analyst narrative for each of these overnight fraud alerts and name the pattern "
+        "(card testing, account takeover, lost or stolen card, first-party misuse). "
         + " ".join(
-            f"Case C-{1000 + i}: {s}. The member called twice and uploaded the statement from online banking."
+            f"Alert FA-{1000 + i}: {s}."
             for i, s in enumerate(
                 [
-                    "card charged at a gas station the member never visited",
-                    "subscription renewed after the member cancelled it",
-                    "same restaurant charge posted twice on the statement",
-                    "online purchase never arrived and the merchant stopped replying",
-                    "foreign transaction while the card was in the member's wallet",
-                    "hotel kept the deposit after checkout",
-                    "ATM withdrawal posted but the cash was not dispensed",
-                    "member forgot a family member used the card",
+                    "three $1.00 online authorizations at one merchant, then an $849.99 electronics purchase",
+                    "new device sign-in, phone number changed, then a $2,400 transfer to an external account",
+                    "card-present purchases in Orlando an hour after a purchase in Fort Lauderdale",
+                    "member disputes a $310 purchase made at a store the member visits weekly",
+                    "eleven declined gas-station authorizations across three states in two hours",
                 ]
-                * 5
+                * 4
             )
         )
+    ],
+    "it-engineering": [
+        "Review this function: round_cents(amount) quantizes to Decimal('0.001'). What is wrong and what is the fix?",
+        "Write a pytest case for overdraft_fees() at exactly -$10.00 and at -$10.01.",
+        "The fix still fails test_overdraft_case_07. Here is the traceback and the full module again; try another fix.",
     ],
 }  # fmt: skip
 # Same document as config/mcp.example.yaml (tests/test_demo_engine.py fails if they drift).
 DEMO_MCP = {
     "version": 1,
     "servers": {
-        "tickets": {
+        "cases": {
             "url": "http://127.0.0.1:9101/mcp", "timeout_s": 10,
-            "headers_from_env": {"Authorization": "MCP_TICKETS_AUTH"},
+            "headers_from_env": {"Authorization": "MCP_CASES_AUTH"},
         },
         "files": {"url": "http://127.0.0.1:9102/mcp", "timeout_s": 5},
     },
@@ -200,9 +233,9 @@ DEMO_MCP = {
     },
     "teams": {
         "member-services": [
-            {"server": "tickets", "tool": "search_*"},
-            {"server": "tickets", "tool": "get_ticket"},
-            {"server": "tickets", "tool": "close_ticket", "per_minute": 5, "per_day": 200},
+            {"server": "cases", "tool": "search_*"},
+            {"server": "cases", "tool": "get_case"},
+            {"server": "cases", "tool": "close_case", "per_minute": 5, "per_day": 200},
         ],
         "risk-analytics": [
             {"server": "files", "tool": "read_file", "per_minute": 30, "cost_usd": 0.001, "daily_usd": 2.0},
@@ -211,25 +244,28 @@ DEMO_MCP = {
 }  # fmt: skip
 # What the simulated MCP servers expose (tools/list before the gateway filters it).
 DEMO_MCP_TOOLS = {
-    "tickets": ["search_tickets", "get_ticket", "close_ticket", "reassign_ticket"],
+    "cases": ["search_cases", "get_case", "close_case", "reassign_case"],
     "files": ["read_file", "delete_file"],
 }
-DEMO_MCP_ARGS = {
-    "search_tickets": {"query": "refund requested by jordan@example.com"},
-    "get_ticket": {"id": "T-1042"},
-    "close_ticket": {"id": "T-1042", "note": "refunded"},
-    "reassign_ticket": {"id": "T-1042", "to": "tier-2"},
-    "read_file": {"path": "reports/q3-summary.txt"},
-    "delete_file": {"path": "reports/q3-summary.txt"},
+DEMO_MCP_ARGS = {  # fictional: a reserved example domain and an invented member number
+    "search_cases": {"query": "open dispute cases for member 4471, jordan@example.com"},
+    "get_case": {"id": "C-1042"},
+    "close_case": {"id": "C-1042", "note": "provisional credit made final"},
+    "reassign_case": {"id": "C-1042", "to": "card-disputes"},
+    "read_file": {"path": "policies/bsa-procedures.txt"},
+    "delete_file": {"path": "policies/bsa-procedures.txt"},
 }
+# A reworded question (hit), a number change (refused by the guard), and a lookalike that differs in meaning: it
+# misses at the calibrated threshold and is a false hit at a looser one (evals/semcache_pairs.jsonl s001, d033, d014).
 SEMANTIC_EXAMPLES = [
-    "How do I export my invoices as CSV?",
-    "how do I export my invoices as csv",
-    "Is the 2025 model compatible with the charger?",
-    "Is the 2023 model compatible with the charger?",
-    "How do I rotate an API key in the dashboard?",
-    "How do I revoke an API key in the dashboard?",
+    "What is Cypress Harbor's routing number?",
+    "what is cypress harbor's routing number",
+    "How many days do I have to report a 60 day old charge?",
+    "How many days do I have to report a 90 day old charge?",
+    "How do I turn on two-step verification for online banking?",
+    "How do I turn off two-step verification for online banking?",
 ]
+SEMANTIC_THRESHOLD = 0.90  # config/routes.yaml semantic_cache.threshold, from scripts/calibrate_semcache.py
 # Same document as config/policies.yaml (tests/test_demo_engine.py fails if they drift); the browser has no YAML parser.
 DEMO_POLICIES = {
     "version": 1,
@@ -246,12 +282,20 @@ DEMO_POLICIES = {
             "deny_models": ["anthropic/claude-sonnet-*", "openai/gpt-4.1"],
         },
     },
-    "routes": {"heavy-reasoning": {"max_tokens_mode": "reject"}},
+    "routes": {
+        "heavy-reasoning": {"max_tokens_mode": "reject"},
+        "regulated-fast": {
+            "allowed_providers": ["ollama"],
+            "required_hooks": ["pii_redact"],
+            "max_tokens_ceiling": 2048,
+        },
+    },
     "opa": {"enabled": False, "path": "router/decision", "timeout_s": 0.5},
 }
 DEMO_ROUTES = {"smart-fast": "anthropic -> openai -> ollama", "public-only": "openai only"}
+# The Playground's "Case with PII" sample too (demo/adapters.js SAMPLE_PROMPTS.pii; tests check they match).
 SAMPLE_PROMPT = (
-    "Summarize this ticket: customer Jordan Example (jordan@example.com, 202-555-0143) says card "
+    "Summarize this case: member Jordan Example (jordan@example.com, 202-555-0143) says card "
     "4111 1111 1111 1111 was double charged. Internal note: retry with key sk-test-abcdefghijklmnopqrstuvwx."
 )  # fictional: reserved example domain, 555-01xx number, a published test card, a fake key
 HOOK_MODES = {"off": [], "detect": ["pii_detect"], "redact": ["pii_redact"], "block": ["pii_block"]}
@@ -315,17 +359,46 @@ def default_deployments() -> list[Deployment]:
     return [
         Deployment("anthropic", "claude-haiku-4-5", "Anthropic", 650, 0.02, price_in_1k=0.0010, price_out_1k=0.0050),
         Deployment("openai", "gpt-4.1-mini", "OpenAI", 480, 0.02, price_in_1k=0.0004, price_out_1k=0.0016),
-        Deployment("ollama", "llama3.1:8b", "Ollama (local)", 1300, 0.0, price_in_1k=0.0001, price_out_1k=0.0001),
+        Deployment("ollama", "llama3.1:8b", "Ollama (local)", 1300, 0.0, price_in_1k=0.00005, price_out_1k=0.00005),
     ]
+
+
+def app_day_spend(app: str) -> float:
+    """The credit union's spend for one app on a working day: uncached requests times the route mix's cost."""
+    spec = ch.APPS[app]
+    per_request = 0.0
+    for alias, share in spec["routes"]:
+        targets = DEMO_ALIASES[alias]["targets"]
+        firsts = ch.first_choice_shares(alias, targets)
+        per_request += share * sum(f * ch.cost(t, *spec["tokens"][alias]) for f, t in zip(firsts, targets, strict=True))
+    cached = spec["cache_hit"] if spec["temperature"] <= 0.0 else 0.0
+    return spec["workday"] * (1 - cached) * per_request
+
+
+def app_hour_spend(app: str, hour: int) -> float:
+    w = ch.hour_weights(app)
+    return app_day_spend(app) * w[hour] / sum(w)
+
+
+def active_slots(app: str) -> int:
+    """Hours a day in which the app has at least one uncached request (router/anomaly.py counts these)."""
+    spec, w = ch.APPS[app], ch.hour_weights(app)
+    cached = spec["cache_hit"] if spec["temperature"] <= 0.0 else 0.0
+    return sum(1 for h in range(24) if spec["workday"] * (1 - cached) * w[h] / sum(w) >= 1)
 
 
 def default_keys() -> list[DemoKey]:
-    return [
-        DemoKey("online-banking", "digital-banking", 0.40, 0.030, 14, 700, 400),
-        DemoKey("mobile-banking", "digital-banking", 0.25, 0.020, 16, 500, 300),
-        DemoKey("member-assistant", "member-services", 0.30, 0.025, 24, 900, 350),
-        DemoKey("fraud-scoring-batch", "risk-analytics", 0.05, 0.004, 6, 1200, 500),
-    ]
+    """The credit union's app keys this tab simulates, with their scaled-down 7-day hourly baselines."""
+    keys = []
+    for app in ch.ENGINE_KEYS:
+        spec = ch.APPS[app]
+        tin, tout = spec["tokens"][KEY_ALIAS[app]]
+        slots = active_slots(app)
+        keys.append(DemoKey(
+            app, spec["team"], spec["workday"] * ch.hour_weights(app)[NOW_HOUR] / sum(ch.hour_weights(app)),
+            app_day_spend(app) / slots / ch.ENGINE_SCALE, slots, tin, tout,
+        ))  # fmt: skip
+    return keys
 
 
 class Engine:
@@ -348,14 +421,16 @@ class Engine:
         self.breakers = BreakerRegistry(self.breaker_config, clock=self.clock)
         self.latency = LatencyTracker(LatencyConfig(alpha=0.3, min_samples=3, tolerance=0.10))
         self.tpm = TokenRateLimiter(clock=self.clock)
-        self.org = Limits(daily_usd=0.40)
-        self.team_limits = {
-            "digital-banking": Limits(daily_usd=0.15, tpm=40_000),
-            "member-services": Limits(daily_usd=0.12, tpm=25_000),
-            "risk-analytics": Limits(daily_usd=0.15, tpm=30_000),
+        # The credit union's caps (config/routes.yaml) divided by ENGINE_SCALE; no TPM caps, as in routes.yaml.
+        scale = ch.ENGINE_SCALE
+        self.org = Limits(daily_usd=DEMO_BUDGETS["org"]["daily_usd"] / scale)
+        teams = {k.team for k in self.keys}
+        self.team_limits = {t: Limits(daily_usd=DEMO_BUDGETS["teams"][t]["daily_usd"] / scale) for t in sorted(teams)}
+        self.key_limits = {
+            k.label: Limits(daily_usd=DEMO_BUDGETS["keys"][k.label]["daily_usd"] / scale) for k in self.keys
         }
-        self.key_limits = {"fraud-scoring-batch": Limits(daily_usd=0.10)}
-        self.key_default = Limits(daily_usd=0.08)
+        self.key_default = Limits(daily_usd=DEMO_BUDGETS["defaults"]["per_key_daily_usd"] / scale)
+        self.team_default = Limits(daily_usd=DEMO_BUDGETS["defaults"]["per_team_daily_usd"] / scale)
         self.ledger: list[dict] = []
         self.events: list[dict] = []
         self.counter = 0
@@ -364,12 +439,13 @@ class Engine:
             "digital-banking": {"mode": "off", "log_content": False},
             "member-services": {"mode": "redact", "log_content": True},
             "risk-analytics": {"mode": "block", "log_content": False},
+            "it-engineering": {"mode": "off", "log_content": False},
             "regulated": {"mode": "off", "log_content": False},
             "contractors": {"mode": "off", "log_content": False},
         }
         self.policies = policy.load(DEMO_POLICIES, pii.registered_hooks())
         self.embedder = semcache.HashingEmbedder()
-        self.semantic = semcache.SemanticCache(threshold=0.88, ttl_seconds=3600, clock=self.clock)
+        self.semantic = semcache.SemanticCache(threshold=SEMANTIC_THRESHOLD, ttl_seconds=3600, clock=self.clock)
         self.semantic_log: list[dict] = []
         self.mcp = mcp_policy.load(DEMO_MCP)
         self.mcp_limiter = mcp_policy.VelocityLimiter(clock=self.clock)
@@ -396,7 +472,7 @@ class Engine:
     def hierarchy(self) -> Hierarchy:
         return Hierarchy(
             org=self.org,
-            team_default=Limits(daily_usd=0.0),
+            team_default=self.team_default,
             key_default=self.key_default,
             teams=dict(self.team_limits),
             keys=dict(self.key_limits),
@@ -732,7 +808,7 @@ class Engine:
         facts = policy.RequestFacts(team=team, alias=ALIAS, targets=self.deployments)
         return semcache.partition_key(team, ALIAS, policy.evaluate(self.policies, facts).fingerprint())
 
-    async def semantic_ask(self, team: str, text: str, threshold: float = 0.88) -> dict:
+    async def semantic_ask(self, team: str, text: str, threshold: float = SEMANTIC_THRESHOLD) -> dict:
         self.clock.advance(0.5)
         self.semantic.threshold = max(0.0, min(1.0, float(threshold)))
         part = self._semantic_partition(team)
@@ -830,7 +906,7 @@ class Engine:
         return out
 
     def mcp_view(self) -> dict:
-        teams = sorted({*self.mcp.teams, "digital-banking"})
+        teams = sorted({*self.mcp.teams, "digital-banking"})  # one team with no tool access, to show default deny
         return {
             "servers": {s: DEMO_MCP_TOOLS[s] for s in self.mcp.servers},
             "teams": teams,
@@ -959,20 +1035,23 @@ class Engine:
         self._apply_prices()
 
     def _history_today(self) -> list[float]:
-        """Simulated spend for each hour of today before NOW_HOUR, around each key's 7-day baseline."""
+        """Simulated spend for each hour of today before NOW_HOUR: each key's usual spend for that hour, scaled."""
         rng = random.Random(f"{self.seed}-today")
         out = [0.0] * 24
         for k in self.keys:
-            for h in ACTIVE_HOURS.get(k.label, range(0)):
-                if h < NOW_HOUR:
-                    out[h] += max(0.0, rng.gauss(k.baseline_per_hour, k.baseline_per_hour * 0.25))
+            if k.label not in ch.APPS:
+                continue
+            for h in range(NOW_HOUR):
+                usual = app_hour_spend(k.label, h) / ch.ENGINE_SCALE
+                out[h] += max(0.0, rng.gauss(usual, usual * 0.25))
         return [round(v, 6) for v in out]
 
     def _baseline_by_hour(self) -> list[float]:
         out = [0.0] * 24
         for k in self.keys:
-            for h in ACTIVE_HOURS.get(k.label, range(0)):
-                out[h] += k.baseline_per_hour
+            if k.label in ch.APPS:
+                for h in range(24):
+                    out[h] += app_hour_spend(k.label, h) / ch.ENGINE_SCALE
         return [round(v, 6) for v in out]
 
     # ---------- console: the governed request path (mirrors router/routing.py route()) ----------
@@ -1036,9 +1115,14 @@ class Engine:
 
     async def request(
         self, key_label: str, alias: str, text: str, max_tokens: int | None = None, temperature: float = 0.7,
-        gap_s: float = 0.5, source: str = "playground",
+        gap_s: float = 0.5, source: str = "playground", context_tokens: int = 0, context_id: str = "",
     ) -> dict:  # fmt: skip
-        """One chat request through every gateway stage, with a trace like GET /admin/traces/{id}."""
+        """One chat request through every gateway stage, with a trace like GET /admin/traces/{id}.
+
+        `context_tokens` stands for what the app adds around the user's text (retrieved knowledge-base passages,
+        a document, a transaction history), so simulated traffic costs what the credit union's requests do;
+        `context_id` names that context (a conversation, a document) and is part of the exact-cache key, as the
+        added text would be."""
         self.clock.advance(gap_s)
         started = self.clock()
         k = self.find_key(key_label)
@@ -1118,7 +1202,9 @@ class Engine:
 
         # exact cache (temperature 0 only), then the semantic cache if the team opted in
         fp = dec.fingerprint() + "|" + ",".join(names)
-        ck = self._cache_key(k.team, alias, sent, dec.max_tokens, fp)
+        ck = self._cache_key(
+            k.team, alias, sent + (f"\n[context {context_id}]" if context_id else ""), dec.max_tokens, fp
+        )
         if self.cache_on and temperature <= 0:
             hit = self.exact_cache.get(ck)
             if hit:
@@ -1155,7 +1241,7 @@ class Engine:
             self._stage(tr, "tpm", "skip", "no TPM limit for this key or team")
 
         # fallback chain
-        pt_est = max(1, len(sent) // 4)
+        pt_est = max(1, len(sent) // 4) + max(0, int(context_tokens))
         t0 = self.clock()
 
         def on_attempt(target: Deployment, a) -> None:
@@ -1252,15 +1338,22 @@ class Engine:
         """Simulated request mix (or a runaway batch job) through request(). Returns a summary."""
         out = []
         for i in range(max(1, min(int(n), 200))):
-            if scenario == "spike":  # a batch job stuck in a retry loop on the premium route
-                k, gap = self.key("fraud-scoring-batch"), 4.0
+            if scenario == "spike":  # a coding agent stuck in a fix-and-retest loop (demo/cypress_harbor.py RUNAWAY)
+                k, gap, alias = self.key(RUNAWAY["key"]), 3600 / RUNAWAY["calls_per_hour"], RUNAWAY["alias"]
+                tin, tout = RUNAWAY["tokens"]
             else:
                 k, gap = self.pick_key(), 0.25
+                alias = KEY_ALIAS.get(k.label, "smart-fast")
+                tin, tout = ch.APPS[k.label]["tokens"][alias] if k.label in ch.APPS else (k.prompt_tokens, k.max_tokens)
             prompts = SAMPLE_PROMPTS.get(k.team, SAMPLE_PROMPTS["digital-banking"])
             text = prompts[(self.counter + i) % len(prompts)]
-            temp = 0.0 if k.team == "member-services" else 0.7
-            alias = "smart-fast" if scenario == "spike" else KEY_ALIAS.get(k.label, "smart-fast")
-            out.append(await self.request(k.label, alias, text, k.max_tokens, temp, gap, source=scenario))
+            temp = ch.APPS[k.label]["temperature"] if k.label in ch.APPS else 0.7
+            ctx = max(0, tin - len(text) // 4)
+            # Most requests carry their own conversation or document, so only about the app's cache hit rate repeat.
+            repeat = scenario != "spike" and self.rng.random() < ch.APPS.get(k.label, {}).get("cache_hit", 0.0)
+            cid = "" if repeat else f"{scenario}-{self.counter + i}"
+            out.append(await self.request(k.label, alias, text, tout, temp, gap, source=scenario, context_tokens=ctx,
+                                          context_id=cid))  # fmt: skip
         self.counter += len(out)
         counts: dict[str, int] = {}
         for t in out:
@@ -1436,6 +1529,7 @@ class Engine:
                        "tpm_used": self.tpm.used(f"team:{t}")} for t in teams],
             "keys": {lbl: lim.daily_usd for lbl, lim in self.key_limits.items()},
             "key_default_usd": self.key_default.daily_usd,
+            "scale": ch.ENGINE_SCALE,
             "warnings": h.warnings(),
         }  # fmt: skip
 
@@ -1545,7 +1639,7 @@ class JsBridge:
     def governance(self) -> str:
         return json.dumps(self.engine.governance())
 
-    def semantic_ask(self, team: str, text: str, threshold: float = 0.88) -> str:
+    def semantic_ask(self, team: str, text: str, threshold: float = SEMANTIC_THRESHOLD) -> str:
         return json.dumps(run_sync(self.engine.semantic_ask(team, text, threshold)))
 
     def semantic_view(self) -> str:

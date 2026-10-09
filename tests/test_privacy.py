@@ -152,7 +152,7 @@ def client():
         yield c
 
 
-def _key(client, team="product"):
+def _key(client, team="digital-banking"):
     r = client.post("/admin/keys", json={"label": f"{team}-app", "team": team}, headers=ADMIN)
     return {"Authorization": f"Bearer {r.json()['key']}"}
 
@@ -201,7 +201,7 @@ def test_route_redaction_reaches_provider_redacted_and_is_audited(client, provid
     assert r.headers["x-router-content-hooks"] == "pii_redact"
     assert r.headers["x-router-redactions"] == "card=1,email=1,phone=1,secret=1,ssn=1"
     rows = client.get("/admin/audit?category=privacy", headers=ADMIN).json()
-    assert len(rows) == 1 and rows[0]["action"] == "redact" and rows[0]["team"] == "product"
+    assert len(rows) == 1 and rows[0]["action"] == "redact" and rows[0]["team"] == "digital-banking"
     assert rows[0]["detail"]["findings"]["email"] == 1 and rows[0]["key_fp"]
     raw_dump = str(rows)
     assert "jane.doe" not in raw_dump and "sk-test" not in raw_dump and "sk-router" not in raw_dump
@@ -211,13 +211,13 @@ def test_route_redaction_reaches_provider_redacted_and_is_audited(client, provid
 
 
 def test_team_block_refuses_before_any_provider_call(client, provider, router_env):
-    _privacy(router_env, "privacy:\n  teams:\n    support: { pre_request: [pii_block] }\n")
-    r = _chat(client, _key(client, "support"))
+    _privacy(router_env, "privacy:\n  teams:\n    member-services: { pre_request: [pii_block] }\n")
+    r = _chat(client, _key(client, "member-services"))
     assert r.status_code == 422 and "blocked by content policy" in r.json()["detail"]
     assert "jane.doe" not in r.text
     assert provider["calls"] == []
-    assert _chat(client, _key(client, "product")).status_code == 200  # other teams unaffected
-    assert _chat(client, _key(client, "support"), content="no personal data here").status_code == 200
+    assert _chat(client, _key(client, "digital-banking")).status_code == 200  # other teams unaffected
+    assert _chat(client, _key(client, "member-services"), content="no personal data here").status_code == 200
     assert 'router_rejections_total{reason="privacy_block_request"} 1' in metrics.render()
 
 
@@ -229,22 +229,24 @@ def test_post_response_redact_and_block(client, provider, router_env):
     assert r.headers["x-router-redactions"] == "email=1"
 
     _privacy(router_env, "privacy:\n  default: { post_response: [pii_block] }\n")
-    h = _key(client, "data")
+    h = _key(client, "risk-analytics")
     r = _chat(client, h, content="who do I contact?")
     assert r.status_code == 422 and "response withheld" in r.json()["detail"]
     # The provider was paid, so the call is still on the ledger.
-    assert any(c["team"] == "data" and c["cost_usd"] >= 0 for c in client.get("/admin/recent", headers=ADMIN).json())
+    assert any(
+        c["team"] == "risk-analytics" and c["cost_usd"] >= 0 for c in client.get("/admin/recent", headers=ADMIN).json()
+    )
 
 
 def test_content_log_is_opt_in_per_team_and_always_redacted(client, provider, router_env):
-    _privacy(router_env, "privacy:\n  teams:\n    support: { log_content: true }\n")
+    _privacy(router_env, "privacy:\n  teams:\n    member-services: { log_content: true }\n")
     provider["reply"] = "Reach me at agent@example.com"
-    _chat(client, _key(client, "product"))
+    _chat(client, _key(client, "digital-banking"))
     assert client.get("/admin/content-log", headers=ADMIN).json() == []
-    _chat(client, _key(client, "support"))
+    _chat(client, _key(client, "member-services"))
     # No redaction hook is configured, so the provider saw the raw text, but the stored copy is redacted.
     assert provider["calls"][-1] == [PII_TEXT]
-    rows = client.get("/admin/content-log?team=support", headers=ADMIN).json()
+    rows = client.get("/admin/content-log?team=member-services", headers=ADMIN).json()
     assert len(rows) == 1
     assert "jane.doe" not in rows[0]["request_redacted"] and "[REDACTED:EMAIL]" in rows[0]["request_redacted"]
     assert rows[0]["response_redacted"] == "Reach me at [REDACTED:EMAIL]"
@@ -331,7 +333,7 @@ def test_audit_log_is_append_only_and_tamper_evident():
 
 
 def test_admin_actions_are_audited(client, router_env):
-    r = client.post("/admin/keys", json={"label": "ops", "team": "data"}, headers=ADMIN)
+    r = client.post("/admin/keys", json={"label": "ops", "team": "risk-analytics"}, headers=ADMIN)
     client.delete(f"/admin/keys/{r.json()['key']}", headers=ADMIN)
     router_env.write_text("aliases:\n  a: [{ provider: nope, model: m }]\n")
     assert client.post("/admin/reload", headers=ADMIN).status_code == 400

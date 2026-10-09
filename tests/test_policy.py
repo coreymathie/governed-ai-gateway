@@ -23,7 +23,7 @@ ADMIN = {"Authorization": "Bearer sk-router-admin"}
 T = RouteTarget
 
 
-def facts(team="product", alias="smart-fast", targets=None, **kw):
+def facts(team="digital-banking", alias="smart-fast", targets=None, **kw):
     targets = targets or [T(provider="anthropic", model="claude-haiku-4-5"), T(provider="ollama", model="llama3.1:8b")]
     return policy.RequestFacts(team=team, alias=alias, targets=targets, **kw)
 
@@ -194,7 +194,7 @@ def test_apply_opa_only_narrows_and_fails_closed():
 
 def test_decision_fingerprint_tracks_what_was_permitted():
     ps = policy.load({"teams": {"reg": {"allowed_providers": ["ollama"]}}})
-    a = policy.evaluate(ps, facts("product"))
+    a = policy.evaluate(ps, facts("digital-banking"))
     b = policy.evaluate(ps, facts("reg"))
     assert a.fingerprint() != b.fingerprint()
     assert a.fingerprint() == policy.evaluate(ps, facts("other")).fingerprint()
@@ -307,7 +307,7 @@ def test_regulated_team_routes_local_with_hooks_and_ceiling(client, calls, route
     assert r.status_code == 502 and [c["model"].split("/")[0] for c in seen[1:]] == ["ollama"]
     # Other teams keep the full route and their content untouched.
     fail.clear()
-    r = _chat(client, _key(client, "product"))
+    r = _chat(client, _key(client, "digital-banking"))
     assert r.headers["x-router-used-provider"] == "anthropic" and seen[-1]["messages"] == ["mail a@example.com"]
     assert r.headers["x-router-policy"] == "allow" and "x-router-policy-removed" not in r.headers
 
@@ -321,7 +321,7 @@ def test_streams_are_admitted_by_the_same_policy(client, calls, router_env):
 def test_max_tokens_reject_and_request_limits(client, calls, router_env):
     seen, _ = calls
     _setup(router_env, "defaults: { max_tokens_ceiling: 100, max_request_bytes: 200, max_messages: 2 }\n")
-    h = _key(client, "product")
+    h = _key(client, "digital-banking")
     r = _chat(client, h, max_tokens=101)
     assert r.status_code == 400 and "ceiling of 100" in r.json()["detail"]
     big = {"model": "smart-fast", "messages": [{"role": "user", "content": "x" * 300}]}
@@ -334,7 +334,7 @@ def test_max_tokens_reject_and_request_limits(client, calls, router_env):
 
 def test_body_size_middleware_refuses_before_parsing(client, calls, router_env, monkeypatch):
     monkeypatch.setattr(settings, "ROUTER_MAX_BODY_BYTES", 500)
-    h = _key(client, "product")
+    h = _key(client, "digital-banking")
     r = client.post(
         "/v1/chat/completions", content=b"{" + b" " * 600 + b"}", headers={**h, "content-type": "application/json"}
     )
@@ -396,12 +396,12 @@ def opa(monkeypatch):
 def test_opa_allow_deny_narrow_and_input_has_no_content(client, calls, router_env, opa):
     seen, _ = calls
     _setup(router_env, "version: 1\nopa: { path: router/decision, timeout_s: 2 }\n")
-    h = _key(client, "product")
+    h = _key(client, "digital-banking")
     r = _chat(client, h)
     assert r.status_code == 200 and r.headers["x-router-policy-source"] == "local+opa"
     sent = opa.inputs[0]
     assert sent["path"] == "/v1/data/router/decision"
-    assert sent["input"]["team"] == "product" and sent["input"]["targets"][0] == "anthropic/claude-haiku-4-5"
+    assert sent["input"]["team"] == "digital-banking" and sent["input"]["targets"][0] == "anthropic/claude-haiku-4-5"
     assert "a@example.com" not in json.dumps(sent) and "messages" in sent["input"]  # a count, not content
 
     opa.result = {"allow": False, "reasons": ["outside business hours"]}
@@ -429,7 +429,7 @@ def test_opa_failures_fail_closed(client, calls, router_env, opa, mode, monkeypa
         with socket.socket() as s:
             s.bind(("127.0.0.1", 0))
             monkeypatch.setattr(settings, "OPA_URL", f"http://127.0.0.1:{s.getsockname()[1]}")
-    r = _chat(client, _key(client, "product"))
+    r = _chat(client, _key(client, "digital-banking"))
     assert r.status_code == 503 and r.headers["x-router-policy"] == "deny"
     assert seen == []
     action = client.get("/admin/audit?category=policy", headers=ADMIN).json()[0]["action"]
@@ -438,7 +438,7 @@ def test_opa_failures_fail_closed(client, calls, router_env, opa, mode, monkeypa
 
 def test_opa_enabled_without_url_refuses_everything(client, calls, router_env):
     _setup(router_env, "version: 1\nopa: { enabled: true }\n")
-    r = _chat(client, _key(client, "product"))
+    r = _chat(client, _key(client, "digital-banking"))
     assert r.status_code == 503 and "OPA_URL is not set" in r.json()["detail"]
 
 
@@ -447,7 +447,7 @@ def test_policy_engine_crash_fails_closed(client, calls, router_env, monkeypatch
         raise RuntimeError("bug")
 
     monkeypatch.setattr("router.admission.evaluate", boom)
-    r = _chat(client, _key(client, "product"))
+    r = _chat(client, _key(client, "digital-banking"))
     assert r.status_code == 503 and r.json()["detail"] == "policy decision unavailable; request refused"
     assert calls[0] == []
 
@@ -476,9 +476,9 @@ def test_admin_policies_shows_effective_rule(client, router_env):
 def test_cache_does_not_cross_a_policy_change(client, calls, router_env):
     routes = "policies:\n  cache_ttl_seconds: 600\n"
     _setup(router_env, "version: 1\n", routes)
-    h = _key(client, "product")
+    h = _key(client, "digital-banking")
     assert _chat(client, h, temperature=0).headers["x-router-cache"] == "miss"
     assert _chat(client, h, temperature=0).headers["x-router-cache"] == "hit"
-    _setup(router_env, "teams: { product: { allowed_providers: [ollama] } }\n", routes)
+    _setup(router_env, "teams: { digital-banking: { allowed_providers: [ollama] } }\n", routes)
     r = _chat(client, h, temperature=0)
     assert r.headers["x-router-cache"] == "miss" and r.headers["x-router-used-provider"] == "ollama"

@@ -1,14 +1,17 @@
-# Regulated-workload routes.
+# Regulated-workload routes: a drop-in routes file for a gateway that serves only
+# work that must stay on the institution's network (BSA/AML case work, card-dispute
+# evidence, members' nonpublic personal information under GLBA).
 #
 # Load with: ROUTER_ROUTES_FILE=./config/regulated.yaml uvicorn router.main:app
 #
 # Posture: NO public LLM calls for these aliases. All inference routes to the
-# on-prem Ollama endpoint only. If Ollama is down, the request fails — we do
-# NOT fall back to a public provider, because the whole point is to keep the
-# data on-prem.
+# on-prem Ollama endpoint only. If Ollama is down, the request fails; it does
+# NOT fall back to a public provider, because the point is to keep the data on-prem.
+# The main config/routes.yaml has the same regulated-fast alias, and
+# config/policies.yaml restricts it to ollama as well.
 #
 # Use alongside a key schema where team names encode the regulatory profile
-# (e.g., team="hipaa" or team="pci").
+# (e.g., team="bsa" or team="member-npi").
 
 aliases:
   regulated-fast:
@@ -17,15 +20,20 @@ aliases:
   regulated-reasoning:
     - { provider: ollama, model: qwen2.5:14b,  timeout_s: 120 }
 
-  # Explicit NO-public policy: this alias intentionally has no fallback.
-  phi-safe:
+  # Members' nonpublic personal information: explicitly no fallback.
+  member-npi:
     - { provider: ollama, model: llama3.1:8b,  timeout_s: 60 }
 
 policies:
-  # Lower per-key cap — if a regulated key is doing >$10/day in local
-  # inference something is unusual (local inference is near-free, so the only
-  # way to spend money here is to accidentally route to a public provider).
+  # Lower per-key cap: if a regulated key spends more than $10/day on local
+  # inference, something is unusual (local inference costs only the GPU
+  # chargeback, so the only way to spend money here is a misrouted request).
   per_key_daily_usd: 10.0
   per_team_daily_usd: 50.0
   rate_limit_rpm: 30
-  auto_pause_on_anomaly: false   # local inference is ~$0, so spend anomalies don't apply
+  auto_pause_on_anomaly: false   # local inference costs almost nothing, so spend anomalies don't apply
+
+# GPU chargeback rates, USD per 1M tokens (the same rate as config/routes.yaml for llama3.1:8b).
+prices:
+  "ollama/llama3.1:8b":  { input_usd_per_1m: 0.05, output_usd_per_1m: 0.05 }
+  "ollama/qwen2.5:14b":  { input_usd_per_1m: 0.08, output_usd_per_1m: 0.08 }

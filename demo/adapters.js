@@ -23,7 +23,8 @@ export const SAMPLE_PROMPTS = {
 const TEAM_PROMPTS = {
   "digital-banking": [SAMPLE_PROMPTS.release, "Suggest three names for a round-up savings feature, one line each."],
   "member-services": [SAMPLE_PROMPTS.faq, SAMPLE_PROMPTS.triage, "How do I reset a member's online banking password?"],
-  "risk-analytics": ["Tag these dispute cases as fraud, merchant error, duplicate or member error: unknown gas station charge; cancelled subscription renewed; restaurant charged twice; ATM cash not dispensed."],
+  "risk-analytics": ["Write a two-sentence analyst narrative for each overnight fraud alert and name the pattern: three $1.00 online authorizations then an $849.99 electronics purchase; new device sign-in then a $2,400 external transfer."],
+  "it-engineering": ["Review this function: round_cents(amount) quantizes to Decimal('0.001'). What is wrong and what is the fix?"],
 };
 
 export class ApiError extends Error {
@@ -129,6 +130,9 @@ export class DemoAdapter {
       py.FS.writeFile(`/home/pyodide/router/${m}.py`, src);
       this.files.push({ path: `router/${m}.py`, lines: src.split("\n").length, sha: await sha256(src) });
     }
+    const company = await fetchText("./cypress_harbor.py");
+    py.FS.writeFile("/home/pyodide/cypress_harbor.py", company);
+    this.files.push({ path: "demo/cypress_harbor.py", lines: company.split("\n").length, sha: await sha256(company), sim: true });
     const engine = await fetchText("./engine.py");
     py.FS.writeFile("/home/pyodide/demo_engine.py", engine);
     this.files.push({ path: "demo/engine.py", lines: engine.split("\n").length, sha: await sha256(engine), sim: true });
@@ -325,8 +329,9 @@ export class LiveAdapter {
   }
 
   async traffic(n, scenario = "mix") {
-    const teams = scenario === "spike" ? ["risk-analytics"] : ["digital-banking", "member-services", "risk-analytics", "digital-banking", "member-services"];
-    const aliasFor = { "digital-banking": "smart-fast", "member-services": "smart-fast", "risk-analytics": "cheap-batch" };
+    // Same team -> alias choices as demo/cypress_harbor.py (online banking on fast-chat, fraud alerts on cheap-batch).
+    const teams = scenario === "spike" ? ["it-engineering"] : ["digital-banking", "member-services", "risk-analytics", "digital-banking", "member-services"];
+    const aliasFor = { "digital-banking": "fast-chat", "member-services": "smart-fast", "risk-analytics": "cheap-batch", "it-engineering": "heavy-reasoning" };
     const routes = await this.routes();
     const keys = {};
     for (const t of new Set(teams)) keys[t] = await this.ensureTeamKey(t);
@@ -337,9 +342,9 @@ export class LiveAdapter {
         const j = i++;
         const team = teams[j % teams.length];
         const prompts = TEAM_PROMPTS[team];
-        let alias = scenario === "spike" ? "smart-fast" : aliasFor[team];
+        let alias = aliasFor[team];
         if (!routes[alias]) alias = Object.keys(routes)[0];
-        const res = await this.chat({ key: keys[team], alias, text: prompts[j % prompts.length], max_tokens: 256, temperature: team === "member-services" ? 0 : 0.7 });
+        const res = await this.chat({ key: keys[team], alias, text: prompts[j % prompts.length], max_tokens: 256, temperature: team === "it-engineering" ? 0.2 : 0 });
         const o = res.ok ? (res.cache && res.cache !== "miss" ? "cache_hit" : "ok") : res.status >= 500 ? "error" : "rejected";
         outcomes[o] = (outcomes[o] || 0) + 1;
       }

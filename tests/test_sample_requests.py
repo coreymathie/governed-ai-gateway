@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from demo import cypress_harbor as ch
 from scripts import generate_sample_company as company
 from scripts import sample_requests as gen
 
@@ -45,26 +46,38 @@ def test_cost_is_tokens_times_the_price_of_the_model_that_answered(log):
             assert r["cost_usd"] == 0 and r["status"] >= 400 and r["reason"]
 
 
-def test_each_teams_cost_per_thousand_is_close_to_the_sample_companys_assumption(log):
-    assumed = {name: per_k for name, _apps, _req, _we, per_k, _b, _hit in company.TEAMS}
+def test_each_apps_cost_per_request_matches_its_route_and_token_sizes(log):
+    """The log prices requests from the same app table as the usage file: per app and alias, within sampling noise."""
+    cfg = company.routes_config()
+    routes = company.aliases(cfg)
     spend, count = defaultdict(float), defaultdict(int)
     for r in log["requests"]:
-        if r["outcome"] == "ok":
-            spend[r["team"]] += r["cost_usd"]
-            count[r["team"]] += 1
-    assert set(count) == set(assumed)
-    for team, n in count.items():
-        per_k = spend[team] / n * 1000
-        assert 0.7 <= per_k / assumed[team] <= 1.3, (team, round(per_k, 2), assumed[team])
+        if r["outcome"] == "ok" and not r["fell_back"]:
+            spend[(r["app"], r["alias"])] += r["cost_usd"]
+            count[(r["app"], r["alias"])] += 1
+    checked = 0
+    for (app, alias), n in count.items():
+        if n < 10:
+            continue
+        targets = routes[alias]
+        firsts = ch.first_choice_shares(alias, targets)
+        implied = sum(f * company.unit_cost(app, alias, t) for f, t in zip(firsts, targets, strict=True))
+        assert 0.7 <= spend[(app, alias)] / n / implied <= 1.3, (app, alias, n)
+        checked += 1
+    assert checked >= 6
 
 
 def test_apps_belong_to_their_team_and_regulated_work_stays_on_prem(log):
-    teams = {t["team"]: set(t["apps"]) for t in company.build()["teams"]}
     for r in log["requests"]:
-        assert r["app"] in teams[r["team"]]
+        spec = ch.APPS[r["app"]]
+        assert r["team"] == (ch.CONTRACTOR["team"] if r["key"] == ch.CONTRACTOR["key"] else spec["team"])
+        assert r["alias"] in [a for a, _ in spec["routes"]]
+        assert r["temperature"] == spec["temperature"]
         if r["regulated"]:
             assert r["alias"] == "regulated-fast"
             assert r["served_by"] in (None, "ollama/llama3.1:8b")
+            policy_stage = next(s for s in r["stages"] if s["stage"] == "policy")
+            assert "routes.regulated-fast" in policy_stage["detail"]["layers"]
 
 
 def test_budget_stage_shows_the_teams_month_to_date_spend_from_the_sample_company(log):
@@ -78,23 +91,33 @@ def test_budget_stage_shows_the_teams_month_to_date_spend_from_the_sample_compan
             d["teams"][r["team"]]["spend_usd"] for d in days if "2026-10-01" <= d["date"] < local_day.date().isoformat()
         )
         assert stage["detail"]["team_month_usd"] == pytest.approx(expected, abs=0.01)
+        assert stage["detail"]["key_today_usd"] <= stage["detail"]["key_daily_cap_usd"]
 
 
 def test_the_activity_feed_stories_are_in_the_log(log):
-    reqs = log["requests"]
-    denied = [r for r in reqs if r["status"] == 403]
-    assert any(r["key"] == "vendor-code-assist" and r["ts"].startswith("2026-10-02") for r in denied)
-    deny = next(s for s in denied[0]["stages"] if s["stage"] == "policy")
-    assert deny["decision"] == "deny" and "contractors" in deny["summary"]
+    reqs = log["requests"][::-1]  # oldest first
+    vendor = [r for r in reqs if r["key"] == ch.CONTRACTOR["key"]]
+    denied, retry = vendor
+    assert denied["status"] == 403 and denied["alias"] == "heavy-reasoning" and denied["team"] == "contractors"
+    deny = next(s for s in denied["stages"] if s["stage"] == "policy")
+    assert (
+        deny["decision"] == "deny"
+        and deny["summary"] == "alias 'heavy-reasoning' is not permitted for team 'contractors'"
+    )
+    gap = datetime.strptime(retry["ts"], "%Y-%m-%dT%H:%M:%SZ") - datetime.strptime(denied["ts"], "%Y-%m-%dT%H:%M:%SZ")
+    assert gap.total_seconds() == 24 and retry["alias"] == "local-first" and retry["status"] == 200  # as the feed says
+
     start, end = "2026-10-06T18:05:00Z", "2026-10-06T18:17:00Z"
     in_window = [r for r in reqs if start <= r["ts"] <= end and r["outcome"] == "ok"]
-    assert len(in_window) >= 8
-    for r in in_window:
-        first = next(s for s in r["stages"] if s["stage"] == "chain")["detail"]["attempts"][0]
-        if first["deployment"] == "anthropic/claude-haiku-4-5":  # haiku was overloaded: every such request fell back
-            assert first["outcome"] == "error" and first["error"] == "529 overloaded"
-            assert r["fell_back"] and r["served_by"] == "openai/gpt-4.1-mini"
-    assert sum(r["fell_back"] for r in in_window) >= 6
+    haiku = [r for r in in_window if next(s for s in r["stages"] if s["stage"] == "chain")["detail"]["attempts"][0]
+             ["deployment"] == "anthropic/claude-haiku-4-5"]  # fmt: skip
+    assert len(haiku) >= 8
+    firsts = [next(s for s in r["stages"] if s["stage"] == "chain")["detail"]["attempts"][0] for r in haiku]
+    assert firsts[0]["outcome"] == "error" and firsts[0]["error"] == "529 overloaded"  # before the breaker opened
+    assert all(f["outcome"] == "skipped" and f["error"] == "circuit open" for f in firsts[1:])  # after it opened
+    assert all(r["fell_back"] and r["served_by"] == "openai/gpt-4.1-mini" for r in haiku)
+    timeout = [r for r in reqs if r["status"] == 504]
+    assert [r["app"] for r in timeout] == ["bsa-case-notes"] and timeout[0]["ts"].startswith("2026-10-05")
     assert any(r["redacted"] for r in reqs)
 
 

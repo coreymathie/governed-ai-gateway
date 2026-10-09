@@ -14,7 +14,10 @@ from router import anomaly, config_loader, main, mock_provider, routing, store, 
 from router.config_loader import settings
 
 ADMIN = {"Authorization": "Bearer sk-router-admin"}
-BODY = {"model": "smart-fast", "messages": [{"role": "user", "content": "Summarise ticket T-1042 for the on-call."}]}
+BODY = {
+    "model": "smart-fast",
+    "messages": [{"role": "user", "content": "Summarise case C-1042 for the card-disputes queue."}],
+}
 
 
 @pytest.fixture
@@ -34,7 +37,7 @@ def client():
         yield c
 
 
-def _key(client, label="web", team="product") -> tuple[dict, str]:
+def _key(client, label="web", team="digital-banking") -> tuple[dict, str]:
     r = client.post("/admin/keys", json={"label": label, "team": team}, headers=ADMIN)
     assert r.status_code == 200
     return {"Authorization": f"Bearer {r.json()['key']}"}, r.json()["id"]
@@ -147,9 +150,9 @@ def test_policy_and_budget_refusals_name_the_stage(client, mock, tmp_path, monke
     assert "removed anthropic/claude-haiku-4-5" in _stages(tr)["policy"]["summary"]
     assert _stages(tr)["chain"]["detail"]["attempts"][0]["deployment"] == "openai/gpt-4.1-mini"
 
-    client.put("/admin/budgets/team/product", json={"daily_usd": 0.0000001}, headers=ADMIN)
-    hp, _ = _key(client, "web", "product")
-    store.record_call("x", "product", "smart-fast", "openai", "gpt-4.1-mini", 1, 1, 0.01)
+    client.put("/admin/budgets/team/digital-banking", json={"daily_usd": 0.0000001}, headers=ADMIN)
+    hp, _ = _key(client, "web", "digital-banking")
+    store.record_call("x", "digital-banking", "smart-fast", "openai", "gpt-4.1-mini", 1, 1, 0.01)
     r = client.post("/v1/chat/completions", json=BODY, headers=hp)
     assert r.status_code == 402
     tr = client.get(f"/admin/traces/{r.headers['x-router-trace-id']}", headers=ADMIN).json()
@@ -165,16 +168,16 @@ def test_budget_overrides_win_over_the_routes_file_and_clear(client, mock):
     h, _ = _key(client)
     assert client.put("/admin/budgets/galaxy/x", json={"daily_usd": 1}, headers=ADMIN).status_code == 400
     assert client.put("/admin/budgets/org/acme", json={"daily_usd": 1}, headers=ADMIN).status_code == 400
-    assert client.put("/admin/budgets/team/product", json={"daily_usd": -1}, headers=ADMIN).status_code == 422
-    r = client.put("/admin/budgets/team/product", json={"daily_usd": 0.001, "tpm": 50000}, headers=ADMIN)
+    assert client.put("/admin/budgets/team/digital-banking", json={"daily_usd": -1}, headers=ADMIN).status_code == 422
+    r = client.put("/admin/budgets/team/digital-banking", json={"daily_usd": 0.001, "tpm": 50000}, headers=ADMIN)
     assert r.status_code == 200
     b = client.get("/admin/budgets", headers=ADMIN).json()
-    assert b["overrides"][0]["name"] == "product" and b["overrides"][0]["daily_usd"] == 0.001
-    assert b["teams"]["product"]["daily"]["cap_usd"] == 0.001 and b["teams"]["product"]["tpm"] == 50000
-    store.record_call("x", "product", "smart-fast", "openai", "gpt-4.1-mini", 1, 1, 0.01)
+    assert b["overrides"][0]["name"] == "digital-banking" and b["overrides"][0]["daily_usd"] == 0.001
+    assert b["teams"]["digital-banking"]["daily"]["cap_usd"] == 0.001 and b["teams"]["digital-banking"]["tpm"] == 50000
+    store.record_call("x", "digital-banking", "smart-fast", "openai", "gpt-4.1-mini", 1, 1, 0.01)
     assert client.post("/v1/chat/completions", json=BODY, headers=h).status_code == 402
-    assert client.delete("/admin/budgets/team/product", headers=ADMIN).json() == {"status": "cleared"}
-    assert client.delete("/admin/budgets/team/product", headers=ADMIN).status_code == 404
+    assert client.delete("/admin/budgets/team/digital-banking", headers=ADMIN).json() == {"status": "cleared"}
+    assert client.delete("/admin/budgets/team/digital-banking", headers=ADMIN).status_code == 404
     assert client.post("/v1/chat/completions", json=BODY, headers=h).status_code == 200
     actions = [a["action"] for a in client.get("/admin/audit?category=admin", headers=ADMIN).json()]
     assert "budget_set" in actions and "budget_cleared" in actions
@@ -196,8 +199,8 @@ def test_pause_unpause_and_anomaly_override(client, mock, monkeypatch):
     # A runaway key the anomaly check pauses can be let through for the rest of the hour.
     for hrs in range(2, 50):
         ts = (datetime.now(UTC) - timedelta(hours=hrs)).strftime("%Y-%m-%d %H:%M:%S")
-        store.record_call(key_id, "product", "smart-fast", "openai", "m", 1, 1, 0.01, ts=ts)
-    store.record_call(key_id, "product", "smart-fast", "openai", "m", 1, 1, 0.50)
+        store.record_call(key_id, "digital-banking", "smart-fast", "openai", "m", 1, 1, 0.01, ts=ts)
+    store.record_call(key_id, "digital-banking", "smart-fast", "openai", "m", 1, 1, 0.50)
     monkeypatch.setattr(config_loader.current().policies, "auto_pause_on_anomaly", True)
     anomaly.clear_cache()
     assert client.post("/v1/chat/completions", json=BODY, headers=h).status_code == 429
@@ -231,14 +234,14 @@ def test_config_read_validate_and_apply(client, mock, monkeypatch):
     )  # fmt: skip
     err = bad_routes.json()["errors"][0]
     assert err["message"].startswith("aliases.a.0.provider") and err["line"] == 3
-    good = "version: 1\nteams:\n  product:\n    deny_aliases: [local-only]\n"
+    good = "version: 1\nteams:\n  digital-banking:\n    deny_aliases: [local-only]\n"
     v = client.post("/admin/config/policies/validate", json={"text": good}, headers=ADMIN).json()
-    assert v["ok"] is True and v["summary"]["teams"] == ["product"]
+    assert v["ok"] is True and v["summary"]["teams"] == ["digital-banking"]
 
     assert client.put("/admin/config/policies", json={"text": good}, headers=ADMIN).status_code == 403
     monkeypatch.setattr(settings, "ROUTER_ALLOW_CONFIG_WRITES", True)
     before = client.post(
-        "/admin/policies/dry-run", json={"teams": ["product"], "aliases": ["local-only"]}, headers=ADMIN
+        "/admin/policies/dry-run", json={"teams": ["digital-banking"], "aliases": ["local-only"]}, headers=ADMIN
     )
     assert before.json()["results"][0]["allow"] is True
     r = client.put("/admin/config/policies", json={"text": "teams: [broken"}, headers=ADMIN)
@@ -246,7 +249,7 @@ def test_config_read_validate_and_apply(client, mock, monkeypatch):
     r = client.put("/admin/config/policies", json={"text": good}, headers=ADMIN)
     assert r.status_code == 200 and r.json()["ok"] is True
     after = client.post(
-        "/admin/policies/dry-run", json={"teams": ["product"], "aliases": ["local-only"]}, headers=ADMIN
+        "/admin/policies/dry-run", json={"teams": ["digital-banking"], "aliases": ["local-only"]}, headers=ADMIN
     )
     assert after.json()["results"][0]["allow"] is False and after.json()["results"][0]["status"] == 403
     h, _ = _key(client)
@@ -257,13 +260,16 @@ def test_config_read_validate_and_apply(client, mock, monkeypatch):
 
 
 def test_dry_run_matrix_and_candidate_policy(client, mock):
-    _key(client, "a", "product")
+    _key(client, "a", "digital-banking")
     r = client.post("/admin/policies/dry-run", json={}, headers=ADMIN).json()
-    assert {(x["team"], x["alias"]) for x in r["results"]} == {("product", "local-only"), ("product", "smart-fast")}
-    cand = "version: 1\nteams:\n  product:\n    allowed_providers: [ollama]\n    max_tokens_ceiling: 100\n"
+    assert {(x["team"], x["alias"]) for x in r["results"]} == {
+        ("digital-banking", "local-only"),
+        ("digital-banking", "smart-fast"),
+    }
+    cand = "version: 1\nteams:\n  digital-banking:\n    allowed_providers: [ollama]\n    max_tokens_ceiling: 100\n"
     r = client.post(
         "/admin/policies/dry-run",
-        json={"teams": ["product"], "aliases": ["smart-fast"], "max_tokens": 50, "text": cand},
+        json={"teams": ["digital-banking"], "aliases": ["smart-fast"], "max_tokens": 50, "text": cand},
         headers=ADMIN,
     ).json()
     assert r["results"][0]["allow"] is False and r["results"][0]["status"] == 403, r
@@ -277,7 +283,7 @@ def test_overview_rolls_up_today(client, mock):
         assert client.post("/v1/chat/completions", json=BODY, headers=h).status_code == 200
     ov = client.get("/admin/overview", headers=ADMIN).json()
     assert ov["kpis"]["requests"] == 3 and ov["kpis"]["spend_usd"] > 0
-    assert ov["by_team"][0]["team"] == "product" and ov["by_model"][0]["model"] == "claude-haiku-4-5"
+    assert ov["by_team"][0]["team"] == "digital-banking" and ov["by_model"][0]["model"] == "claude-haiku-4-5"
     assert len(ov["hourly"]["today"]) == 24 and sum(ov["hourly"]["today"]) == pytest.approx(ov["kpis"]["spend_usd"])
     assert ov["traces"]["served"] == 3 and ov["mock_providers"] is True
     routes = client.get("/admin/routes", headers=ADMIN).json()
@@ -285,21 +291,21 @@ def test_overview_rolls_up_today(client, mock):
 
 
 def test_mock_mcp_server(client, mock, monkeypatch):
-    r = client.post("/mock/mcp/tickets", json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
-    assert [t["name"] for t in r.json()["result"]["tools"]][:2] == ["search_tickets", "get_ticket"]
+    r = client.post("/mock/mcp/cases", json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
+    assert [t["name"] for t in r.json()["result"]["tools"]][:2] == ["search_cases", "get_case"]
     r = client.post(
-        "/mock/mcp/tickets",
+        "/mock/mcp/cases",
         json={
             "jsonrpc": "2.0",
             "id": 2,
             "method": "tools/call",
-            "params": {"name": "get_ticket", "arguments": {"id": 1}},
+            "params": {"name": "get_case", "arguments": {"id": 1}},
         },
     )
-    assert "simulated tickets server" in r.json()["result"]["content"][0]["text"]
-    assert client.post("/mock/mcp/tickets", json={"jsonrpc": "2.0", "method": "notifications/x"}).status_code == 202
+    assert "simulated cases server" in r.json()["result"]["content"][0]["text"]
+    assert client.post("/mock/mcp/cases", json={"jsonrpc": "2.0", "method": "notifications/x"}).status_code == 202
     monkeypatch.setattr(settings, "ROUTER_MOCK_PROVIDERS", False)
-    assert client.post("/mock/mcp/tickets", json={"jsonrpc": "2.0", "id": 1, "method": "ping"}).status_code == 404
+    assert client.post("/mock/mcp/cases", json={"jsonrpc": "2.0", "id": 1, "method": "ping"}).status_code == 404
 
 
 def test_admin_key_file_is_created_once_with_private_permissions(tmp_path, monkeypatch):

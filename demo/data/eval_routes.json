@@ -8,28 +8,32 @@
   "cheap-batch": {
    "summary": {
     "cases": 40,
-    "cost_per_1k_requests_usd": 0.0039,
+    "cost_per_1k_requests_usd": 0.3037,
     "errors": 0,
-    "fallbacks": 1,
+    "fallbacks": 2,
     "judge_mean": null,
-    "latency_p50_s": 0.3051,
-    "latency_p95_s": 0.3542,
-    "quality": 0.775,
+    "latency_p50_s": 0.3227,
+    "latency_p95_s": 0.3595,
+    "quality": 0.625,
     "quality_by_tag": {
-     "classification": 0.75,
-     "extraction": 0.75,
-     "format": 0.8333,
-     "math": 0.7,
-     "reasoning": 0.75,
-     "summary": 1.0
+     "agent-assist": 0.0,
+     "bsa-case-notes": 0.0,
+     "code-assistant": 1.0,
+     "content-drafts": 0.5,
+     "dispute-triage": 1.0,
+     "fraud-alert-narratives": 0.2,
+     "loan-doc-extraction": 1.0,
+     "member-assistant": 0.8571,
+     "online-banking": 0.6667,
+     "reg-change-digest": 0.3333
     },
     "scored": 40,
     "served_by": {
-     "gemini/gemini-2.5-flash": 1,
-     "openai/gpt-4.1-nano": 39
+     "gemini/gemini-2.5-flash": 2,
+     "openai/gpt-4.1-nano": 38
     },
-    "tokens": 942,
-    "total_cost_usd": 0.000155
+    "tokens": 111586,
+    "total_cost_usd": 0.01215
    },
    "targets": [
     "openai/gpt-4.1-nano",
@@ -39,28 +43,32 @@
   "fast-chat": {
    "summary": {
     "cases": 40,
-    "cost_per_1k_requests_usd": 0.03,
+    "cost_per_1k_requests_usd": 2.7637,
     "errors": 0,
     "fallbacks": 1,
     "judge_mean": null,
-    "latency_p50_s": 0.6591,
-    "latency_p95_s": 0.7454,
-    "quality": 0.975,
+    "latency_p50_s": 0.6274,
+    "latency_p95_s": 0.7553,
+    "quality": 0.85,
     "quality_by_tag": {
-     "classification": 0.875,
-     "extraction": 1.0,
-     "format": 1.0,
-     "math": 1.0,
-     "reasoning": 1.0,
-     "summary": 1.0
+     "agent-assist": 1.0,
+     "bsa-case-notes": 0.5,
+     "code-assistant": 1.0,
+     "content-drafts": 1.0,
+     "dispute-triage": 0.8571,
+     "fraud-alert-narratives": 1.0,
+     "loan-doc-extraction": 0.8,
+     "member-assistant": 0.7143,
+     "online-banking": 1.0,
+     "reg-change-digest": 1.0
     },
     "scored": 40,
     "served_by": {
      "anthropic/claude-haiku-4-5": 39,
      "openai/gpt-4.1-mini": 1
     },
-    "tokens": 852,
-    "total_cost_usd": 0.0012
+    "tokens": 111486,
+    "total_cost_usd": 0.11055
    },
    "targets": [
     "anthropic/claude-haiku-4-5",
@@ -71,27 +79,31 @@
   "heavy-reasoning": {
    "summary": {
     "cases": 40,
-    "cost_per_1k_requests_usd": 0.0947,
+    "cost_per_1k_requests_usd": 8.3777,
     "errors": 0,
     "fallbacks": 0,
     "judge_mean": null,
-    "latency_p50_s": 1.4111,
-    "latency_p95_s": 1.6556,
-    "quality": 0.95,
+    "latency_p50_s": 1.416,
+    "latency_p95_s": 1.5907,
+    "quality": 1.0,
     "quality_by_tag": {
-     "classification": 1.0,
-     "extraction": 0.875,
-     "format": 1.0,
-     "math": 1.0,
-     "reasoning": 1.0,
-     "summary": 0.5
+     "agent-assist": 1.0,
+     "bsa-case-notes": 1.0,
+     "code-assistant": 1.0,
+     "content-drafts": 1.0,
+     "dispute-triage": 1.0,
+     "fraud-alert-narratives": 1.0,
+     "loan-doc-extraction": 1.0,
+     "member-assistant": 1.0,
+     "online-banking": 1.0,
+     "reg-change-digest": 1.0
     },
     "scored": 40,
     "served_by": {
      "anthropic/claude-sonnet-4-5": 40
     },
-    "tokens": 863,
-    "total_cost_usd": 0.003789
+    "tokens": 111419,
+    "total_cost_usd": 0.335109
    },
    "targets": [
     "anthropic/claude-sonnet-4-5",
@@ -101,58 +113,99 @@
   "local-first": {
    "summary": {
     "cases": 40,
-    "cost_per_1k_requests_usd": 0.0012,
+    "cost_per_1k_requests_usd": 0.1394,
     "errors": 0,
     "fallbacks": 0,
     "judge_mean": null,
-    "latency_p50_s": 1.2426,
-    "latency_p95_s": 1.5005,
-    "quality": 0.65,
+    "latency_p50_s": 1.2812,
+    "latency_p95_s": 1.5096,
+    "quality": 0.6,
     "quality_by_tag": {
-     "classification": 0.625,
-     "extraction": 0.5,
-     "format": 1.0,
-     "math": 0.6,
-     "reasoning": 0.625,
-     "summary": 0.5
+     "agent-assist": 0.5,
+     "bsa-case-notes": 0.5,
+     "code-assistant": 1.0,
+     "content-drafts": 1.0,
+     "dispute-triage": 0.4286,
+     "fraud-alert-narratives": 0.8,
+     "loan-doc-extraction": 0.4,
+     "member-assistant": 0.7143,
+     "online-banking": 0.3333,
+     "reg-change-digest": 0.6667
     },
     "scored": 40,
     "served_by": {
      "ollama/llama3.1:8b": 40
     },
-    "tokens": 1006,
-    "total_cost_usd": 5e-05
+    "tokens": 111597,
+    "total_cost_usd": 0.005578
    },
    "targets": [
     "ollama/llama3.1:8b",
     "anthropic/claude-haiku-4-5"
    ]
   },
+  "regulated-fast": {
+   "summary": {
+    "cases": 40,
+    "cost_per_1k_requests_usd": 0.1394,
+    "errors": 0,
+    "fallbacks": 0,
+    "judge_mean": null,
+    "latency_p50_s": 1.2812,
+    "latency_p95_s": 1.5096,
+    "quality": 0.6,
+    "quality_by_tag": {
+     "agent-assist": 0.5,
+     "bsa-case-notes": 0.5,
+     "code-assistant": 1.0,
+     "content-drafts": 1.0,
+     "dispute-triage": 0.4286,
+     "fraud-alert-narratives": 0.8,
+     "loan-doc-extraction": 0.4,
+     "member-assistant": 0.7143,
+     "online-banking": 0.3333,
+     "reg-change-digest": 0.6667
+    },
+    "scored": 40,
+    "served_by": {
+     "ollama/llama3.1:8b": 40
+    },
+    "tokens": 111597,
+    "total_cost_usd": 0.005578
+   },
+   "targets": [
+    "ollama/llama3.1:8b"
+   ]
+  },
   "smart-fast": {
    "summary": {
     "cases": 40,
-    "cost_per_1k_requests_usd": 0.03,
+    "cost_per_1k_requests_usd": 2.7637,
     "errors": 0,
     "fallbacks": 1,
     "judge_mean": null,
-    "latency_p50_s": 0.6591,
-    "latency_p95_s": 0.7454,
-    "quality": 0.975,
+    "latency_p50_s": 0.6274,
+    "latency_p95_s": 0.7553,
+    "quality": 0.85,
     "quality_by_tag": {
-     "classification": 0.875,
-     "extraction": 1.0,
-     "format": 1.0,
-     "math": 1.0,
-     "reasoning": 1.0,
-     "summary": 1.0
+     "agent-assist": 1.0,
+     "bsa-case-notes": 0.5,
+     "code-assistant": 1.0,
+     "content-drafts": 1.0,
+     "dispute-triage": 0.8571,
+     "fraud-alert-narratives": 1.0,
+     "loan-doc-extraction": 0.8,
+     "member-assistant": 0.7143,
+     "online-banking": 1.0,
+     "reg-change-digest": 1.0
     },
     "scored": 40,
     "served_by": {
      "anthropic/claude-haiku-4-5": 39,
      "openai/gpt-4.1-mini": 1
     },
-    "tokens": 852,
-    "total_cost_usd": 0.0012
+    "tokens": 111486,
+    "total_cost_usd": 0.11055
    },
    "targets": [
     "anthropic/claude-haiku-4-5",

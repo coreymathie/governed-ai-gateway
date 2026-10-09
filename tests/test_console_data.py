@@ -35,6 +35,6 @@ def test_console_data_labels_what_is_simulated_and_what_is_measured():
     routes = json.loads((DATA / "eval_routes.json").read_text())
     assert routes["provider"] == "simulated" and routes["measured"].startswith("simulated")
     cal = json.loads((DATA / "semcache_calibration.json").read_text())
-    assert cal["measured"].startswith("measured") and cal["chosen"]["threshold"] == 0.88
+    assert cal["measured"].startswith("measured") and cal["chosen"]["threshold"] == 0.90
     gate = json.loads((DATA / "eval_gate.json").read_text())
     assert gate["ok"] is False and gate["measured"].startswith("simulated")

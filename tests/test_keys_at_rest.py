@@ -21,7 +21,7 @@ def _all_values(db_path) -> str:
 
 
 def test_only_a_salted_hash_is_stored():
-    created = store.create_key("web", team="product")
+    created = store.create_key("web", team="digital-banking")
     secret = created.key
     assert secret.startswith("sk-router-") and created.id.startswith("key_")
     assert created.key_prefix == secret[:14] and created.fingerprint == hashlib.sha256(secret.encode()).hexdigest()[:8]
@@ -36,9 +36,9 @@ def test_only_a_salted_hash_is_stored():
 
 
 def test_lookup_by_secret_wrong_key_and_revocation():
-    created = store.create_key("app", team="data", is_admin=True)
+    created = store.create_key("app", team="risk-analytics", is_admin=True)
     found = store.get_active_key(created.key)
-    assert found.id == created.id and found.team == "data" and found.is_admin and not hasattr(found, "key")
+    assert found.id == created.id and found.team == "risk-analytics" and found.is_admin and not hasattr(found, "key")
     assert store.get_active_key(created.key[:-1] + ("A" if created.key[-1] != "A" else "B")) is None  # same prefix
     assert store.get_active_key("sk-router-nothing") is None
     assert store.revoke_key(created.id) and store.get_active_key(created.key) is None
@@ -82,7 +82,7 @@ BODY = {"model": "smart-fast", "messages": [{"role": "user", "content": "hi"}]}
 
 
 def test_api_shows_the_secret_once_and_lists_prefixes_only(client):
-    r = client.post("/admin/keys", json={"label": "web", "team": "product"}, headers=ADMIN).json()
+    r = client.post("/admin/keys", json={"label": "web", "team": "digital-banking"}, headers=ADMIN).json()
     secret, key_id = r["key"], r["id"]
     assert r["key_prefix"] == secret[:14] and len(r["fingerprint"]) == 8
     listed = client.get("/admin/keys", headers=ADMIN).json()
@@ -118,9 +118,9 @@ CREATE TABLE usage (id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT NOT NULL, tea
     cost_usd REAL NOT NULL, error TEXT, ts TEXT NOT NULL);
 """
 OLD_KEYS = [
-    ("sk-router-OLDwebAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "web", "product", 0, None),
-    ("sk-router-OLDopsBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "ops", "platform", 1, None),
-    ("sk-router-OLDoldCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", "old", "product", 0, "2026-09-01 00:00:00"),
+    ("sk-router-OLDwebAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "web", "digital-banking", 0, None),
+    ("sk-router-OLDopsBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "ops", "it-engineering", 1, None),
+    ("sk-router-OLDoldCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", "old", "digital-banking", 0, "2026-09-01 00:00:00"),
 ]
 GONE = "sk-router-OLDgoneDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"  # usage for a key no longer in api_keys
 
@@ -138,7 +138,7 @@ def v05_db(tmp_path, monkeypatch):
         for secret in (OLD_KEYS[0][0], OLD_KEYS[0][0], OLD_KEYS[1][0], GONE):
             c.execute(
                 "INSERT INTO usage (key, team, alias, provider, model, prompt_tokens, completion_tokens, cost_usd, ts) "
-                "VALUES (?, 'product', 'smart-fast', 'openai', 'm', 1, 1, 0.5, datetime('now'))",
+                "VALUES (?, 'digital-banking', 'smart-fast', 'openai', 'm', 1, 1, 0.5, datetime('now'))",
                 (secret,),
             )
     monkeypatch.setattr(settings, "ROUTER_DB_PATH", str(path))
@@ -151,7 +151,12 @@ def test_migration_hashes_keys_repoints_usage_and_leaves_no_plaintext(v05_db):
     assert store.migrate_plaintext_keys() == 0
     web = store.get_active_key(OLD_KEYS[0][0])
     ops = store.get_active_key(OLD_KEYS[1][0])
-    assert web.label == "web" and web.team == "product" and not web.is_admin and web.created_at == "2026-08-01 00:00:00"
+    assert (
+        web.label == "web"
+        and web.team == "digital-banking"
+        and not web.is_admin
+        and web.created_at == "2026-08-01 00:00:00"
+    )
     assert ops.is_admin and store.get_active_key(OLD_KEYS[2][0]) is None  # revoked stays revoked
     assert web.fingerprint == showback.fingerprint(OLD_KEYS[0][0])  # same fingerprint as 0.5 exports
     assert store.spend_today(key=web.id) == pytest.approx(1.0) and store.spend_today(key=ops.id) == pytest.approx(0.5)

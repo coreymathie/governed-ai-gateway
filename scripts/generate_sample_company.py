@@ -1,10 +1,10 @@
 # Corey Mathie, 2026
 """
 Write demo/data/sample_company.json: 90 days of AI traffic through the gateway at a fictional
-mid-size credit union, so the console's Business impact view shows it at a realistic scale.
+credit union, so the console's Spend screen shows it at a realistic scale.
 
 Cypress Harbor Credit Union does not exist. Every number in the file is generated here from a
-fixed seed and the assumptions below; none of it is a measurement of this repo or of any real
+fixed seed and stated assumptions; none of it is a measurement of this repo or of any real
 institution. The console labels it "Sample company data" wherever it appears, and keeps it apart
 from the measured eval results (Evals) and the requests simulated in the browser (This session).
 
@@ -12,14 +12,17 @@ from the measured eval results (Evals) and the requests simulated in the browser
     python scripts/generate_sample_company.py --check    # exit 1 if the committed file differs
 
 The model, in short:
-- Seven teams run AI features through one gateway, each with a monthly budget. Traffic follows
-  the working week; the member assistant also runs nights and weekends.
-- Spend per request depends on each team's model mix; the exact-match cache serves repeated
-  questions at $0.
-- Two provider incidents (September 16, October 6) are absorbed by fallback; one runaway batch job
-  (September 24) is paused by spend-anomaly detection, and the spend it would have caused is estimated.
-- Regulated work (dispute evidence in risk analytics, BSA case notes in compliance) runs only on the
-  on-prem model.
+- Applications, their teams, route aliases, token sizes, hours and volumes come from
+  demo/cypress_harbor.py; deployments, budgets, per-key caps and the circuit-breaker settings come
+  from config/routes.yaml. Nothing about the company is defined twice.
+- Each day, every app's requests (less exact-cache hits) are served by its route's deployments in
+  order; a small share falls back to the next deployment, and on incident days the requests that
+  reached the failing deployment during the incident window fall back. Spend is tokens times price
+  for the deployment that answered, so spend by team and by model follow from the request mix.
+- One runaway (September 24: a coding agent looping on heavy-reasoning) is paused by the anomaly
+  rule in router/anomaly.py (10x the key's 7-day hourly baseline); the spend it would have caused
+  before the next business morning, within the key, team and org caps, is estimated.
+- Regulated work (dispute triage, BSA case notes) runs only on the on-prem model.
 """
 
 from __future__ import annotations
@@ -28,184 +31,521 @@ import argparse
 import json
 import random
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from math import fsum
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from demo import cypress_harbor as ch  # noqa: E402
+from router import anomaly  # noqa: E402
+
 OUT = ROOT / "demo" / "data" / "sample_company.json"
+ROUTES_FILE = ROOT / "config" / "routes.yaml"
 SEED = 20261009
 END = date(2026, 10, 7)
 DAYS = 90
-
-COMPANY = {
-    "name": "Cypress Harbor Credit Union",
-    "short": "Cypress Harbor CU",
-    "fictional": True,
-    "industry": "Credit union (financial services)",
-    "headquarters": "Fort Lauderdale, Florida",
-    "members": 92400,
-    "assets_usd": 1_400_000_000,
-    "employees": 340,
-    "branches": 11,
-    "providers": ["Anthropic", "OpenAI", "Google Gemini", "On-prem Llama (Ollama)"],
-    "regulators": ["NCUA", "CFPB", "Florida OFR"],
-}
-
-# team: (apps, workday requests, weekend share, dollars per 1K requests, monthly budget, cache hit rate)
-TEAMS = [
-    ("member-services", ["member-assistant", "agent-assist"], 31000, 0.55, 3.10, 3600, 0.21),
-    ("digital-banking", ["online-banking", "mobile-banking"], 26000, 0.62, 2.40, 2600, 0.17),
-    ("risk-analytics", ["fraud-scoring-batch", "dispute-triage"], 14000, 0.9, 6.80, 4200, 0.04),
-    ("lending", ["loan-doc-extraction"], 5200, 0.08, 9.50, 2000, 0.06),
-    ("compliance", ["reg-change-digest", "bsa-case-notes"], 900, 0.0, 14.0, 700, 0.09),
-    ("it-engineering", ["code-assistant"], 4200, 0.05, 4.90, 1000, 0.12),
-    ("marketing", ["content-drafts"], 1100, 0.02, 7.20, 500, 0.08),
-]
-
-MODELS = [
-    ("anthropic/claude-haiku-4-5", 0.34),
-    ("openai/gpt-4.1-mini", 0.24),
-    ("anthropic/claude-sonnet-4-5", 0.14),
-    ("gemini/gemini-2.5-flash", 0.11),
-    ("ollama/llama3.1:8b (on-prem)", 0.17),
-]
+HOLIDAYS = {date(2026, 9, 7)}  # Labor Day: branches and back office closed
+UTC_DAY_STARTS = 20  # local hour (Eastern daylight time) at which a new UTC day, and the daily caps, begin
+STORY_FAILURES = {"2026-10-05": "bsa-case-notes"}  # the on-prem timeout shown in the request log
 
 ASSUMPTIONS = {
-    "note": "Request volumes, per-request prices by team and budgets are illustrative assumptions for the "
-    "sample company. Spend prevented by the anomaly pause is the paused job's hourly rate times the hours it "
-    "would have run until someone read the invoice (estimated, not measured).",
+    "note": "Request volumes, token sizes, cache hit rates and hours of use per app are illustrative assumptions "
+    "(demo/cypress_harbor.py); budgets and per-key caps are the credit union's config/routes.yaml. Spend is tokens "
+    "times list prices (on-prem Llama at an assumed GPU chargeback rate). Spend prevented by the anomaly pause is "
+    "the runaway's rate until the next business morning, within the key, team and org caps (estimated, not "
+    "measured).",
 }
 
 
-def _day(rng: random.Random, d: date, i: int) -> dict:
-    weekday = d.weekday()
-    workday = weekday < 5 and d != date(2026, 9, 7)
+def routes_config() -> dict:
+    return yaml.safe_load(ROUTES_FILE.read_text())
+
+
+def aliases(cfg: dict | None = None) -> dict[str, list[str]]:
+    """alias -> ["provider/model", ...] in configured order, from config/routes.yaml."""
+    cfg = cfg or routes_config()
+    out = {}
+    for name, spec in cfg["aliases"].items():
+        targets = spec["targets"] if isinstance(spec, dict) else spec
+        out[name] = [f"{t['provider']}/{t['model']}" for t in targets]
+    return out
+
+
+def is_workday(d: date) -> bool:
+    return d.weekday() < 5 and d not in HOLIDAYS
+
+
+def clock(hhmm: str) -> int:
+    """Minutes after local midnight."""
+    h, m = hhmm.split(":")[:2]
+    return int(h) * 60 + int(m)
+
+
+def hour_share(app: str, h0: float, h1: float) -> float:
+    """Share of an app's daily traffic between local hours h0 and h1 (fractions allowed)."""
+    w = ch.hour_weights(app)
+    total = fsum(w) or 1.0
+    return fsum(w[h] * max(0.0, min(h1, h + 1) - max(h0, h)) for h in range(24)) / total
+
+
+def window_share(app: str, start: str, minutes: int) -> float:
+    """Share of an app's daily traffic in [start, start + minutes) local time."""
+    m0 = clock(start)
+    return hour_share(app, m0 / 60, (m0 + minutes) / 60)
+
+
+def unit_cost(app: str, alias: str, dep: str) -> float:
+    tin, tout = ch.APPS[app]["tokens"][alias]
+    return ch.cost(dep, tin, tout)
+
+
+def expected_cost(app: str, routes: dict[str, list[str]]) -> float:
+    """Average cost of one uncached request with no fallback, from the route mix."""
+    total = 0.0
+    for alias, share in ch.APPS[app]["routes"]:
+        targets = routes[alias]
+        firsts = ch.first_choice_shares(alias, targets)
+        total += share * fsum(f * unit_cost(app, alias, t) for f, t in zip(firsts, targets, strict=True))
+    return total
+
+
+def split(n: int, shares: list[float]) -> list[int]:
+    """Split n into integer parts by share; the remainder goes to the largest share."""
+    parts = [int(n * s) for s in shares]
+    parts[max(range(len(shares)), key=lambda i: shares[i])] += n - sum(parts)
+    return parts
+
+
+def next_target(alias: str, targets: list[str], failing: str) -> str | None:
+    """Where a request goes when `failing` errors or is skipped: the next target (latency routes: next fastest)."""
+    rest = [t for t in targets if t != failing]
+    mix = ch.LATENCY_MIX.get(alias)
+    if mix:
+        rest.sort(key=lambda t: -mix[targets.index(t)])
+    return rest[0] if rest else None
+
+
+def affected_aliases(dep: str, routes: dict[str, list[str]]) -> list[str]:
+    """Aliases whose requests can reach `dep` first: ordered routes that start with it, latency routes listing it."""
+    return sorted(a for a, t in routes.items() if t[0] == dep or (a in ch.LATENCY_MIX and dep in t))
+
+
+def serve(app: str, uncached: int, d: date, rng: random.Random, routes: dict[str, list[str]]) -> dict:
+    """Which deployment answered each uncached request of one app on one day, with fallbacks and failures."""
+    spec = ch.APPS[app]
+    served: dict[str, dict[str, int]] = {}  # alias -> deployment -> requests
+    fallbacks = failed = 0
+    incident_fallbacks: dict[str, int] = {}
+    base_rate = rng.uniform(0.002, 0.005)  # ordinary provider errors and timeouts, retried on the next target
+    today = [x for x in ch.INCIDENTS if x["date"] == d.isoformat()]
+    for (alias, _share), m in zip(spec["routes"], split(uncached, [s for _, s in spec["routes"]]), strict=True):
+        targets = routes[alias]
+        row = served.setdefault(alias, {})
+        for target, mj in zip(targets, split(m, ch.first_choice_shares(alias, targets)), strict=True):
+            if not mj:
+                continue
+            affected = sum(
+                round(mj * window_share(app, inc["start"], inc["minutes"]))
+                for inc in today
+                if inc["deployment"] == target
+            )
+            nxt = next_target(alias, targets, target)
+            if nxt:
+                base = round((mj - affected) * base_rate)
+                row[nxt] = row.get(nxt, 0) + affected + base
+                fallbacks += affected + base
+                if affected:
+                    incident_fallbacks[target] = incident_fallbacks.get(target, 0) + affected
+            else:  # a single-target route (regulated-fast) has nowhere to go: the request fails
+                base = int((mj - affected) * rng.uniform(0, 0.004))
+                failed += base
+            row[target] = row.get(target, 0) + mj - affected - base
+    if STORY_FAILURES.get(d.isoformat()) == app and failed == 0:
+        alias = spec["routes"][0][0]
+        served[alias][routes[alias][0]] -= 1
+        failed = 1
+    return {"served": served, "fallbacks": fallbacks, "failed": failed, "incident_fallbacks": incident_fallbacks}
+
+
+def app_day(app: str, d: date, i: int, rng: random.Random, routes: dict[str, list[str]]) -> dict:
+    spec = ch.APPS[app]
     growth = 1 + 0.18 * (i / (DAYS - 1))
-    teams = {}
-    for name, _apps, req, weekend, per_k, _budget, hit in TEAMS:
-        n = int(req * growth * (1 if workday else weekend) * rng.uniform(0.92, 1.08))
-        cached = int(n * hit * rng.uniform(0.9, 1.1))
-        spend = round((n - cached) / 1000 * per_k * rng.uniform(0.95, 1.05), 2)
-        saved = round(cached / 1000 * per_k, 2)
-        teams[name] = {"requests": n, "cached": cached, "spend_usd": spend, "saved_usd": saved}
-    if d == date(2026, 9, 24):  # the runaway batch: about two hours before the pause
-        teams["risk-analytics"]["requests"] += 21000
-        teams["risk-analytics"]["spend_usd"] = round(teams["risk-analytics"]["spend_usd"] + 192.40, 2)
-    requests = sum(t["requests"] for t in teams.values())
-    incident = d == date(2026, 9, 16)
-    usual = rng.uniform(0.002, 0.006)
-    # October 6: twelve minutes of Anthropic overload; smart-fast traffic fell back to gpt-4.1-mini.
-    fallbacks = int(requests * (0.031 if incident else usual + 0.0045 if d == date(2026, 10, 6) else usual))
-    failed = int(requests * (0.0004 if incident else rng.uniform(0.00002, 0.00008)))
-    regulated = int(teams["risk-analytics"]["requests"] * 0.4 + teams["compliance"]["requests"] * 0.35)
+    n = int(spec["workday"] * growth * (1 if is_workday(d) else spec["weekend"]) * rng.uniform(0.92, 1.08))
+    cached = int(n * spec["cache_hit"] * rng.uniform(0.9, 1.1)) if spec["temperature"] <= 0.0 else 0
+    s = serve(app, n - cached, d, rng, routes)
+    models: dict[str, list[float]] = {}
+    for alias, row in s["served"].items():
+        for dep, k in row.items():
+            if k:
+                acc = models.setdefault(dep, [0, 0.0])
+                acc[0] += k
+                acc[1] += k * unit_cost(app, alias, dep)
     return {
-        "date": d.isoformat(),
-        "requests": requests,
-        "spend_usd": round(sum(t["spend_usd"] for t in teams.values()), 2),
-        "saved_usd": round(sum(t["saved_usd"] for t in teams.values()), 2),
-        "fallbacks": fallbacks,
-        "failed": failed,
-        "policy_denied": rng.randint(4, 19) if workday else rng.randint(0, 4),
-        "pii_redacted": int(teams["member-services"]["requests"] * rng.uniform(0.018, 0.026)),
-        "regulated_on_prem": regulated,
-        "anomaly_pauses": 1 if d == date(2026, 9, 24) else 0,
-        "p50_overhead_ms": round(rng.uniform(8.5, 10.5), 1),
-        "teams": teams,
+        "requests": n,
+        "cached": cached,
+        "spend_usd": round(fsum(v[1] for v in models.values()), 4),
+        "saved_usd": round(cached * expected_cost(app, routes), 4),
+        "fallbacks": s["fallbacks"],
+        "failed": s["failed"],
+        "incident_fallbacks": s["incident_fallbacks"],
+        "models": {k: {"requests": v[0], "spend_usd": round(v[1], 4)} for k, v in sorted(models.items())},
     }
 
 
-def build() -> dict:
-    rng = random.Random(SEED)
-    start = END - timedelta(days=DAYS - 1)
-    days = [_day(rng, start + timedelta(days=i), i) for i in range(DAYS)]
-    teams = [
-        {"team": name, "apps": apps, "monthly_budget_usd": budget, "cache_hit_rate": hit}
-        for name, apps, _r, _w, _p, budget, hit in TEAMS
-    ]
-    spend30 = sum(d["spend_usd"] for d in days[-30:])
-    models = [{"model": m, "spend_30d_usd": round(spend30 * s * rng.uniform(0.95, 1.05), 2)} for m, s in MODELS]
-    incidents = [
-        {
-            "date": "2026-10-06",
-            "provider": "Anthropic",
-            "duration_minutes": 12,
-            "what": "Overloaded (529) responses on claude-haiku-4-5",
-            "handled": "Each failed attempt fell through to gpt-4.1-mini within the same request; members saw "
-            "about a second of extra latency and no errors.",
+def make_day(rng: random.Random, d: date, i: int, routes: dict[str, list[str]]) -> dict:
+    apps = {app: app_day(app, d, i, rng, routes) for app in ch.APPS}
+    teams = {}
+    for team in ch.TEAMS:
+        rows = [apps[a] for a in ch.apps_of(team)]
+        teams[team] = {
+            "requests": sum(r["requests"] for r in rows),
+            "cached": sum(r["cached"] for r in rows),
+            "spend_usd": round(fsum(r["spend_usd"] for r in rows), 2),
+            "saved_usd": round(fsum(r["saved_usd"] for r in rows), 2),
+        }
+    models: dict[str, dict] = {}
+    for a in apps.values():
+        for dep, v in a["models"].items():
+            m = models.setdefault(dep, {"requests": 0, "spend_usd": 0.0})
+            m["requests"] += v["requests"]
+            m["spend_usd"] = round(m["spend_usd"] + v["spend_usd"], 4)
+    workday = is_workday(d)
+    pii_requests = sum(apps[a]["requests"] for a, s in ch.APPS.items() if s["pii"])
+    incident = sorted({k for a in apps.values() for k in a["incident_fallbacks"]})
+    return {
+        "date": d.isoformat(),
+        "requests": sum(t["requests"] for t in teams.values()),
+        "spend_usd": round(fsum(t["spend_usd"] for t in teams.values()), 2),
+        "saved_usd": round(fsum(t["saved_usd"] for t in teams.values()), 2),
+        "fallbacks": sum(a["fallbacks"] for a in apps.values()),
+        "failed": sum(a["failed"] for a in apps.values()),
+        "policy_denied": rng.randint(4, 19) if workday else rng.randint(0, 4),
+        "pii_redacted": int(pii_requests * rng.uniform(0.018, 0.026)),
+        "regulated_on_prem": sum(apps[a]["requests"] for a, s in ch.APPS.items() if s["regulated"]),
+        "anomaly_pauses": 0,
+        "p50_overhead_ms": round(rng.uniform(8.5, 10.5), 1),
+        "teams": teams,
+        "apps": {
+            k: {f: v[f] for f in ("requests", "cached", "spend_usd", "fallbacks", "failed")} for k, v in apps.items()
         },
-        {
-            "date": "2026-09-16",
-            "provider": "OpenAI",
-            "duration_minutes": 47,
-            "what": "Elevated 5xx and latency on gpt-4.1-mini",
-            "handled": "Circuit breaker opened after 3 failures; traffic fell back to Claude Haiku. "
-            "99.6% of affected requests still succeeded.",
+        "models": dict(sorted(models.items())),
+        "incident_fallbacks": {
+            dep: sum(a["incident_fallbacks"].get(dep, 0) for a in apps.values()) for dep in incident
         },
-        {
-            "date": "2026-07-29",
-            "provider": "Google Gemini",
-            "duration_minutes": 12,
-            "what": "Rate-limit (429) burst in us-east",
-            "handled": "Breaker half-open probes recovered the route; no member-facing errors.",
-        },
-    ]
+    }
+
+
+# ---------- the September 24 runaway ----------
+
+
+def baseline(days: list[dict], app: str) -> tuple[float, int]:
+    """router/anomaly.py's baseline over the 7 days before: spend per hour in which the key had any requests."""
+    w = ch.hour_weights(app)
+    total = fsum(w)
+    hourly: list[float] = []
+    for d in days[-7:]:
+        a = d["apps"][app]
+        uncached = a["requests"] - a["cached"]
+        hourly += [a["spend_usd"] * w[h] / total for h in range(24) if uncached * w[h] / total >= 1]
+    return anomaly.baseline_from_hourly(hourly)
+
+
+def spend_between(day: dict, apps: list[str], h0: float, h1: float) -> float:
+    """Normal spend of these apps between local hours h0 and h1 of a day, from each app's hours of use."""
+    return fsum(day["apps"][a]["spend_usd"] * hour_share(a, h0, h1) for a in apps)
+
+
+def runaway(days: list[dict], today: dict, cfg: dict) -> dict:
+    """When the anomaly check pauses the loop, and what it would have spent before the next business morning."""
+    r = ch.RUNAWAY
+    app, alias = r["key"], r["alias"]
+    team = ch.APPS[app]["team"]
+    routes = aliases(cfg)
+    base, hours = baseline(days, app)
+    call = ch.cost(routes[alias][0], *r["tokens"])
+    start = clock(r["start"]) * 60  # seconds after local midnight
+    gap = 3600 / r["calls_per_hour"]
+    hour = start // 3600
+    calls = 0
+    while True:  # the gateway checks every request before it is sent
+        t = start + calls * gap
+        sig = anomaly.classify(app, spend_between(today, [app], hour, t / 3600) + calls * call, base, hours)
+        if sig.verdict == "pause":
+            break
+        calls += 1
+    paused = start + calls * gap
+    loop = calls * call
+
+    b = cfg["budgets"]
+    caps = {
+        "key daily cap": (b["keys"][app]["daily_usd"], [app]),
+        "team daily cap": (b["teams"][team]["daily_usd"], ch.apps_of(team)),
+        "org daily cap": (b["org"]["daily_usd"], list(ch.APPS)),
+    }
+    month = [x for x in days if x["date"][:7] == r["date"][:7]] + [today]
+    monthly = {
+        "team monthly budget": b["teams"][team]["monthly_usd"] - fsum(x["teams"][team]["spend_usd"] for x in month),
+        "org monthly budget": b["org"]["monthly_usd"] - fsum(x["spend_usd"] for x in month),
+    }
+    # Spend already in the current UTC day for each daily cap: last evening after 8 pm, today until the pause.
+    used = {
+        k: spend_between(days[-1], apps, UTC_DAY_STARTS, 24) + spend_between(today, apps, 0, paused / 3600) + loop
+        for k, (_cap, apps) in caps.items()
+    }
+    d0 = date.fromisoformat(r["date"])
+    morning = d0 + timedelta(days=1)
+    while not is_workday(morning):
+        morning += timedelta(days=1)
+    stop = datetime.combine(morning, datetime.min.time()) + timedelta(minutes=clock(r["noticed"]))
+    now = datetime.combine(d0, datetime.min.time()) + timedelta(seconds=paused)
+    rate = r["calls_per_hour"] / 60 * call  # per minute
+    prevented, binding, utc_days = 0.0, None, 1
+    while now < stop:
+        if now.hour == UTC_DAY_STARTS and now.minute == 0:  # a new UTC day: daily caps start again
+            used = dict.fromkeys(used, 0.0)
+            utc_days += 1
+        h = now.hour + now.minute / 60
+        for k, (_cap, apps) in caps.items():  # normal traffic keeps using the same caps (today's shape)
+            used[k] += spend_between(today, apps, h, h + 1 / 60)
+        room = {k: cap - used[k] for k, (cap, _apps) in caps.items()}
+        room |= {k: v - prevented for k, v in monthly.items()}
+        tightest = min(room, key=room.get)
+        step = max(0.0, min(rate, room[tightest]))
+        if step < rate and binding is None:
+            binding = tightest
+        prevented += step
+        for k in used:
+            used[k] += step
+        now += timedelta(minutes=1)
+    return {
+        "date": r["date"],
+        "team": team,
+        "key": app,
+        "alias": alias,
+        "deployment": routes[alias][0],
+        "started": r["start"],
+        "paused_at": f"{int(paused // 3600):02d}:{int(paused % 3600 // 60):02d}:{int(paused % 60):02d}",
+        "seconds_to_pause": round(paused - start),
+        "calls_before_pause": calls,
+        "cost_per_call_usd": round(call, 4),
+        "loop_spend_usd": round(loop, 2),
+        "baseline_hourly_usd": round(base, 4),
+        "baseline_hours": hours,
+        "hour_spend_at_pause_usd": round(sig.hour_spend, 4),
+        "baseline_multiple": round(sig.multiple, 1),
+        "rate_usd_per_hour": round(rate * 60, 2),
+        "prevented_usd": round(prevented, 2),
+        "binding_cap": binding,
+        "binding_cap_usd": (
+            caps[binding][0]
+            if binding in caps
+            else b["teams"][team]["monthly_usd"]
+            if binding == "team monthly budget"
+            else b["org"]["monthly_usd"]
+        )
+        if binding
+        else None,
+        "utc_days": utc_days,
+        "key_daily_cap_usd": b["keys"][app]["daily_usd"],
+        "until": stop.strftime("%Y-%m-%dT%H:%M"),
+    }
+
+
+def book_runaway(day: dict, info: dict) -> None:
+    """Book the loop's calls before the pause on the key, its team, the deployment and the day."""
+    n, extra = info["calls_before_pause"], info["loop_spend_usd"]
+    a, t = day["apps"][info["key"]], day["teams"][info["team"]]
+    m = day["models"].setdefault(info["deployment"], {"requests": 0, "spend_usd": 0.0})
+    for row, digits in ((a, 4), (t, 2), (m, 4), (day, 2)):
+        row["requests"] += n
+        row["spend_usd"] = round(row["spend_usd"] + extra, digits)
+    day["anomaly_pauses"] = 1
+
+
+# ---------- stories ----------
+
+
+def money(x: float) -> str:
+    return f"${x:,.0f}" if x >= 100 else f"${x:,.2f}"
+
+
+def when(hhmm: str) -> str:
+    h, m = (int(p) for p in hhmm.split(":")[:2])
+    return f"{(h - 1) % 12 + 1}:{m:02d} {'am' if h < 12 else 'pm'}"
+
+
+def plus(hhmm: str, minutes: int) -> str:
+    t = clock(hhmm) + minutes
+    return f"{t // 60:02d}:{t % 60:02d}"
+
+
+def model_name(dep: str) -> str:
+    return ch.MODEL_NAMES[dep]
+
+
+def stories(days: list[dict], cfg: dict, info: dict) -> tuple[list[dict], list[dict]]:
+    """Incidents and the activity feed, with every number taken from the generated days and the config."""
+    by_date = {d["date"]: d for d in days}
+    breaker = cfg["resilience"]["circuit_breaker"]
+    threshold, cooldown = breaker["failure_threshold"], breaker["cooldown_seconds"]
+    routes = aliases(cfg)
+    incidents, facts = [], {}
+    for inc in ch.INCIDENTS:
+        dep = inc["deployment"]
+        n = by_date[inc["date"]]["incident_fallbacks"].get(dep, 0)
+        hit = affected_aliases(dep, routes)
+        to = " and ".join(sorted({model_name(next_target(a, routes[a], dep)) for a in hit}))
+        end = plus(inc["start"], inc["minutes"])
+        incidents.append(
+            {
+                "date": inc["date"],
+                "provider": inc["provider"],
+                "deployment": dep,
+                "duration_minutes": inc["minutes"],
+                "window": f"{when(inc['start'])} to {when(end)}",
+                "what": f"{inc['error'][:1].upper()}{inc['error'][1:]} responses on {model_name(dep)}",
+                "routes_affected": hit,
+                "fallback_requests": n,
+                "failed_requests": 0,
+                "handled": f"The circuit breaker on {model_name(dep)} opened after {threshold} consecutive failures "
+                f"(failure_threshold: {threshold}); later requests skipped it and went straight to {to}, and half-open "
+                f"probes every {cooldown:g} s closed it again at {when(end)}. {n:,} requests were answered by the "
+                "fallback; none failed.",
+            }
+        )
+        facts[inc["date"]] = {"n": n, "to": to, "end": end, "inc": inc}
+
+    aug = [d for d in days if d["date"][:7] == "2026-08"]
+    budget = {t: cfg["budgets"]["teams"][t]["monthly_usd"] for t in ch.TEAMS}
+    spent = {t: fsum(d["teams"][t]["spend_usd"] for d in aug) for t in ch.TEAMS}
+    under = {t: 1 - spent[t] / budget[t] for t in ch.TEAMS}
+    most, least = max(under, key=under.get), min(under, key=under.get)
+    o6, s16 = facts["2026-10-06"], facts["2026-09-16"]
+    c = ch.CONTRACTOR
     notable = [
         {
             "date": "2026-10-06",
             "kind": "reliability",
-            "title": "Twelve minutes of Anthropic overload, no member-facing errors",
-            "detail": "claude-haiku-4-5 returned 529s from 2:05 to 2:17 pm; smart-fast requests fell back to "
-            "gpt-4.1-mini within the same call.",
+            "title": f"Twelve minutes of Anthropic overload, {o6['n']:,} requests answered by the fallback",
+            "detail": f"{model_name(o6['inc']['deployment'])} returned {o6['inc']['error']} from "
+            f"{when(o6['inc']['start'])} to {when(o6['end'])}. After {threshold} consecutive failures its breaker "
+            f"opened, and smart-fast and fast-chat requests went straight to {o6['to']}; no member-facing errors.",
         },
         {
             "date": "2026-10-02",
             "kind": "policy",
-            "title": "Contractor key blocked from Sonnet-class models",
-            "detail": "A vendor's code-assistant key asked for claude-sonnet-4-5; the contractors policy denied it "
-            "and the request fell to an allowed alias.",
+            "title": "Contractor key refused the heavy-reasoning route",
+            "detail": f"A vendor developer's {c['key']} key (team {c['team']}) asked for heavy-reasoning. The "
+            "contractors policy allows only smart-fast, cheap-batch and local-first, so the gateway refused it with "
+            "403 before any provider saw the prompt; the developer resent it on local-first 24 seconds later.",
         },
         {
-            "date": "2026-09-24",
+            "date": info["date"],
             "kind": "risk",
-            "title": "Runaway fraud-scoring batch paused at 10.2x its baseline",
-            "detail": "A retry loop multiplied requests; anomaly detection paused the key within the hour. "
-            "Estimated spend prevented: $2,310 before the next business day.",
+            "title": f"Looping coding agent paused {info['seconds_to_pause']} seconds after it started",
+            "detail": f"From {when(info['started'])} an engineer's coding agent called {info['alias']} in a "
+            f"fix-and-retest loop on the {info['key']} key ({money(info['rate_usd_per_hour'])} an hour). After "
+            f"{info['calls_before_pause']} calls the key's spend that hour reached {info['baseline_multiple']}x its "
+            f"7-day hourly baseline and the gateway paused it. Estimated spend prevented before 8 am the next business "
+            f"day: {money(info['prevented_usd'])}, the most the {info['binding_cap']} "
+            f"({money(info['binding_cap_usd'])}) allowed across the {info['utc_days']} UTC days the loop would have "
+            "run.",
         },
         {
             "date": "2026-09-16",
             "kind": "reliability",
-            "title": "Provider incident absorbed by fallback",
-            "detail": "47 minutes of OpenAI errors; the member assistant and online banking chat kept answering "
-            "through Claude Haiku.",
+            "title": "OpenAI incident absorbed by fallback",
+            "detail": f"{s16['inc']['minutes']} minutes of {s16['inc']['error']} on "
+            f"{model_name(s16['inc']['deployment'])}. fast-chat ranked the remaining deployments by latency and "
+            f"{s16['to']} answered {s16['n']:,} requests; online and mobile banking chat kept answering, and the "
+            "member assistant (smart-fast, Claude Haiku first) was not affected.",
         },
         {
             "date": "2026-09-03",
             "kind": "finops",
-            "title": "September showback sent to department heads",
-            "detail": "CSV export by team and app; risk analytics came in 9% under budget after moving dispute "
-            "triage onto the on-prem model.",
+            "title": "August showback sent to department heads",
+            "detail": f"CSV export by team, app and model: {money(fsum(spent.values()))} in August against "
+            f"{money(fsum(budget.values()))} in team budgets ({fsum(spent.values()) / fsum(budget.values()):.0%}). "
+            f"{ch.TEAMS[most]} finished {under[most]:.0%} under budget; {ch.TEAMS[least].lower()} came closest, at "
+            f"{1 - under[least]:.0%} of its budget.",
         },
         {
             "date": "2026-08-11",
             "kind": "policy",
-            "title": "Regulated workloads pinned to on-prem models",
-            "detail": "BSA and dispute-evidence prompts now route only to the on-prem Llama deployment; "
-            "fallback can't reach a cloud provider.",
+            "title": "On-prem residency for regulated work moved into policy",
+            "detail": "regulated-fast already listed only the on-prem Llama deployment. config/policies.yaml now also "
+            "sets allowed_providers: [ollama] and a required pii_redact hook for that route, so a later edit to "
+            "routes.yaml cannot add a cloud fallback for dispute or BSA work.",
         },
     ]
+    return incidents, notable
+
+
+def build() -> dict:
+    cfg = routes_config()
+    routes = aliases(cfg)
+    rng = random.Random(SEED)
+    start = END - timedelta(days=DAYS - 1)
+    days: list[dict] = []
+    info: dict = {}
+    for i in range(DAYS):
+        d = start + timedelta(days=i)
+        day = make_day(rng, d, i, routes)
+        if d.isoformat() == ch.RUNAWAY["date"]:
+            info = runaway(days, day, cfg)
+            book_runaway(day, info)
+        days.append(day)
+    b = cfg["budgets"]
+    teams = [
+        {
+            "team": name,
+            "label": label,
+            "apps": ch.apps_of(name),
+            "monthly_budget_usd": b["teams"][name]["monthly_usd"],
+            "daily_cap_usd": b["teams"][name]["daily_usd"],
+            "cache_hit_rate": round(
+                sum(d["teams"][name]["cached"] for d in days) / sum(d["teams"][name]["requests"] for d in days), 3
+            ),
+        }
+        for name, label in ch.TEAMS.items()
+    ]
+    apps = [
+        {
+            "app": app,
+            "team": spec["team"],
+            "routes": [{"alias": a, "share": s} for a, s in spec["routes"]],
+            "key_daily_cap_usd": b["keys"][app]["daily_usd"],
+            "regulated": spec["regulated"],
+        }
+        for app, spec in ch.APPS.items()
+    ]
+    models: dict[str, dict] = {}
+    for d in days[-30:]:
+        for dep, v in d["models"].items():
+            m = models.setdefault(dep, {"model": dep, "requests_30d": 0, "spend_30d_usd": 0.0})
+            m["requests_30d"] += v["requests"]
+            m["spend_30d_usd"] += v["spend_usd"]
+    for m in models.values():
+        m["spend_30d_usd"] = round(m["spend_30d_usd"], 2)
+    incidents, notable = stories(days, cfg, info)
     return {
         "generated_by": "scripts/generate_sample_company.py",
         "seed": SEED,
         "disclaimer": "Fictional sample company. Generated data for demonstration, not measurements.",
         "period": {"start": start.isoformat(), "end": END.isoformat(), "days": DAYS},
-        "company": COMPANY,
+        "company": ch.COMPANY,
         "assumptions": ASSUMPTIONS,
         "teams": teams,
+        "apps": apps,
+        "org_budget": {**b["org"], "source": "config/routes.yaml"},
         "days": days,
-        "models": sorted(models, key=lambda x: -x["spend_30d_usd"]),
+        "models": sorted(models.values(), key=lambda x: -x["spend_30d_usd"]),
         "incidents": incidents,
-        "anomaly": {"date": "2026-09-24", "team": "risk-analytics", "key": "fraud-scoring-batch",
-                    "baseline_multiple": 10.2, "prevented_usd": 2310.0},
+        "anomaly": info,
         "governance": {
             "requests_with_attribution": 1.0,
             "audit_chain_verified_rate": 1.0,
@@ -213,7 +553,7 @@ def build() -> dict:
             "keys_rotated_90d": 14,
         },
         "notable": notable,
-    }  # fmt: skip
+    }
 
 
 def render(data: dict) -> str:

@@ -124,20 +124,20 @@ H = Hierarchy(
     org=Limits(daily_usd=100, monthly_usd=1000),
     team_default=Limits(daily_usd=20, monthly_usd=0, tpm=5000),
     key_default=Limits(daily_usd=5),
-    teams={"data": Limits(daily_usd=40, tpm=20000)},
+    teams={"risk-analytics": Limits(daily_usd=40, tpm=20000)},
     keys={"batch": Limits(daily_usd=15, monthly_usd=100)},
 )
 
 
 def test_overrides_inherit_unset_fields():
-    assert H.team("data") == Limits(40, 0, 20000)
-    assert H.team("product") == Limits(20, 0, 5000)
+    assert H.team("risk-analytics") == Limits(40, 0, 20000)
+    assert H.team("digital-banking") == Limits(20, 0, 5000)
     assert H.key("batch") == Limits(15, 100, None)
     assert H.key("web") == Limits(5, None, None)
 
 
 def test_under_every_cap_is_allowed():
-    assert check(H, "data", "batch", "k1", spends({("key", "k1", "daily"): 14.99})) is None
+    assert check(H, "risk-analytics", "batch", "k1", spends({("key", "k1", "daily"): 14.99})) is None
 
 
 @pytest.mark.parametrize(
@@ -145,13 +145,13 @@ def test_under_every_cap_is_allowed():
     [
         ({("org", None, "monthly"): 1000}, ("org", "monthly", "org monthly spend cap reached")),
         ({("org", None, "daily"): 100, ("key", "k1", "daily"): 99}, ("org", "daily", "org daily spend cap reached")),
-        ({("team", "data", "daily"): 40}, ("team", "daily", "per-team daily spend cap reached")),
+        ({("team", "risk-analytics", "daily"): 40}, ("team", "daily", "per-team daily spend cap reached")),
         ({("key", "k1", "daily"): 15}, ("key", "daily", "per-key daily spend cap reached")),
         ({("key", "k1", "monthly"): 100}, ("key", "monthly", "per-key monthly spend cap reached")),
     ],
 )
 def test_first_breached_cap_broadest_first(spent, expected):
-    b = check(H, "data", "batch", "k1", spends(spent))
+    b = check(H, "risk-analytics", "batch", "k1", spends(spent))
     assert (b.scope, b.period, b.message) == expected
 
 
@@ -171,16 +171,16 @@ def test_hierarchy_warnings_and_utilization():
 # ---------- showback ----------
 
 ROWS = [
-    {"team": "product", "key_label": "web", "key_fp": "aaaa", "alias": "smart-fast", "provider": "openai",
+    {"team": "digital-banking", "key_label": "web", "key_fp": "aaaa", "alias": "smart-fast", "provider": "openai",
      "model": "gpt-4.1-mini", "prompt_tokens": 1000, "completion_tokens": 500, "cost_usd": 0.003, "error": None,
      "cached": 0, "saved_usd": 0.0},
-    {"team": "product", "key_label": "web", "key_fp": "aaaa", "alias": "smart-fast", "provider": "openai",
+    {"team": "digital-banking", "key_label": "web", "key_fp": "aaaa", "alias": "smart-fast", "provider": "openai",
      "model": "gpt-4.1-mini", "prompt_tokens": 1000, "completion_tokens": 500, "cost_usd": 0.0, "error": None,
      "cached": 1, "saved_usd": 0.003},
-    {"team": "product", "key_label": "web", "key_fp": "aaaa", "alias": "smart-fast", "provider": "anthropic",
+    {"team": "digital-banking", "key_label": "web", "key_fp": "aaaa", "alias": "smart-fast", "provider": "anthropic",
      "model": "claude-haiku-4-5", "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0, "error": "timeout",
      "cached": 0, "saved_usd": 0.0},
-    {"team": "data", "key_label": "=cmd()", "key_fp": "bbbb", "alias": "cheap-batch", "provider": "openai",
+    {"team": "risk-analytics", "key_label": "=cmd()", "key_fp": "bbbb", "alias": "cheap-batch", "provider": "openai",
      "model": "gpt-4.1-nano", "prompt_tokens": 3000, "completion_tokens": 1000, "cost_usd": 0.001, "error": None,
      "cached": 0, "saved_usd": 0.0},
 ]  # fmt: skip
@@ -188,14 +188,14 @@ ROWS = [
 
 def test_aggregate_unit_metrics():
     rows = showback.aggregate(ROWS, ("team",))
-    product = next(r for r in rows if r["team"] == "product")
-    assert product["requests"] == 2 and product["cache_hits"] == 1 and product["failed_attempts"] == 1
-    assert product["input_tokens"] == 1000 and product["output_tokens"] == 500  # cache hit not billed
-    assert product["cost_per_1k_requests"] == pytest.approx(1.5)  # $0.003 over 2 requests
-    assert product["cost_per_1k_tokens"] == pytest.approx(0.002)  # $0.003 over 1500 tokens
-    assert product["share_of_cost"] == pytest.approx(0.75)
-    assert product["saved_usd"] == pytest.approx(0.003)
-    assert [r["team"] for r in rows] == ["product", "data"]  # most expensive first
+    banking = next(r for r in rows if r["team"] == "digital-banking")
+    assert banking["requests"] == 2 and banking["cache_hits"] == 1 and banking["failed_attempts"] == 1
+    assert banking["input_tokens"] == 1000 and banking["output_tokens"] == 500  # cache hit not billed
+    assert banking["cost_per_1k_requests"] == pytest.approx(1.5)  # $0.003 over 2 requests
+    assert banking["cost_per_1k_tokens"] == pytest.approx(0.002)  # $0.003 over 1500 tokens
+    assert banking["share_of_cost"] == pytest.approx(0.75)
+    assert banking["saved_usd"] == pytest.approx(0.003)
+    assert [r["team"] for r in rows] == ["digital-banking", "risk-analytics"]  # most expensive first
 
 
 def test_group_by_parsing():

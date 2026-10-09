@@ -9,12 +9,12 @@ from pathlib import Path
 import pytest
 import yaml
 
-from demo.engine import DEMO_ALIASES, NOW_HOUR, SIM_PROFILES, Engine, JsBridge, run_sync
+from demo.engine import DEMO_ALIASES, NOW_HOUR, RUNAWAY, SIM_PROFILES, Engine, JsBridge, run_sync
 from router import costs, traces
 from router.models import RouterConfig
 
 ROOT = Path(__file__).resolve().parent.parent
-PROMPT = "How do I export my invoices as CSV?"
+PROMPT = "How do I download my statements as PDF?"
 
 
 @pytest.fixture(autouse=True)
@@ -97,8 +97,8 @@ def test_exact_and_semantic_cache():
     assert stages(miss)["cache"]["decision"] == "miss" and hit["outcome"] == "cache_hit"
     assert hit["cost_usd"] == 0 and hit["saved_usd"] == pytest.approx(miss["cost_usd"])
     e.set_semantic_team("member-services", True)
-    ask(e, "member-assistant", text="How do I rotate an API key in the dashboard?", temperature=0)
-    sem = ask(e, "member-assistant", text="how do i rotate an api key in the dashboard", temperature=0)
+    ask(e, "member-assistant", text="What is Cypress Harbor's routing number?", temperature=0)
+    sem = ask(e, "member-assistant", text="what is cypress harbor's routing number", temperature=0)
     assert sem["cache"] == "semantic-hit" and stages(sem)["semantic_cache"]["decision"] == "hit"
     e.set_cache(False)
     assert stages(ask(e, "member-assistant", temperature=0))["cache"]["decision"] == "skip"
@@ -134,10 +134,11 @@ def test_spike_is_flagged_then_paused_and_can_be_overridden():
     assert summary["outcomes"].get("rejected", 0) >= 1
     paused = [t for t in e.traces if t["status"] == 429]
     assert paused and paused[0]["stages"][-1]["stage"] == "anomaly"
+    assert {t["key"] for t in e.traces} == {RUNAWAY["key"]} and {t["alias"] for t in e.traces} == {RUNAWAY["alias"]}
     ov = e.overview()
-    assert ov["anomalies"][0]["label"] == "fraud-scoring-batch" and ov["anomalies"][0]["verdict"] == "pause"
-    assert e.unpause_key("fraud-scoring-batch") == "override"
-    tr = ask(e, "fraud-scoring-batch", "cheap-batch")
+    assert ov["anomalies"][0]["label"] == RUNAWAY["key"] and ov["anomalies"][0]["verdict"] == "pause"
+    assert e.unpause_key(RUNAWAY["key"]) == "override"
+    tr = ask(e, RUNAWAY["key"], RUNAWAY["alias"])
     assert tr["status"] == 200 and "admin override" in stages(tr)["anomaly"]["summary"]
 
 
@@ -150,7 +151,7 @@ def test_overview_chart_history_is_simulated_and_current_hour_is_live():
     assert all(v > 0 for v in today[:NOW_HOUR]) and all(v == 0 for v in today[NOW_HOUR + 1 :])
     assert today[NOW_HOUR] >= ov["kpis"]["spend_usd"]
     assert ov["kpis"]["requests"] >= 1 and ov["traces"]["requests"] == 20
-    assert {r["team"] for r in ov["by_team"]} <= {"digital-banking", "member-services", "risk-analytics"}
+    assert {r["team"] for r in ov["by_team"]} <= {k.team for k in e.keys}
 
 
 def test_config_screens_use_the_gateway_loaders():

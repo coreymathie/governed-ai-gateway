@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from demo.engine import DEMO_MCP, DEMO_POLICIES, Engine, JsBridge, run_sync
+from demo.engine import DEMO_BUDGETS, DEMO_MCP, DEMO_POLICIES, RUNAWAY, SAMPLE_PROMPT, Engine, JsBridge, run_sync
 from router import costs
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -125,12 +125,12 @@ def test_anomaly_spike_flags_then_pauses():
     e = Engine()
     verdicts = []
     for _ in range(40):
-        ev = send(e, "fraud-scoring-batch", 0.1)
+        ev = send(e, RUNAWAY["key"], 0.1)
         verdicts.append(ev.get("anomaly") or ev.get("reason"))
         if ev.get("reason") == "anomaly_pause":
             break
     assert "flagged" in verdicts and verdicts[-1] == "anomaly_pause"
-    sig = e.signal(e.key("fraud-scoring-batch"))
+    sig = e.signal(e.key(RUNAWAY["key"]))
     assert sig.verdict == "pause" and sig.multiple >= 10 and sig.history_hours >= 24
 
 
@@ -210,6 +210,27 @@ def test_demo_policies_match_the_shipped_file():
     assert yaml.safe_load((ROOT / "config" / "policies.yaml").read_text()) == DEMO_POLICIES
 
 
+def test_demo_budgets_are_the_route_configs_caps_scaled_down():
+    from demo import cypress_harbor as ch
+
+    cfg = yaml.safe_load((ROOT / "config" / "routes.yaml").read_text())
+    assert DEMO_BUDGETS["org"] == cfg["budgets"]["org"] and DEMO_BUDGETS["teams"] == cfg["budgets"]["teams"]
+    assert DEMO_BUDGETS["keys"] == cfg["budgets"]["keys"]
+    assert DEMO_BUDGETS["defaults"] == {k: cfg["policies"][k] for k in ("per_key_daily_usd", "per_team_daily_usd")}
+    e = Engine()
+    b = e.budgets_view()
+    assert b["scale"] == ch.ENGINE_SCALE and b["org"]["cap_usd"] == pytest.approx(100 / ch.ENGINE_SCALE)
+    for t in b["teams"]:
+        assert t["cap_usd"] == pytest.approx(cfg["budgets"]["teams"][t["team"]]["daily_usd"] / ch.ENGINE_SCALE)
+    for label, cap in b["keys"].items():
+        assert cap == pytest.approx(cfg["budgets"]["keys"][label]["daily_usd"] / ch.ENGINE_SCALE)
+    assert {k.label for k in e.keys} == set(ch.ENGINE_KEYS)
+
+
+def test_pii_sample_prompt_is_the_same_in_the_engine_and_the_page():
+    assert json.dumps(SAMPLE_PROMPT) in (ROOT / "demo" / "adapters.js").read_text().replace("pii: ", "")
+
+
 def test_governance_policy_stage_residency_alias_list_and_clamp():
     e = Engine()
     text = e.governance()["sample_prompt"]
@@ -242,9 +263,10 @@ def test_semantic_panel_hit_guard_isolation_and_known_false_hit():
     run_sync(e.semantic_ask("digital-banking", ex[2]))
     assert run_sync(e.semantic_ask("digital-banking", ex[3]))["reason"] == "guard: numbers differ"
     run_sync(e.semantic_ask("digital-banking", ex[4]))
-    wrong = run_sync(e.semantic_ask("digital-banking", ex[5]))  # rotate vs. revoke: the documented false hit
+    wrong = run_sync(e.semantic_ask("digital-banking", ex[5], 0.85))  # turn on vs. turn off: a looser threshold errs
     assert wrong["result"] == "hit" and wrong["nearest"] == ex[4]
-    assert run_sync(e.semantic_ask("digital-banking", ex[5], 0.9))["result"] == "miss"  # a stricter threshold avoids it
+    right = run_sync(e.semantic_ask("digital-banking", ex[5]))  # the calibrated threshold (0.90) does not
+    assert right["result"] == "miss" and right["reason"] == "below_threshold" and e.semantic.threshold == 0.90
     assert e.semantic_view()["counts"] == {"hit": 2, "miss": 5, "guard": 1}
 
 
@@ -267,18 +289,18 @@ def test_demo_mcp_config_matches_the_example_file():
 def test_mcp_panel_allow_deny_velocity_redaction_and_showback():
     e = Engine()
     view = e.mcp_view()
-    assert view["allowed"]["member-services"]["tickets"] == ["search_tickets", "get_ticket", "close_ticket"]
-    assert view["allowed"]["digital-banking"] == {"tickets": [], "files": []}
-    ok = e.mcp_call("member-services", "tickets", "search_tickets")
-    assert ok["decision"] == "allow" and ok["args"] == {"query": "refund requested by [REDACTED:EMAIL]"}
-    assert e.mcp_call("member-services", "tickets", "reassign_ticket")["decision"] == "deny"
+    assert view["allowed"]["member-services"]["cases"] == ["search_cases", "get_case", "close_case"]
+    assert view["allowed"]["digital-banking"] == {"cases": [], "files": []}
+    ok = e.mcp_call("member-services", "cases", "search_cases")
+    assert ok["decision"] == "allow" and ok["args"] == {"query": "open dispute cases for member 4471, [REDACTED:EMAIL]"}
+    assert e.mcp_call("member-services", "cases", "reassign_case")["decision"] == "deny"
     assert e.mcp_call("risk-analytics", "files", "delete_file")["decision"] == "deny"
-    burst = [e.mcp_call("member-services", "tickets", "close_ticket", {"id": f"T-{i}"})["decision"] for i in range(6)]
-    assert burst == ["allow"] * 5 + ["rate_limited"]  # per_minute: 5 on close_ticket
+    burst = [e.mcp_call("member-services", "cases", "close_case", {"id": f"T-{i}"})["decision"] for i in range(6)]
+    assert burst == ["allow"] * 5 + ["rate_limited"]  # per_minute: 5 on close_case
     loop = [e.mcp_call("risk-analytics", "files", "read_file", {"path": "same"})["decision"] for _ in range(6)]
     assert loop[-1] == "rate_limited" and "identical-call" in e.mcp_log[-1]["reason"]
     e.advance(61)
-    assert e.mcp_call("member-services", "tickets", "close_ticket", {"id": "T-9"})["decision"] == "allow"
+    assert e.mcp_call("member-services", "cases", "close_case", {"id": "C-9"})["decision"] == "allow"
     tool_cost = sum(r["cost_usd"] for r in e.ledger if r["provider"] == "mcp")
-    assert tool_cost == pytest.approx(5 * 0.001)  # read_file costs $0.001 per call; ticket tools are free
+    assert tool_cost == pytest.approx(5 * 0.001)  # read_file costs $0.001 per call; case tools are free
     assert {a["category"] for a in e.governance()["audit"]} == {"mcp"}
