@@ -4,63 +4,51 @@
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
-**One OpenAI-compatible endpoint that decides, per request, who may call which model, what it may cost, and what happens when a provider fails, with a console that shows every one of those decisions.**
+**A reference implementation of a central AI gateway for regulated financial institutions: one OpenAI-compatible endpoint that decides, per request, who may call which model, where the data may go, what it may cost and what happens when a provider fails, and records each decision as evidence.**
 
-### ▶ [Open the live console](https://coreymathie.github.io/governed-ai-gateway/demo/)
+## Executive summary
+
+- **Business problem.** Once several teams call model APIs directly, spend is unbounded and unattributed, a provider outage propagates into every application, and no one can say per request what a call cost, where it went or why. A regulated institution also needs data residency for sensitive workloads and evidence of who changed which control.
+- **Architectural approach.** A single gateway is the platform control point between client applications and four providers (OpenAI, Anthropic, Gemini, on-prem Ollama), and between agents and MCP tool servers. Every request passes the same admission pipeline before any provider sees the prompt, then an ordered fallback chain guarded by per-deployment circuit breakers, with opt-in latency-aware routing.
+- **Key controls.** Policy as code (YAML, optional OPA) for model allow/deny lists, data residency and request limits; PII redaction hooks with content logging off by default; a hash-chained audit trail of policy decisions and administrative changes, plus a decision trace for every request; an org → team → key budget hierarchy, tokens-per-minute limits, showback/chargeback and spend-anomaly detection modelled on card-fraud velocity checks; an MCP tool gateway with default-deny allow-lists.
+- **Evidence.** 290 tests (289 passed, 1 skipped) run offline; a 157-check browser smoke test covers every console screen in both modes (113 demo, 44 live). The semantic cache ships disabled because its **measured** false-hit rate on held-out pairs is 9.1% (1 of 11 hits; 95% upper bound 37.7%) against a 1% target. A route-eval gate fails a routing change that lowers quality or raises cost beyond set limits (**simulated** providers).
+- **Out of scope.** Content-level guardrails (prompt-injection classification, output filtering), SSO for administrators, state shared across gateway instances, TLS termination, and any evaluation against real models.
+
+## Live demo
+
+### [Open the live console](https://coreymathie.github.io/governed-ai-gateway/demo/)
 
 [![The Governed AI Gateway console's Spend screen: AI spend against team budgets, requests served, cost per 1,000 requests, cache savings, success rate, spend stopped by an anomaly pause, October's spend and forecast by team, and the latest requests for a sample credit union](docs/img/console.png)](https://coreymathie.github.io/governed-ai-gateway/demo/)
 
-The hosted console runs this repo's actual `router/*.py` modules (policy, budgets, breakers, fallback chain, anomaly thresholds, PII hooks, caches, MCP tool policy, showback, config validation) in your browser via Pyodide, against **simulated** providers. No API keys, no provider calls. The same console runs **live** against the real gateway: `docker compose up`, then open http://localhost:4000/console/.
+The console is set in **Cypress Harbor Credit Union**, a *fictional* credit union whose seven teams run eleven AI applications through the gateway; its 90 days of usage and 500-request log are labelled **sample** data. A visitor can read spend against team budgets, open any request to see every control it passed, take a simulated provider down and watch breakers open, edit a policy and preview its decisions, and try allowed and denied MCP tool calls. The hosted console runs the repository's own `router/*.py` modules in the browser via Pyodide against **simulated** providers, with no API keys and no provider calls; `docker compose up` runs the same console live against the gateway. How the console works: [docs/console.md](docs/console.md).
 
-The gateway sits in front of OpenAI, Anthropic, Gemini and local Ollama with the controls a platform team needs before letting many apps spend on model APIs: ordered fallback with per-provider **circuit breakers**, opt-in **latency-aware routing**, an **org → team → key budget hierarchy**, **tokens-per-minute limits**, fraud-style **spend-anomaly detection** with admin pause/unpause, **showback/chargeback export**, **policy-as-code** (YAML, optional OPA) for model allow/deny lists, data residency and request limits, **PII redaction hooks** with content logging off by default, a **hash-chained audit trail**, **per-request decision traces**, a **route evaluation harness** with a CI cost/quality gate and **shadow mode**, a **semantic cache** with a measured false-hit rate (off by default), an **MCP tool gateway** with per-team tool allow-lists and velocity limits, **OpenTelemetry GenAI spans** and Prometheus metrics. Every policy is a reviewable YAML file, and every behaviour below has an offline test.
-
-## Console
-
-The console is set in a sample business so the gateway can be judged at the scale it would run at: **Cypress Harbor Credit Union**, a *fictional* credit union whose seven teams (member services, digital banking, risk analytics, lending, compliance, IT, marketing) run eleven AI applications through the gateway with monthly budgets. It opens on **Spend**, the way a FinOps or AI-gateway product does, with the **Requests** log next to it.
-
-- **Usage**: 90 days of traffic and spend from [scripts/generate_sample_company.py](scripts/generate_sample_company.py).
-- **Request log**: 500 requests from October 1 to 7 from [scripts/sample_requests.py](scripts/sample_requests.py), each with the fields and decision stages the gateway records for a real one ([router/traces.py](router/traces.py)). Costs are tokens times list prices; each team's cost per 1,000 requests lands within 30% of the usage file's assumption, budgets in each trace are the team's month-to-date spend from the usage file, and the October 6 Anthropic overload and the October 2 contractor-policy refusal in the activity feed are the requests they describe ([tests/test_sample_requests.py](tests/test_sample_requests.py)).
-
-Both are seeded, checked in CI and labelled **Sample** everywhere, apart from **measured** results and the **simulated** requests sent in the tab. Spend and Requests render from those files straight away; the screens that run the gateway's code wait for Pyodide and say so.
-
-**Business and technical views.** The header switch (or `?view=technical`) chooses the audience. The business view shows apps, teams, models by name, outcomes ("Answered after fallback", "Refused by policy") and a plain-language account of each request; the technical view adds keys and fingerprints, route aliases, token counts, stage names and timings, stage details and the raw record. Light and dark themes follow the system and can be switched in the header.
-
-Navigation: screens grouped by job (Monitor, Operate, Govern, Configure) with sub-pages, breadcrumbs, a command palette (<kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd> or <kbd>/</kbd>) over screens and actions, `g` + letter shortcuts (<kbd>?</kbd> lists them), a collapsible sidebar, and a guided tour offered on the first visit.
-
-One static app in [demo/](demo/) with two adapters behind the same interface: `DemoAdapter` (Pyodide + [demo/engine.py](demo/engine.py)) and `LiveAdapter` (the gateway's HTTP API). The header badge says which one is running. Anything simulated is labelled so.
-
-![A request from the sample log: sent during the October 6 Anthropic overload, Claude Haiku returned 529, the gateway retried on GPT-4.1 mini in the same call; cost, response time, the team's budget, and every control the request passed](docs/img/console-trace.png)
-
-| Screen | What it does | Live endpoints |
-|---|---|---|
-| **Spend** | For the sample credit union over 7, 30 or 90 days: AI spend against team budgets, requests served, cost per 1,000 requests, cache savings, success rate with fallback rescues, spend stopped by an anomaly pause, policy decisions enforced and regulated requests kept on-prem, each against the previous period; October so far by team with the month-end forecast against budget; latest requests; daily spend by team; budgets by team; spend by model; provider incidents; governance checks; recent activity linked to the requests it describes | `demo/data/sample_company.json`, `demo/data/sample_requests.json` |
-| **Spend › This session** | Spend by team and model, requests, fallback rate, cache savings, anomaly flags, open circuits; spend per hour vs. each hour's 7-day average; guided "what to try" cards | `GET /admin/overview` |
-| **Requests** | The sample company's request log: search, filter by team, outcome, model and day, page through, export CSV. Each request opens a page with what happened in plain words, cost, response time and gateway overhead, the model that answered and any failed attempt, the team's budget, every control it passed in order, recent requests from the same app, and (technical view) key fingerprint, stage details and the raw record | `demo/data/sample_requests.json` |
-| **Requests › This session** | Requests sent in this tab (demo) or handled by the gateway (live), filterable by team, outcome and free text; a drawer with the full decision timeline: auth → policy/OPA → budgets → anomaly → PII hooks → exact and semantic cache → TPM → each fallback attempt with its breaker state → cost settle → response hooks → content log. Deep-linkable (`#/traces/<id>`), browser back closes it | `GET /admin/traces`, `GET /admin/traces/{id}` |
-| **Playground** | Send a chat request as any app key and alias and see who answered, what it cost and each stage it passed; compare two routes side by side over N runs; take a simulated provider down (outage, 429s, error rate, latency) and watch breakers open, fall back and recover; semantic-cache playground (demo) | `/v1/chat/completions`, `/admin/mock/providers`, `/admin/circuits`, `/admin/circuits/reset` |
-| **Policies** | Edit `config/policies.yaml`, `routes.yaml` and the MCP file; validate with the gateway's own loaders (errors inline with line numbers); preview every team × route decision against the active policy before applying; apply and re-run a request | `GET/PUT /admin/config/{name}`, `POST /admin/config/{name}/validate`, `POST /admin/policies/dry-run` |
-| **Budgets & Keys** | Org and team caps and TPM (editable), create/revoke app keys (secret shown once), pause/unpause keys and override an anomaly pause for the hour, showback table and CSV export | `/admin/budgets/{scope}/{name}`, `/admin/keys/{id}/pause`, `/unpause`, `/admin/showback` |
-| **MCP tools** | Team × tool allow-list, try allowed, denied and velocity-limited tool calls, audited (redacted) arguments | `GET /admin/mcp`, `POST /mcp/{server}`, `GET /admin/audit?category=mcp` |
-| **Evals** | Route cost-vs-quality scorecard and CI gate example (simulated profiles), semantic-cache calibration (measured on the bundled pairs, re-runnable in the browser), test inventory | `demo/data/*.json` from [scripts/build_console_data.py](scripts/build_console_data.py) |
-| **Settings** | Admin key (kept in the tab's session storage unless you choose to remember it), roles, gateway controls (breakers, auto-pause, caches, PII hook mode per team), the files running in your browser with their hashes, guided tour | `GET /admin/policies`, `/admin/semantic-cache` |
-
-**Run it live:** `docker compose up` → http://localhost:4000/console/ . Compose builds the gateway with `ROUTER_MOCK_PROVIDERS=true` ([router/mock_provider.py](router/mock_provider.py)): every provider call is answered in-process by a **simulated** OpenAI-compatible provider, and MCP tool calls go to simulated MCP servers ([config/mcp.mock.yaml](config/mcp.mock.yaml)), so it needs no API keys and calls nothing. Costs in that mode are simulated token counts at the configured prices. The admin key is `ROUTER_ADMIN_KEY` from `.env`, or one generated on first start: `docker compose exec gateway cat /data/admin-key.txt` (never logged). Set `ROUTER_MOCK_PROVIDERS=false` and provider keys to route real traffic.
-
-`python scripts/demo_smoke.py --both` drives every screen in headless Chromium in both modes (see [Quality](#quality)). The older server-rendered dashboard is still at `/dashboard`.
-
----
-
-## The problem
+## Problem and context
 
 Once several teams call LLM APIs directly, three things go wrong:
 
-1. **Cost is unbounded and unattributed.** A retry loop or a leaked key spends until someone reads the invoice, and the invoice doesn't say which team or app did it.
-2. **Outages propagate.** When a provider degrades, every request waits for a timeout before anything falls back, and clients keep hammering a provider that's already returning 429s.
-3. **No one can answer "what did that cost, and why did it go there?"** per request, per team, or per model.
+1. **Cost is unbounded and unattributed.** A retry loop or a leaked key spends until someone reads the invoice, and the invoice does not say which team or application did it.
+2. **Outages propagate.** When a provider degrades, every request waits for a timeout before anything falls back, and clients keep sending traffic to a provider that is already returning 429s.
+3. **No one can answer "what did that cost, and why did it go there?"** per request, per team or per model.
 
-This gateway puts one enforcement and accounting point in front of every provider, so those answers come from config and data rather than from each app.
+A regulated institution adds constraints. Member data in regulated workloads must stay on infrastructure the institution controls, including when the preferred provider fails. Changes to the controls themselves need an attributable, tamper-evident record. Agents that call tools need least privilege and velocity limits, as payment flows do. Finance needs monthly budgets per team and a chargeback basis it can reconcile. The gateway places one enforcement and accounting point in front of every provider, so those answers come from configuration and data rather than from each application.
 
-## Architecture
+### Worked example: a credit union's seven teams (sample)
+
+The console models the operating model for the fictional Cypress Harbor Credit Union. Each team holds gateway keys for its applications; budgets, residency and anomaly limits attach to the team and key, not to the application code. Budgets and volumes are illustrative assumptions in the **sample** data.
+
+| Team | AI applications and route aliases (sample) | Monthly budget (sample) |
+|---|---|---|
+| Member services | `member-assistant`, `agent-assist` on `smart-fast` | $3,600 |
+| Digital banking | `online-banking`, `mobile-banking` on `fast-chat` (latency-aware) | $2,600 |
+| Risk analytics | `fraud-scoring-batch` on `heavy-reasoning`; `dispute-triage` on `regulated-fast` (on-prem only) | $4,200 |
+| Lending | `loan-doc-extraction` on `smart-fast` and `heavy-reasoning` | $2,000 |
+| Compliance | `reg-change-digest` on `heavy-reasoning`; `bsa-case-notes` on `regulated-fast` (on-prem only) | $700 |
+| IT | `code-assistant` on `smart-fast` and `heavy-reasoning` | $1,000 |
+| Marketing | `content-drafts` on `smart-fast` | $500 |
+
+In the sample, the risk-analytics `fraud-scoring-batch` key is paused on September 24 at 10.2x its 7-day baseline; the spend it prevented ($2,310) is an estimate, not a measurement. The Spend screen shows each team's month-to-date spend, its month-end forecast at the current daily rate, and its budget; showback by team, key and model is the chargeback basis.
+
+## Reference architecture
 
 ```mermaid
 flowchart LR
@@ -86,274 +74,119 @@ flowchart LR
     gw -.-> obs[OTel GenAI spans<br/>Prometheus /metrics<br/>dashboard · showback]
 ```
 
-Module map and request lifecycle: [docs/architecture.md](docs/architecture.md).
-
-## Key decisions
-
-| ADR | Decision |
+| Component | Responsibility |
 |---|---|
-| [0001](docs/adr/0001-litellm-for-provider-adapters.md) | Use LiteLLM for provider wire formats; own the control plane in dependency-free modules |
-| [0002](docs/adr/0002-ordered-fallback-and-circuit-breakers.md) | Ordered fallback by default, per-deployment circuit breakers, latency ordering opt-in |
-| [0003](docs/adr/0003-per-key-baseline-anomaly-model.md) | Judge spend against each key's own baseline (fraud velocity checks), not fixed thresholds |
-| [0004](docs/adr/0004-exact-match-cache-now-semantic-later.md) | Exact-match cache now; semantic cache only with a measured false-hit rate |
-| [0005](docs/adr/0005-semantic-cache-off-by-default-calibrated.md) | Semantic cache ships off; threshold calibrated on half the pairs, reported on the other half |
-| [0006](docs/adr/0006-mcp-tool-gateway-scope.md) | MCP tool gateway: request/response tool calls only, default deny, fraud-style velocity |
+| Admission pipeline | Authentication and RPM, policy (and optional OPA), budgets, anomaly pause, content hooks, exact and semantic cache, TPM reservation. Every stage can refuse a request before any provider is called. |
+| Fallback chain | Walks an alias's ordered targets (or latency order), skips deployments whose circuit is open, records each attempt. |
+| Settlement | Corrects token reservations to provider-reported usage, prices the call, runs response hooks, writes usage, cache and the opt-in content log. |
+| MCP tool gateway | Applies per-team tool allow-lists, velocity windows and daily caps before forwarding one JSON-RPC message upstream. |
+| Store | SQLite: hashed application keys, usage, cache, audit trail and content log. |
+| Observability | OpenTelemetry GenAI spans, Prometheus metrics, per-request decision traces, admin API, console. |
 
-## FinOps and risk controls
+**Trust boundaries.** (1) Client → gateway carries untrusted input; the caller's team comes from its key, set by an administrator, never from the request. (2) Operator → admin API is privileged and separately authenticated. (3) Gateway → public providers is where data leaves the institution; residency policy removes non-permitted providers before the fallback chain runs. (4) Gateway → OPA carries request metadata only, never content. (5) Agent → gateway → MCP servers crosses the same boundary as model calls, and the gateway decides before forwarding.
 
-All of these are decided **before** a provider is called.
+**Data flow.** A request is refused with 400/403/413 (policy), 402 (budget), 429 (TPM, RPM or anomaly pause), 422 (PII block) or 503 (policy or hook failure, or all circuits open) before any provider call. A provider error, timeout, 429 or 5xx moves to the next target, and the breaker counts it. Module map and request lifecycle: [docs/architecture.md](docs/architecture.md).
 
-| Control | Behaviour | Config |
+## Design principles
+
+1. **Controls live outside the model and outside the application.** Teams, budgets and policy attach to the gateway key, so an application cannot select a looser policy.
+2. **Decide before spending.** Policy, budgets, anomaly pauses, content hooks and rate limits are evaluated before any provider is called.
+3. **Fail closed.** A policy-engine error, an unreachable OPA, a failing content hook or an MCP upstream error denies the request; nothing partial is returned.
+4. **Policy is reviewable code.** Every control is a schema-validated YAML file; an invalid file stops startup, and a bad reload keeps the previous configuration.
+5. **The most restrictive layer wins.** Allow-lists intersect and deny-lists union across defaults, team and route; a route cannot loosen a team rule.
+6. **Record metadata, not content.** Usage rows, spans, traces and audit rows hold metadata and counts; content logging is opt-in per team and always redacted.
+7. **Measure before enabling.** The semantic cache stays off until calibrated, and routing changes pass a cost/quality gate and shadow comparison first.
+
+## Key decisions and trade-offs
+
+| ADR | Decision | Trade-off or consequence |
 |---|---|---|
-| Budget hierarchy | Org, team and key caps, daily and monthly (UTC). Broadest scope checked first; 402 when a cap is reached. Team/key overrides inherit unset fields. | `policies.per_*_usd`, `budgets:` |
-| Tokens per minute | Per key and per team. An estimate (prompt + `max_tokens`) is reserved, then corrected to provider-reported usage; released if every provider fails. 429 + `Retry-After`. | `policies.per_*_tpm`, `budgets.*.tpm` |
-| Requests per minute | Per key. | `policies.rate_limit_rpm` |
-| Spend anomalies | This hour vs. the key's 7-day baseline: flagged at 3x, auto-paused (429) at 10x if enabled. | `policies.auto_pause_on_anomaly` |
-| Showback / chargeback | `GET /admin/showback?group_by=team,key,model,provider&format=csv` with cost, tokens, cost per 1K requests, cost per 1K tokens, share of cost. Keys appear as label + fingerprint, never the secret. | admin key |
-| Price overrides | Negotiated or self-hosted rates (USD per 1M tokens) take precedence over LiteLLM's catalog. Unpriced models are flagged at startup and on `/health`. | `prices:` |
-| Data residency | A team's `allowed_providers` in `config/policies.yaml` removes every other provider from any route it calls, fallback included; `config/regulated.yaml` is a routes file with only on-prem Ollama. | `policies.teams.<team>`, separate routes file |
+| [0001](docs/adr/0001-litellm-for-provider-adapters.md) | Use LiteLLM for provider wire formats; own the control plane in dependency-free modules | Adding a provider is a one-line change; LiteLLM becomes a supply-chain dependency on the hot path (version floor, not a pin) |
+| [0002](docs/adr/0002-ordered-fallback-and-circuit-breakers.md) | Ordered fallback by default, per-deployment circuit breakers, latency ordering opt-in | Outages stop costing every request a timeout; breaker state is per process, so N workers allow N × `failure_threshold` failures |
+| [0003](docs/adr/0003-per-key-baseline-anomaly-model.md) | Judge spend against each key's own baseline (fraud velocity checks), not fixed thresholds | One rule fits keys of any scale and is explainable; slow drift is invisible, and verdicts are cached for 30 s |
+| [0004](docs/adr/0004-exact-match-cache-now-semantic-later.md) | Exact-match cache now; semantic cache only with a measured false-hit rate | No false hits, at the cost of missing paraphrases; cached completions are plaintext at rest |
+| [0005](docs/adr/0005-semantic-cache-off-by-default-calibrated.md) | Semantic cache ships off; threshold calibrated on half the pairs, reported on the other half | The held-out result misses the 1% target, so enabling it is a per-team decision after local calibration |
+| [0006](docs/adr/0006-mcp-tool-gateway-scope.md) | MCP tool gateway: request/response tool calls only, default deny, fraud-style velocity | A small, fully tested surface; no stdio servers, server-initiated streams or upstream OAuth |
 
-### Privacy and audit controls
+## Controls and risk mapping
 
-| Control | Behaviour | Config |
-|---|---|---|
-| PII redaction hooks | `pre_request` hooks run over message contents before any provider call; `post_response` hooks run over the completion before it reaches the client, the cache or the content log. Built-ins: `pii_redact` (emails, phones, SSNs, Luhn-valid cards, API-key-like secrets → `[REDACTED:KIND]`), `pii_block` (422), `pii_detect` (audit only). Layers union: default + route + team. Responses carry `x-router-content-hooks` and `x-router-redactions` (counts only). | `privacy:` in routes.yaml |
-| Custom hooks | `register_hook(name, fn)` in a module listed in `ROUTER_HOOK_MODULES`; unknown hook names fail config validation. A hook that raises fails the request closed (503, nothing sent). | `ROUTER_HOOK_MODULES` |
-| Content logging | Off by default: usage rows, logs, spans and the audit trail hold metadata only. A team opts in with `log_content: true`; stored prompts and completions are then redacted with every detector and truncated. `GET /admin/content-log`. | `privacy.teams.<team>.log_content` |
-| Audit trail | Every hook action (redact, block, detect, hook error), every content-log write, and admin key creation, revocation and reloads are appended to `audit_log` with counts, never matched values. Rows are hash-chained; triggers refuse UPDATE/DELETE; `GET /admin/audit/verify` finds the first altered row. | always on |
-
-Pattern-based detection misses PII it has no pattern for (names, street addresses, numbers spelled out) and can flag look-alikes; it reduces what reaches a provider or a log, it doesn't guarantee it.
-
-How these map to NIST AI RMF / AI 600-1 and FinOps capabilities: [docs/controls.md](docs/controls.md). Threats and residual risks (STRIDE, OWASP LLM Top 10 2025): [docs/threat-model.md](docs/threat-model.md).
-
-What "enforced" means precisely: caps compare against spend already recorded, so concurrent in-flight requests can overshoot a cap by their own cost, and all limits are per gateway process.
-
-## Policy-as-code
-
-`config/policies.yaml` is evaluated before budgets, cache or any provider call ([router/policy.py](router/policy.py)). Layers combine so the most restrictive wins: `defaults` → `teams.<team>` → `routes.<alias>`.
-
-```yaml
-defaults:
-  max_tokens_ceiling: 4096        # also sent when a request doesn't set max_tokens
-  max_tokens_mode: clamp          # or reject (400)
-  max_request_bytes: 262144       # serialized messages; 413 above it
-  max_messages: 200
-teams:
-  regulated:
-    allowed_providers: [ollama]   # public providers are removed from every route, fallback included
-    required_hooks: [pii_redact]  # runs even if the team's privacy config has no hooks
-    max_tokens_ceiling: 2048
-  contractors:
-    allow_aliases: [smart-fast, cheap-batch, local-first]
-    deny_models: ["anthropic/claude-sonnet-*", "openai/gpt-4.1"]
-```
-
-| Behaviour | Detail | Evidence |
-|---|---|---|
-| Schema validation | Unknown keys, providers, modes, unregistered hooks and malformed globs are errors. An invalid file stops startup; a bad `POST /admin/reload` returns 400 and keeps the previous routes **and** policies. | `test_schema_errors`, `test_reload_is_atomic_and_missing_explicit_file_fails` |
-| Combination | Allow-lists intersect, deny-lists union, ceilings take the smallest, `reject` beats `clamp`, required hooks union. A route can't loosen a team rule. | `test_most_restrictive_layer_wins` |
-| Decisions | Removed deployments are never tried. Nothing left → 403. Alias not allowed → 403; over-size → 413; over the ceiling → 400 or clamped. | `test_regulated_team_blocked_from_external_provider`, `test_regulated_team_routes_local_with_hooks_and_ceiling`, `test_max_tokens_reject_and_request_limits` |
-| Visibility | `x-router-policy`, `x-router-policy-rules`, `x-router-policy-source`, `x-router-policy-removed`, `x-router-policy-max-tokens`; every decision is an audit row; `GET /admin/policies?team=&alias=` shows the effective rule. | `test_admin_policies_shows_effective_rule` |
-| Optional OPA | With `OPA_URL` set, OPA must also allow (`POST /v1/data/<opa.path>`, input is metadata only, never content). OPA can narrow the route via `allowed_targets`, never widen it. Timeouts, errors, non-200, undefined or malformed results → 503 (fail closed). | `test_opa_allow_deny_narrow_and_input_has_no_content`, `test_opa_failures_fail_closed` (fake OPA over real HTTP) |
-| Body size | `ROUTER_MAX_BODY_BYTES` (default 1 MiB) refused with 413 before parsing, including chunked bodies. | `test_body_size_middleware_refuses_before_parsing` |
-
-[policies/router.rego](policies/router.rego) is an example OPA policy (local-only teams, off-peak batch alias, org-wide `max_tokens`, model deny list) with its own tests: `opa test policies/` passed 8/8 locally on OPA 1.4.2, and the gateway was checked against a real `opa run --server` with that policy. CI doesn't run OPA.
-
-## MCP tool gateway
-
-`POST /mcp/{server}` puts the same governance in front of [Model Context Protocol](https://modelcontextprotocol.io) tool servers ([router/mcp_gateway.py](router/mcp_gateway.py), [router/mcp_policy.py](router/mcp_policy.py), [ADR 0006](docs/adr/0006-mcp-tool-gateway-scope.md)). Configure it from [config/mcp.example.yaml](config/mcp.example.yaml):
-
-```yaml
-servers:
-  tickets: { url: http://127.0.0.1:9101/mcp, headers_from_env: { Authorization: MCP_TICKETS_AUTH } }
-teams:
-  support:
-    - { server: tickets, tool: "search_*" }
-    - { server: tickets, tool: close_ticket, per_minute: 5, per_day: 200 }
-```
-
-| Control | Behaviour | Evidence |
-|---|---|---|
-| Default deny, per-team allow-lists | `tools/list` shows only allowed tools; other `tools/call`s get JSON-RPC `-32001` and never reach the server; a team with no entry for a server gets 403 | `test_denied_tools_never_reach_the_server`, `test_initialize_list_and_notifications_pass_through` |
-| Velocity (fraud-style) | Per key per tool and per team per tool calls/minute; an identical-call limit (same tool and arguments) that stops agent loops; `-32002` + `Retry-After` | `test_velocity_identical_calls_and_daily_cap`, `test_check_call_allow_list_velocity_identical_and_caps` |
-| Count and spend caps | Daily calls and USD per team per tool, read from the usage table (survive restarts); `-32003` | `test_velocity_identical_calls_and_daily_cap` |
-| Argument redaction | Audit rows keep PII-redacted argument values (or keys only); `forward_redacted` sends redacted arguments upstream too | `test_allowed_call_is_forwarded_recorded_and_audited_with_redaction`, `test_sse_replies_and_forward_redacted` |
-| Audit and accounting | Every `tools/call` decision is an audit row; allowed calls are usage rows (`provider: mcp`) priced at `cost_usd`, visible in showback; `router_mcp_tool_calls_total` | `test_allowed_call_is_forwarded_recorded_and_audited_with_redaction` |
-| Fail closed | Upstream down, non-2xx, malformed, or its credential variable unset → `-32004`, nothing partial; unset credentials mean the server isn't called at all | `test_upstream_failures_and_missing_credentials_fail_closed` |
-
-**Scope, honestly:** the request/response part of the Streamable HTTP transport (JSON or SSE replies), with `initialize`, `ping`, `notifications/*`, `tools/list` and `tools/call`. Not proxied: stdio servers, batches, GET streams, DELETE, resumability, server-to-client requests, resources and prompts. Clients authenticate with their gateway key; upstream servers get static headers from environment variables (no OAuth). Tested against a fake MCP server over real HTTP, not third-party servers.
-
-## Semantic cache
-
-[router/semcache.py](router/semcache.py) serves a cached answer when a new prompt's last user turn is similar enough to a cached one ([ADR 0005](docs/adr/0005-semantic-cache-off-by-default-calibrated.md)). It is **off by default**.
-
-- **Embedder:** offline deterministic hashing (word and character n-grams) by default; a provider embedding model with `embedder: provider`.
-- **False-hit guards:** a hit also needs the same numbers and the same negation in both prompts.
-- **Isolation:** entries are partitioned by team, alias, policy decision, content hooks, earlier messages, `max_tokens` and embedding space (`test_cache_never_crosses_teams_policies_or_context`). Per-team opt-in (`teams`) and per-team thresholds (`team_thresholds`).
-- **Visibility:** `x-router-cache: semantic-hit`, `x-router-semantic-similarity`, `x-router-semantic-match` (`hit`, `below_threshold`, `guard-numbers-differ`, …); `router_semantic_cache_total`; `GET /admin/semantic-cache`.
-
-**Calibration, measured** (`python scripts/calibrate_semcache.py`; bundled fictional pairs, hashing embedder, target ≤1% of hits wrong; pinned by `test_bundled_pairs_calibration_numbers`):
-
-| 160 labelled pairs, split in half | Threshold | Hit rate | False-hit rate |
+| Control | Risk addressed | Enforcement point | Evidence |
 |---|---|---|---|
-| Calibration half | 0.88 (chosen) | 30.9% | 0.0% (0 of 13 hits) |
-| Held-out half | 0.88 | 26.3% | **9.1%** (1 of 11 hits; 95% upper bound 37.7%) |
-| Held-out half, guards off | 0.88 | 26.3% | 28.6% (4 of 14 hits) |
+| Policy as code: alias and model lists, `max_tokens` ceilings, request limits | Teams using models they are not cleared for; oversized requests | `router/admission.py`, after auth and before budgets | `test_most_restrictive_layer_wins`, `test_max_tokens_reject_and_request_limits` |
+| Data residency (`allowed_providers`) | Regulated data reaching a public provider, including through fallback | Policy removes deployments before the fallback chain | `test_regulated_team_blocked_from_external_provider`, `test_regulated_team_routes_local_with_hooks_and_ceiling` |
+| Optional OPA, fail closed | Policy bypass when the decision point is down or returns garbage | `router/admission.py`, `router/opa.py` | `test_opa_failures_fail_closed`, `test_policy_engine_crash_fails_closed` |
+| PII redaction / block hooks | Member data reaching a provider, the cache or a log | `router/privacy.py`, before the provider call and on the response | `test_route_redaction_reaches_provider_redacted_and_is_audited`, `test_team_block_refuses_before_any_provider_call`, `test_failing_hook_fails_closed` |
+| Content logging off by default | Prompts and completions at rest | `router/privacy.py` | `test_content_log_is_opt_in_per_team_and_always_redacted` |
+| Audit trail (hash-chained, append-only) | Unattributed or concealed changes to keys, budgets, policy and config; repudiation of policy decisions | `router/audit.py` | `test_audit_log_is_append_only_and_tamper_evident`, `test_admin_actions_are_audited` |
+| Decision traces | A single request that cannot be explained | `router/traces.py` | `test_mock_provider_answers_without_keys_and_traces_every_stage` |
+| Budget hierarchy org → team → key | Unbounded spend | `router/budgets.py` | `test_org_daily_cap_blocks_every_team`, `test_first_breached_cap_broadest_first` |
+| Tokens and requests per minute | One team's burst exhausting shared capacity | `router/tokens.py`, `router/auth.py` | `test_team_tpm_limit_rejects_with_retry_after_and_settles_to_real_usage` |
+| Spend-anomaly pause | A runaway loop or leaked key spending under its cap | `router/anomaly.py` | `test_auto_pause_blocks_runaway_key` |
+| Showback / chargeback | Unattributed cost | `router/showback.py` | `test_showback_json_and_csv`, `test_csv_escapes_formulas_and_has_unit_columns` |
+| Circuit breakers and fallback | Provider outages propagating to every application | `router/fallback.py`, `router/breaker.py` | `test_breaker_opens_and_later_requests_skip_the_dead_provider`, `test_all_circuits_open_returns_503_with_retry_after` |
+| MCP default deny and velocity | Excessive agency: agents calling tools they are not cleared for, or in loops | `router/mcp_gateway.py`, `router/mcp_policy.py` | `test_denied_tools_never_reach_the_server`, `test_velocity_identical_calls_and_daily_cap` |
+| Cache isolation by team and policy | Cross-team disclosure through cached answers | `router/semcache.py`, `router/routing.py` | `test_cache_never_crosses_teams_policies_or_context` |
+| Application keys hashed at rest | Key recovery from the database | `router/store.py` | `tests/test_keys_at_rest.py` |
 
-The chosen threshold misses the 1% target on held-out pairs: a dozen hits can't certify 1%, and the lexical embedder can't tell "rotate" from "revoke" an API key. That's why it ships off. Calibrate on pairs labelled from your own traffic, preferably with a provider embedding model, before enabling it for a team. These numbers describe this embedder on this small synthetic set, not production traffic.
+The audit trail records policy decisions, content-hook actions, MCP tool-call decisions and administrative changes; decision traces hold each request's stage-by-stage timeline in memory. Framework mapping (NIST AI RMF, NIST AI 600-1, FinOps for AI): [docs/controls.md](docs/controls.md). Threats and residual risk (STRIDE, OWASP LLM Top 10 2025): [docs/threat-model.md](docs/threat-model.md). Configuration and full control behaviour: [docs/configuration.md](docs/configuration.md).
 
-## Evaluating route changes
+## Evaluation and evidence
 
-Routing changes are measured before they ship, offline and then on live traffic.
-
-**Offline replay** ([router/evals.py](router/evals.py), [scripts/eval_routes.py](scripts/eval_routes.py)): a JSONL set of prompts with reference answers (`exact`, `contains`, `regex`; optional judge hook `module:function`) is replayed through each route with the gateway's own fallback chain and pricing, producing a cost-versus-quality report in Markdown and JSON. [evals/sample_cases.jsonl](evals/sample_cases.jsonl) bundles 40 fictional cases (math, extraction, classification, formatting, reasoning, summary).
-
-```bash
-python scripts/eval_routes.py --aliases smart-fast,cheap-batch --out reports/eval        # simulated (default)
-python scripts/eval_routes.py --provider real --aliases cheap-batch                     # refused unless every key is set
-```
-
-The default provider is a **deterministic simulation**: each deployment answers a case correctly with a probability from [evals/sim_profiles.json](evals/sim_profiles.json) (invented numbers, not measurements of any model). It tests the harness, the routes' fallback behaviour and their pricing; it says nothing about how real models perform. No real-model evaluation has been run for this repository. Simulated result for the shipped routes (seed `eval-v1`, pinned by `test_shipped_routes_simulated_report_numbers`):
-
-| Route (simulated providers) | Quality | Cost for 40 cases | p50 latency |
+| Result | Value | Label | How measured, and limits |
 |---|---|---|---|
-| `smart-fast` (haiku → gpt-4.1-mini → llama3.1) | 0.975 | $0.001200 | 0.659 s |
-| `heavy-reasoning` (sonnet → gpt-4.1) | 0.950 | $0.003789 | 1.411 s |
-| `cheap-batch` (gpt-4.1-nano → gemini flash) | 0.775 | $0.000155 | 0.305 s |
-| `local-first` (llama3.1 → haiku) | 0.650 | $0.000050 | 1.243 s |
+| Test suite | 290 tests: 289 passed, 1 skipped | **measured** | `python -m pytest -q`, offline with LiteLLM's completion call stubbed. The skipped test needs tiktoken's `cl100k_base` encoding. |
+| Console smoke | 157 checks passed (113 demo, 44 live) | **measured** | `python scripts/demo_smoke.py --both` in headless Chromium, Pyodide served from a local copy: every screen's key interaction, no console errors, no failed or third-party requests, no horizontal scroll at 390 px or 1366 px. |
+| Semantic cache, held-out false-hit rate | 9.1% (1 of 11 hits; 95% upper bound 37.7%) at threshold 0.88; 28.6% with guards off | **measured** | `python scripts/calibrate_semcache.py` on 160 bundled fictional pairs with the hashing embedder; not production traffic. |
+| Route evaluation | `smart-fast` 0.975 quality, $0.001200 for 40 cases | **simulated** | Invented provider profiles; tests the harness, fallback and pricing, not model quality. No real-model evaluation has been run. |
+| Route-eval gate | Fails `smart-fast` on quality (0.975 → 0.775) or cost (+216%) | **simulated** | `scripts/eval_gate.py`; an example pull-request job, not wired into this repository's CI. |
+| OPA policy tests | 8/8 passed on OPA 1.4.2 | **measured** | Run locally; CI does not run OPA. |
+| Request log consistency | Each team's cost per 1,000 requests within 30% of the usage file | **sample** | `tests/test_sample_requests.py` over the 500-request log. |
 
-With 40 cases one case is 0.025 of quality, so a profile of 0.96 can score below one of 0.90 by chance (as `heavy-reasoning` vs `smart-fast` does here). Size the case set and the gate threshold accordingly.
+**Why the semantic cache ships disabled.** The threshold chosen on the calibration half (0.88, 0 of 13 hits wrong) misses the 1% target on the held-out half: a dozen hits cannot certify 1%, and the lexical embedder cannot tell "rotate" from "revoke" an API key. A team enabling it calibrates first on pairs labelled from its own traffic, preferably with a provider embedding model. Full calibration table, route results, gate, shadow-mode guarantees and test inventory: [docs/evaluation.md](docs/evaluation.md).
 
-**CI gate** ([scripts/eval_gate.py](scripts/eval_gate.py)): exits 1 when an alias's quality drops more than `--max-quality-drop` (default 0.02) or its cost rises more than `--max-cost-increase` (default 10%) between two routes files or two reports, 2 on configuration errors. Locally, swapping `smart-fast`'s first target to `gpt-4.1-nano` fails it on quality (0.975 → 0.775), and swapping it to `claude-sonnet-4-5` fails it on cost (+216%) (simulated; `test_cli_report_and_gate`). Example for a pull-request job (not wired into this repo's CI):
+## Operations
 
-```bash
-git show origin/main:config/routes.yaml > /tmp/routes_main.yaml
-python scripts/eval_gate.py --routes-before /tmp/routes_main.yaml --routes-after config/routes.yaml --alias smart-fast
-```
+- **Observability.** One OpenTelemetry GenAI span per provider attempt (no content), Prometheus metrics at `/metrics`, an `x-router-trace-id` and decision trace for every chat request, routing and policy decisions in `x-router-*` response headers, and the audit trail at `GET /admin/audit` with `GET /admin/audit/verify`.
+- **Failure modes.** Every provider failing returns a clean 502; every circuit open returns 503 + `Retry-After` with no provider call; an exhausted org budget returns 402 for every team; a regulated team whose only permitted provider is down gets 502 and public providers are never tried; OPA, policy-engine and hook failures return 503. Thirty failure modes with their tests: [docs/operations.md](docs/operations.md#failure-modes).
+- **Deployment options.** SQLite by default; limits and breakers are per process. Details: [docs/operations.md](docs/operations.md#deployment-options).
 
-**Shadow mode** ([router/shadow.py](router/shadow.py)): mirror a share of an alias's live traffic to a candidate alias in the background.
-
-```yaml
-shadow:
-  smart-fast: { candidate: cheap-batch, percent: 10, billing: ledger, max_daily_usd: 5 }
-```
-
-| Guarantee | Evidence |
-|---|---|
-| The client only ever gets the live answer; shadow failures don't affect it | `test_shadow_mirrors_to_candidate_off_the_books`, `test_shadow_failure_never_touches_the_live_path` |
-| Shadow cost goes to a separate `shadow_usage` ledger (or isn't recorded with `billing: suppress`), never to usage, budgets, anomaly baselines or showback | `test_shadow_mirrors_to_candidate_off_the_books`, `test_shadow_billing_suppress_cap_sampling_and_scope` |
-| The mirror is admitted by the same policy as a live request for the candidate (residency holds) and gets the already-redacted messages plus any hooks the candidate's policy requires | `test_shadow_respects_the_candidates_policy`, `test_shadow_gets_redacted_content_and_required_hooks` |
-| Separate circuit breakers and latency averages; `max_daily_usd` cap; streams and cache hits aren't mirrored | `test_shadow_failure_never_touches_the_live_path`, `test_shadow_billing_suppress_cap_sampling_and_scope` |
-
-`GET /admin/shadow` compares each pair: mirrored calls, errors, word-level agreement, exact-match rate, and cost and latency of shadow vs. live. Shadow calls are real provider calls; `billing: suppress` hides the cost from the ledger, not from the invoice.
-
-## Resilience
-
-- **Ordered fallback.** Any provider error, timeout or 429 moves to the next target in the alias.
-- **Circuit breakers per `provider/model`.** Closed → open after N consecutive failures or an error-rate threshold in a sliding window, or immediately when a 429/503 carries `Retry-After`. Open → half-open after the cooldown; limited probes; closed again on success. Caller errors (400, 422) don't count. If every target is open: **503 + `Retry-After`** with no provider call.
-- **Latency-aware routing (opt-in).** `strategy: latency` orders healthy targets by an EWMA of observed latency (time-to-first-token for streams). Near-ties within 10% keep the configured order; new deployments get a short warm-up. Routes without it are unchanged.
-- **Streaming.** Fallback before the first chunk; a mid-stream failure ends the stream with an error event. Tokens received are recorded when the stream ends or the client disconnects.
-- **Visible routing.** `x-router-used-provider`, `x-router-used-model`, `x-router-cache`, `x-router-strategy`, `x-router-attempts`, `x-router-fallback-from`, `x-router-circuit-skipped`.
-
-```yaml
-aliases:
-  smart-fast:                       # configured order
-    - { provider: anthropic, model: claude-haiku-4-5, timeout_s: 20 }
-    - { provider: openai,    model: gpt-4.1-mini,     timeout_s: 20 }
-    - { provider: ollama,    model: llama3.1:8b,      timeout_s: 60 }
-  fast-chat:                        # fastest healthy first
-    strategy: latency
-    targets:
-      - { provider: anthropic, model: claude-haiku-4-5 }
-      - { provider: openai,    model: gpt-4.1-mini }
-
-resilience:
-  circuit_breaker: { failure_threshold: 5, error_rate_threshold: 0.5, min_requests: 10,
-                     window_seconds: 60, cooldown_seconds: 30, half_open_max_probes: 1 }
-  latency: { alpha: 0.3, min_samples: 3, tolerance: 0.10 }
-
-budgets:
-  org:   { daily_usd: 2000, monthly_usd: 40000 }
-  teams: { data: { daily_usd: 200, tpm: 400000 } }
-  keys:  { fraud-scoring-batch: { monthly_usd: 300 } }
-```
-
-Full annotated file: [config/routes.yaml](config/routes.yaml) (the budget figures above are examples; the shipped file leaves org/team overrides empty).
-
-## Quality
-
-```bash
-pip install -r requirements.txt ruff
-ruff check . && ruff format --check .
-python -m pytest -q
-python scripts/demo_smoke.py --both     # optional: every console screen in headless Chromium, demo + live (needs playwright)
-python scripts/build_console_data.py    # regenerate demo/data/*.json after changing evals, routes or tests
-```
-
-Latest local run: **289 passed, 1 skipped (290 tests)**. Console smoke (`--both`, Pyodide served from a local copy): **157 checks passed (113 demo, 44 live)**: every screen's key interaction in both modes, no console errors, no failed or third-party requests, no horizontal scroll at 390 px or 1366 px. The skipped test checks the tiktoken estimator and only runs when tiktoken can load its `cl100k_base` encoding (it downloads it on first use). Tests stub LiteLLM's completion call, so they run offline without provider keys.
-
-| File | Tests | Covers |
+| Option | Providers | Use |
 |---|---|---|
-| `test_breaker.py` | 17 | Every breaker transition on an injected clock; error-rate window; Retry-After (seconds and HTTP-date, capped); which errors count; probe slots |
-| `test_latency_and_chain.py` | 14 | EWMA math, warm-up, tolerance ties, TTFT vs latency; fallback chain skips, 503 hints, cancellation releasing probes |
-| `test_tokens_budgets_showback.py` | 21 | Heuristic and tiktoken estimates, TPM windows, settle/release, budget hierarchy order and inheritance, showback unit metrics, CSV formula escaping |
-| `test_v05_api.py` | 22 | Breakers, headers and metrics through the HTTP API; half-open recovery; provider 429 Retry-After; latency routes; TPM 429; org/team caps; showback JSON/CSV; GenAI spans; config validation; early stream close |
-| `test_evals_shadow.py` | 22 | Case validation and scoring, simulation determinism and profiles, fallback/errors/cost/latency in replays, judge hook, gate decisions, pinned simulated numbers for the shipped routes, real runs refused without keys, both CLI scripts; shadow mirroring off the books, failure isolation, candidate policy, redaction and required hooks, billing suppress, daily cap, sampling, streams, config validation |
-| `test_mcp_gateway.py` | 20 | MCP config schema and example file, allow-list/velocity/identical-call/day-count/spend decisions, tools/list filtering, nested argument redaction; through the proxy with a fake MCP server: initialize and session/auth headers, notifications, filtered tools/list, allowed calls forwarded, recorded, priced and audited redacted, tool-level errors, denials never reaching the server, velocity and daily caps, upstream failures and missing credentials, SSE replies, forward_redacted, protocol edge cases |
-| `test_semcache.py` | 12 | Embedder determinism and normalisation, number/negation guards, threshold/guard/partition/TTL/LRU, Wilson bound and pick rules, pinned bundled calibration numbers, calibration script, semantic hits through the API at $0, guard and threshold misses, isolation across teams/policies/context/parameters, disabled/creative/streaming, provider embedder and its failure, per-team opt-in and thresholds |
-| `test_policy.py` | 39 | Policy schema errors, layer combination, alias/size/message limits, max_tokens reject/clamp/unset, provider and model lists, shipped regulated profile, OPA narrowing and fail-closed results, decision fingerprints; through the API: residency deny and local-only routing with no public fallback, streams, limits, body-size middleware, a fake OPA server (allow, deny, narrow, undefined, 500, garbage, down), OPA enabled without URL, engine crash, atomic reload, `/admin/policies`, cache isolation across policy changes |
-| `test_privacy.py` | 30 | Every PII detector and its false-positive guards (Luhn, never-issued SSN ranges), hook order/block/failure, config validation, redaction through the API, team block, post-response hooks, opt-in redacted content log, fail-closed hooks, streaming rules, cache/policy isolation, custom hook modules, append-only hash-chained audit, admin actions audited |
-| `test_demo_engine.py` | 19 | The browser demo's engine under CPython (including the governance panel's policy and content stages, that its rules equal `config/policies.yaml`, the semantic-cache panel and that in-browser calibration equals the script's, and the MCP panel with config equal to `config/mcp.example.yaml`), and that the modules it loads stay free of third-party imports |
-| `test_console_api.py` | 17 | Live console endpoints: simulated providers (answers, outage fallback, 502 when all down, streaming, knob validation), trace stages and order and that traces hold no prompt text, refusals naming the stage that refused, budget overrides winning over routes.yaml, admin pause/unpause and the anomaly override, config read/validate/apply (YAML and schema errors with lines, writes off by default, atomic apply changes enforcement), policy dry runs on candidate text, overview roll-up, simulated MCP server, admin key file (0600, created once), version consistency |
-| `test_demo_console.py` | 10 | The console's demo engine: same stage order and trace shape as the gateway, aliases equal `config/routes.yaml` and profiles equal `evals/sim_profiles.json`, fallback/breakers, residency and clamps, exact and semantic cache, keys/holds/revocation/budgets, runaway batch job paused then overridden, overview history, config screens using the gateway's loaders (pydantic for routes) |
-| `test_console_data.py` | 2 | `demo/data/*.json` equal what the eval scripts produce now, and say what is simulated vs. measured |
-| `test_api.py`, `test_v04_streaming_cache.py`, `test_anomaly.py`, `test_config_and_store.py` | 26 | Fallback, clean 502s, spend caps, anomaly thresholds and auto-pause, streaming with LiteLLM's real chunk objects, cache scoping and expiry, metrics, admin auth, schema migration |
+| `uvicorn router.main:app --port 4000` | Real, from keys in `.env` | Development, single-node deployment |
+| `docker compose up` | **Simulated** by default | Evaluation; console in live mode at `/console/` |
+| `ROUTER_ROUTES_FILE=./config/regulated.yaml` | On-prem Ollama only | Workloads that must stay on the institution's network |
+| `OPA_URL` set to an OPA sidecar | Any | A central policy decision point in addition to the local policy file |
+| GitHub Pages (`demo/`) | **Simulated**, in the browser | Public demonstration |
 
-## Observability
+## Limitations and residual risk
 
-- **OpenTelemetry GenAI spans.** One CLIENT span per provider attempt, named `chat {model}`, with `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens/output_tokens`, `error.type`, plus `router.cost_usd`, `router.alias`, `router.attempt`. A no-op if OpenTelemetry isn't installed; nothing is exported unless you configure an exporter. Prompts and completions are never put on spans.
-- **Prometheus** at `/metrics` (admin key): requests by outcome (ok, error, skipped, cache_hit), spend, tokens, cache savings, rejections by reason, breaker state and transitions, latency EWMA, TPM in use.
-- **Console** at `/console/` (see [Console](#console)) and the classic dashboard at `/dashboard`.
-- **Request traces:** every chat request gets an `x-router-trace-id` header and a trace (`GET /admin/traces`, `GET /admin/traces/{id}`): each stage's decision, a one-line summary and its wall time. Metadata only (team, key label and fingerprint, alias, deployments, statuses, tokens, cost), never prompt or completion text; a bounded in-memory buffer per worker (`ROUTER_TRACE_BUFFER`, default 500).
-- **Admin API:** `/admin/circuits`, `/admin/circuits/reset`, `/admin/budgets`, `/admin/budgets/{scope}/{name}`, `/admin/showback`, `/admin/anomalies`, `/admin/usage/today`, `/admin/recent`, `/admin/keys`, `/admin/keys/{id}/pause`, `/admin/keys/{id}/unpause`, `/admin/key-holds`, `/admin/reload`, `/admin/routes`, `/admin/policies`, `/admin/policies/dry-run`, `/admin/config`, `/admin/config/{name}` (+ `/validate`), `/admin/overview`, `/admin/traces`, `/admin/shadow`, `/admin/semantic-cache`, `/admin/mcp`, `/admin/mock/providers`, `/admin/audit`, `/admin/audit/verify`, `/admin/content-log`.
-- **Policy actions:** `router_policy_actions_total{category,action}` counts what the audit trail records; `router_shadow_requests_total{alias,candidate,outcome}` counts mirrors; `router_mcp_tool_calls_total{server,tool,decision}` counts tool calls.
+- Limits, breakers and latency averages are **per process**; multiple workers or instances each enforce their own. `POST /admin/reload` reloads only the worker that receives it.
+- Spend caps compare against recorded spend, so in-flight requests can overshoot a cap by their own cost.
+- Every request that reaches policy evaluation writes one audit row (plus the usage row); with SQLite that is an extra serialized write per request.
+- Cached completions are stored in plaintext SQLite when the cache is on. Application keys are not: only a salted HMAC is stored.
+- The semantic cache is in memory per worker; provider embedding calls are not priced or recorded. Its bundled calibration does not meet a 1% false-hit target on held-out pairs.
+- PII detection is pattern-based (no names or addresses). Streams cannot be combined with `post_response` hooks.
+- The audit chain makes tampering evident, not impossible: anyone who can write the SQLite file can rebuild the chain.
+- SQLite serializes writes; heavy concurrent traffic needs a server database. "Today" and "this month" are UTC.
+- Request traces, like breakers, are in memory per worker and bounded; the usage table and audit trail are the durable record. Budget overrides and key holds set from the console are in SQLite and shared, but each worker caches budget overrides until it changes them itself.
+- `PUT /admin/config/{name}` (off unless `ROUTER_ALLOW_CONFIG_WRITES=true`) rewrites the YAML file, so comments in an edited file are whatever the editor sent; it reloads only the worker that receives it.
+- The console's demo mode simulates providers, time (a virtual clock) and the hours before "now" on its overview chart; its budgets are scaled down so they can be hit. Live mode with `ROUTER_MOCK_PROVIDERS=true` simulates providers only.
+- Teams that outgrow this design can move to LiteLLM's own proxy, which does far more; the routes file maps over cleanly.
 
-## Failure modes
+## Roadmap
 
-| Situation | What the gateway does | Evidence |
-|---|---|---|
-| Primary provider down | Falls back; after `failure_threshold` failures the breaker opens and later requests skip it | `test_breaker_opens_and_later_requests_skip_the_dead_provider` |
-| Provider recovers | After cooldown, one probe; success closes the breaker | `test_half_open_probe_closes_the_breaker_when_provider_recovers` |
-| Provider returns 429 + Retry-After | Breaker opens for that long (capped) | `test_provider_429_retry_after_is_honoured` |
-| Every provider failing | 502 with a clean message (no upstream detail) | `test_all_providers_failing_returns_clean_502` |
-| Every circuit open | 503 + `Retry-After`, no provider call | `test_all_circuits_open_returns_503_with_retry_after` |
-| Caller sends a bad request (400) | Falls through, but breakers aren't tripped | `test_bad_request_does_not_trip_breaker` |
-| Provider dies mid-stream | Error event to the client, partial usage recorded | `test_mid_stream_failure_sends_error_event_and_records_it` |
-| Client disconnects mid-stream | Tokens received so far recorded | `test_stream_closed_early_is_still_recorded` |
-| Team bursts past its TPM | 429 + `Retry-After`; other teams unaffected | `test_team_tpm_limit_rejects_with_retry_after_and_settles_to_real_usage` |
-| Org budget exhausted | 402 for every team | `test_org_daily_cap_blocks_every_team` |
-| Runaway key | Flagged at 3x baseline, 429 at 10x if auto-pause is on | `test_auto_pause_blocks_runaway_key` |
-| Invalid routes file on reload | 400, previous config kept | `test_bad_reload_keeps_previous_config` |
-| Model missing from price catalog | Warning at startup, listed on `/health`; calls record $0 unless `prices:` overrides it | `router/costs.py` |
-| Regulated team calls a route with only public providers | 403 before any provider call; audit `deny` | `test_regulated_team_blocked_from_external_provider` |
-| Regulated team's only permitted (local) provider is down | 502; public providers in the same route are never tried | `test_regulated_team_routes_local_with_hooks_and_ceiling` |
-| OPA unreachable, erroring or returning no decision | 503, no provider call (fail closed) | `test_opa_failures_fail_closed` |
-| Policy engine raises | 503, `error` audit row | `test_policy_engine_crash_fails_closed` |
-| Policy file invalid at startup or on reload | Startup fails; reload returns 400 and keeps the previous routes and policies | `test_reload_is_atomic_and_missing_explicit_file_fails` |
-| Body over `ROUTER_MAX_BODY_BYTES` | 413 before the JSON is parsed | `test_body_size_middleware_refuses_before_parsing` |
-| MCP tool outside the team's allow-list | JSON-RPC `-32001`; the server is never called; audit `deny` | `test_denied_tools_never_reach_the_server` |
-| Agent repeats the same tool call in a loop | `-32002` + `Retry-After` after `max_identical_per_minute` | `test_velocity_identical_calls_and_daily_cap` |
-| MCP server down or its credential missing | `-32004`, no partial result; audit `upstream_error` | `test_upstream_failures_and_missing_credentials_fail_closed` |
-| Shadow candidate fails or times out | Live response unaffected; error row in `shadow_usage`; only the shadow breaker counts it | `test_shadow_failure_never_touches_the_live_path` |
-| Shadow candidate not permitted for the caller's team | Not mirrored; `skipped_policy` audit row | `test_shadow_respects_the_candidates_policy` |
-| Real eval run without provider keys | Refused with the list of missing credentials (exit 2) | `test_real_runs_refuse_without_credentials` |
-| Prompt contains PII on a `pii_block` route/team | 422 before any provider call; audit row with counts | `test_team_block_refuses_before_any_provider_call` |
-| A content hook raises | 503, nothing sent to a provider (fail closed); `hook_error` audit row | `test_failing_hook_fails_closed` |
-| `post_response` hook blocks a completion | 422 to the client; the provider call is still recorded and billed | `test_post_response_redact_and_block` |
-| `stream: true` where a `post_response` hook applies | 400 before any provider call (chunk-wise redaction can miss matches split across chunks) | `test_streaming_with_pre_hooks_and_refused_with_post_hooks` |
-| Content policy changes while answers are cached | Cache key includes the hook-set fingerprint, so old entries aren't served | `test_cache_entries_do_not_cross_a_content_policy_change` |
+- SSO (OIDC) for the admin API and dashboard.
+- Shared state (Redis) for rate-limit windows and breakers across instances.
+- Encrypted cache at rest.
+- Signed or digest-pinned policy files; append-only usage records.
+- OAuth and per-user identity for upstream MCP servers.
+- `opa test policies/` in CI; pinned, hashed dependencies; SRI on the console's CDN script.
+- Configurable anomaly thresholds and a seasonality-aware baseline.
+- Spend forecasts by team in the gateway API (the console's forecast is computed over sample data).
 
-## Quickstart
+## Getting started
+
+### Quickstart
 
 ```bash
 git clone https://github.com/coreymathie/governed-ai-gateway.git
@@ -387,29 +220,32 @@ curl -H "Authorization: Bearer $ROUTER_ADMIN_KEY" \
   "http://localhost:4000/admin/showback?group_by=team,model&format=csv" -o showback.csv
 ```
 
-Or with Docker and simulated providers: `docker compose up`, then http://localhost:4000/console/ (see [Console](#console)). Without Docker, `ROUTER_MOCK_PROVIDERS=true uvicorn router.main:app --port 4000` does the same.
+With Docker and simulated providers: `docker compose up`, then open http://localhost:4000/console/ ([docs/console.md](docs/console.md#run-it-live)). Without Docker, `ROUTER_MOCK_PROVIDERS=true uvicorn router.main:app --port 4000` does the same.
 
-Run the in-browser console locally: `python -m http.server 8000` from the repo root, then open `http://localhost:8000/demo/` (Pyodide loads from jsDelivr). The hosted link needs GitHub Pages enabled for this repo (branch `main`, folder `/`).
+### Running the checks
 
-## Limitations
+```bash
+pip install -r requirements.txt ruff
+ruff check . && ruff format --check .
+python -m pytest -q
+python scripts/demo_smoke.py --both     # optional: every console screen in headless Chromium (needs playwright)
+python scripts/build_console_data.py    # regenerate demo/data/*.json after changing evals, routes or tests
+```
 
-- Limits, breakers and latency averages are **per process**; multiple workers or instances each enforce their own. `POST /admin/reload` reloads only the worker that receives it.
-- Spend caps compare against recorded spend, so in-flight requests can overshoot a cap by their own cost.
-- Every request that reaches policy evaluation writes one audit row (plus the usage row); with SQLite that's an extra serialized write per request.
-- Cached completions are stored in plaintext SQLite when the cache is on. (Application keys are not: only a salted HMAC is stored.)
-- The semantic cache is in memory per worker; provider embedding calls aren't priced or recorded. Its bundled calibration doesn't meet a 1% false-hit target on held-out pairs (see above).
-- PII detection is pattern-based (no names or addresses). Streams can't be combined with `post_response` hooks.
-- The audit chain makes tampering evident, not impossible: anyone who can write the SQLite file can rebuild the chain.
-- SQLite serializes writes; use a server database for heavy concurrent traffic. "Today" and "this month" are UTC.
-- Request traces, like breakers, are in memory per worker and bounded; the usage table and audit trail are the durable record. Budget overrides and key holds set from the console are in SQLite and shared, but each worker caches budget overrides until it changes them itself.
-- `PUT /admin/config/{name}` (off unless `ROUTER_ALLOW_CONFIG_WRITES=true`) rewrites the YAML file, so comments in an edited file are whatever the editor sent; it reloads only the worker that receives it.
-- The console's demo mode simulates providers, time (a virtual clock) and the hours before "now" on its overview chart; its budgets are scaled down so they can be hit. Live mode with `ROUTER_MOCK_PROVIDERS=true` simulates providers only.
-- If you outgrow this, LiteLLM's own proxy does far more, and the routes file maps over cleanly.
+### Repository layout
 
-## Roadmap (Phase 2)
+| Path | Contents |
+|---|---|
+| `router/` | The gateway: API, admission pipeline, policy, budgets, breakers, caches, MCP gateway, telemetry, store |
+| `config/` | `routes.yaml`, `policies.yaml`, `regulated.yaml`, MCP example and mock configs |
+| `policies/` | Example OPA policy and its tests |
+| `demo/` | The console (static app, demo and live adapters) and its committed sample data |
+| `dashboard/` | The classic server-rendered dashboard |
+| `evals/` | Route-eval cases, simulated provider profiles, semantic-cache pairs |
+| `scripts/` | Eval, gate, calibration, sample-data generators, console smoke test |
+| `tests/` | The offline test suite |
+| `docs/` | [Architecture](docs/architecture.md), [configuration](docs/configuration.md), [operations](docs/operations.md), [evaluation](docs/evaluation.md), [console](docs/console.md), [controls](docs/controls.md), [threat model](docs/threat-model.md), [ADRs](docs/adr/) |
 
-- Also: SSO for admin, shared limit/breaker state across instances, encrypted cache at rest.
-
-## License
+### License
 
 MIT.

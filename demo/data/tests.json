@@ -102,9 +102,9 @@
   }
  ],
  "last_run": {
-  "date": "2026-10-05",
+  "date": "2026-10-09",
   "exit_code": 0,
-  "summary": "277 passed, 1 skipped, 2 warnings"
+  "summary": "289 passed, 1 skipped, 2 warnings"
  },
  "measured": "counted from the test sources; CI runs pytest -q on every push",
  "total": 240
