@@ -183,7 +183,7 @@ def build() -> dict:
             "kind": "finops",
             "title": "September showback sent to department heads",
             "detail": "CSV export by team and app; risk analytics came in 9% under budget after moving dispute "
-            "triage to the cheap-batch route.",
+            "triage onto the on-prem model.",
         },
         {
             "date": "2026-08-11",
