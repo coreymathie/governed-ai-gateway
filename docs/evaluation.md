@@ -12,7 +12,7 @@ python scripts/demo_smoke.py --both     # optional: every console screen in head
 python scripts/build_console_data.py    # regenerate demo/data/*.json after changing evals, routes or tests
 ```
 
-Latest local run: **289 passed, 1 skipped (290 tests)**. The skipped test checks the tiktoken estimator and only runs when tiktoken can load its `cl100k_base` encoding (it downloads it on first use). Tests stub LiteLLM's completion call, so they run offline without provider keys. CI runs ruff, the format check and `pytest -q` on every push, and checks that the sample data files are current (`scripts/generate_sample_company.py --check`, `scripts/sample_requests.py --check`).
+Latest local run: **304 passed, 1 skipped (305 tests)**, from 255 test functions in 21 files (pytest runs each case of a parametrized test separately, so it collects more tests than there are functions). The skipped test checks the tiktoken estimator and only runs when tiktoken can load its `cl100k_base` encoding (it downloads it on first use). Tests stub LiteLLM's completion call, so they run offline without provider keys. CI runs ruff, the format check and `pytest -q` on every push, and checks that the sample data and eval-case files are current (`scripts/generate_sample_company.py --check`, `scripts/sample_requests.py --check`, `scripts/build_eval_cases.py --check`).
 
 | File | Tests | Covers |
 |---|---|---|
@@ -26,36 +26,37 @@ Latest local run: **289 passed, 1 skipped (290 tests)**. The skipped test checks
 | `test_policy.py` | 39 | Policy schema errors, layer combination, alias/size/message limits, max_tokens reject/clamp/unset, provider and model lists, shipped regulated profile, OPA narrowing and fail-closed results, decision fingerprints; through the API: residency deny and local-only routing with no public fallback, streams, limits, body-size middleware, a fake OPA server (allow, deny, narrow, undefined, 500, garbage, down), OPA enabled without URL, engine crash, atomic reload, `/admin/policies`, cache isolation across policy changes |
 | `test_privacy.py` | 30 | Every PII detector and its false-positive guards (Luhn, never-issued SSN ranges), hook order/block/failure, config validation, redaction through the API, team block, post-response hooks, opt-in redacted content log, fail-closed hooks, streaming rules, cache/policy isolation, custom hook modules, append-only hash-chained audit, admin actions audited |
 | `test_keys_at_rest.py` | 7 | Application keys hashed at rest: storage, lookup, pepper, API surface, and migration of a v0.5 database with no plaintext left behind |
-| `test_demo_engine.py` | 19 | The browser demo's engine under CPython (including the governance panel's policy and content stages, that its rules equal `config/policies.yaml`, the semantic-cache panel and that in-browser calibration equals the script's, and the MCP panel with config equal to `config/mcp.example.yaml`), and that the modules it loads stay free of third-party imports |
+| `test_demo_engine.py` | 21 | The browser demo's engine under CPython (including the governance panel's policy and content stages, that its rules equal `config/policies.yaml`, that its caps are `config/routes.yaml`'s divided by the stated scale, that its PII sample equals the page's, the semantic-cache panel and that in-browser calibration equals the script's, and the MCP panel with config equal to `config/mcp.example.yaml`), and that the modules it loads stay free of third-party imports |
 | `test_console_api.py` | 17 | Live console endpoints: simulated providers (answers, outage fallback, 502 when all down, streaming, knob validation), trace stages and order and that traces hold no prompt text, refusals naming the stage that refused, budget overrides winning over routes.yaml, admin pause/unpause and the anomaly override, config read/validate/apply (YAML and schema errors with lines, writes off by default, atomic apply changes enforcement), policy dry runs on candidate text, overview roll-up, simulated MCP server, admin key file (0600, created once), version consistency |
 | `test_demo_console.py` | 10 | The console's demo engine: same stage order and trace shape as the gateway, aliases equal `config/routes.yaml` and profiles equal `evals/sim_profiles.json`, fallback/breakers, residency and clamps, exact and semantic cache, keys/holds/revocation/budgets, runaway batch job paused then overridden, overview history, config screens using the gateway's loaders (pydantic for routes) |
 | `test_console_data.py` | 2 | `demo/data/*.json` equal what the eval scripts produce now, and say what is simulated vs. measured |
-| `test_sample_company.py`, `test_sample_requests.py` | 12 | The sample data: generator output is current and deterministic, daily totals equal the sum of the teams, labelled fictional with stated assumptions; request costs equal tokens times the price of the model that answered, each team's cost per 1,000 requests within 30% of the usage file, month-to-date budgets, on-prem routing for regulated apps, the activity-feed stories present in the log, no prompt or completion text stored |
+| `test_sample_company.py`, `test_sample_requests.py` | 12 | The sample data: generator output is current and deterministic, daily totals equal the sum of the teams, labelled fictional with stated assumptions; request costs equal tokens times the price of the model that answered, each app's cost per request matching its route and token sizes, month-to-date budgets and key caps, on-prem routing for regulated apps, the activity-feed stories present in the log (the contractor refusal, the October 6 breaker opening, the October 5 on-prem timeout), no prompt or completion text stored |
+| `test_sample_consistency.py` | 13 | One story across the console: spend by model equals what the request mix implies (within 1 point of share), the log's cost by model tracks it, one route per app in `config/routes.yaml`, the engine, the log and Spend; every alias and deployment in the log exists in the config; prices defined once; content hooks in the app table match the configs; the contractor refusal is `router/policy.py`'s decision; incident counts, breaker thresholds, the runaway and the August showback recomputed from the data; every day inside every org, team and key cap; volumes sized for the membership; eval cases are credit-union tasks with realistic prompt sizes; MCP examples equal in engine and page; no generic shop, SaaS or healthcare strings in demo-facing files |
 | `test_api.py`, `test_v04_streaming_cache.py`, `test_anomaly.py`, `test_config_and_store.py` | 26 | Fallback, clean 502s, spend caps, anomaly thresholds and auto-pause, streaming with LiteLLM's real chunk objects, cache scoping and expiry, metrics, admin auth, schema migration |
 
-The console's **Evals** screen shows the test inventory from `demo/data/tests.json`, which counts test functions in the source (parametrized cases count once there, so its total is lower than pytest's item count).
+The console's **Evals** screen shows the test inventory from `demo/data/tests.json`, which counts test functions in the source (255; parametrized cases count once there) next to the last recorded pytest run (305 collected) and explains the difference.
 
 ## Console smoke test
 
-`python scripts/demo_smoke.py --both` with Pyodide served from a local copy: **157 checks passed (113 demo, 44 live)**, **measured**. The checks cover every screen's key interaction in both modes, no console errors, no failed or third-party requests, and no horizontal scroll at 390 px or 1366 px. See [console](console.md#verification).
+`python scripts/demo_smoke.py --both` with Pyodide served from a local copy: **159 checks passed (115 demo, 44 live)**, **measured**. The checks cover every screen's key interaction in both modes, no console errors, no failed or third-party requests, and no horizontal scroll at 390 px or 1366 px. See [console](console.md#verification).
 
 ## Semantic cache calibration
 
-**Measured** with `python scripts/calibrate_semcache.py` on the bundled fictional pairs with the hashing embedder, target ≤1% of hits wrong; pinned by `test_bundled_pairs_calibration_numbers`.
+**Measured** with `python scripts/calibrate_semcache.py` on the bundled pairs ([evals/semcache_pairs.jsonl](../evals/semcache_pairs.jsonl): 160 fictional credit-union member questions; 80 same-meaning pairs, 80 different-meaning pairs such as a 12-month vs an 18-month certificate, "turn on" vs "turn off" two-step verification, or a 60-day vs a 90-day old charge) with the hashing embedder, target ≤1% of hits wrong; pinned by `test_bundled_pairs_calibration_numbers`.
 
 | 160 labelled pairs, split in half | Threshold | Hit rate | False-hit rate |
 |---|---|---|---|
-| Calibration half | 0.88 (chosen) | 30.9% | 0.0% (0 of 13 hits) |
-| Held-out half | 0.88 | 26.3% | **9.1%** (1 of 11 hits; 95% upper bound 37.7%) |
-| Held-out half, guards off | 0.88 | 26.3% | 28.6% (4 of 14 hits) |
+| Calibration half | 0.90 (chosen) | 28.6% (12 of 42) | 0.0% (0 of 12 hits) |
+| Held-out half | 0.90 | 26.3% (10 of 38) | **0.0%** (0 of 10 hits; 95% upper bound 27.8%) |
+| Held-out half, guards off | 0.90 | 26.3% | 0.0% (0 of 10 hits) |
 
-The chosen threshold misses the 1% target on held-out pairs: a dozen hits cannot certify 1%, and the lexical embedder cannot tell "rotate" from "revoke" an API key. For that reason the cache ships disabled. A team enabling it calibrates first on pairs labelled from its own traffic, preferably with a provider embedding model. These numbers describe this embedder on this small synthetic set, not production traffic. Method and full result: [ADR 0005](adr/0005-semantic-cache-off-by-default-calibrated.md).
+No held-out hit was wrong, but 10 hits cannot certify a 1% rate: the 95% upper bound is 27.8%, and requiring that bound to meet the target (`--conservative`) selects no threshold. The margin is thin: at 0.85 the calibration half already has 4 wrong hits in 25 (16%), and "turn on" vs "turn off" two-step verification scores 0.894, just under the threshold. For that reason the cache still ships disabled, and `config/routes.yaml` records 0.90 as the threshold a team would start from. A team enabling it calibrates first on pairs labelled from its own traffic, preferably with a provider embedding model. These numbers describe this embedder on this small synthetic set, not production traffic. Method and full result: [ADR 0005](adr/0005-semantic-cache-off-by-default-calibrated.md).
 
 ## Route evaluation
 
 Routing changes are measured before they ship, offline and then on live traffic.
 
-**Offline replay** ([router/evals.py](../router/evals.py), [scripts/eval_routes.py](../scripts/eval_routes.py)): a JSONL set of prompts with reference answers (`exact`, `contains`, `regex`; optional judge hook `module:function`) is replayed through each route with the gateway's own fallback chain and pricing, producing a cost-versus-quality report in Markdown and JSON. [evals/sample_cases.jsonl](../evals/sample_cases.jsonl) bundles 40 fictional cases (math, extraction, classification, formatting, reasoning, summary).
+**Offline replay** ([router/evals.py](../router/evals.py), [scripts/eval_routes.py](../scripts/eval_routes.py)): a JSONL set of prompts with reference answers (`exact`, `contains`, `regex`; optional judge hook `module:function`) is replayed through each route with the gateway's own fallback chain and pricing, producing a cost-versus-quality report in Markdown and JSON. [evals/sample_cases.jsonl](../evals/sample_cases.jsonl) bundles 40 fictional credit-union tasks, written by [scripts/build_eval_cases.py](../scripts/build_eval_cases.py) and tagged with the app that does them: member and online-banking questions answered from a knowledge base (routing number, limits, fees), agent-assist policy checks, card-dispute tagging and Regulation E deadlines, loan-document extraction, BSA case review, fraud-alert narratives, a regulatory-change digest, code review and a marketing rate check. Prompts carry the context the apps send (knowledge-base excerpts, procedures, loan documents, transaction histories), so they average 1,450 to 5,600 tokens per app, within 40% of the token sizes the sample company assumes (`test_eval_cases_are_credit_union_tasks_with_realistic_prompt_sizes`).
 
 ```bash
 python scripts/eval_routes.py --aliases smart-fast,cheap-batch --out reports/eval        # simulated (default)
@@ -64,18 +65,20 @@ python scripts/eval_routes.py --provider real --aliases cheap-batch             
 
 The default provider is a **deterministic simulation**: each deployment answers a case correctly with a probability from [evals/sim_profiles.json](../evals/sim_profiles.json) (invented numbers, not measurements of any model). It tests the harness, the routes' fallback behaviour and their pricing; it says nothing about how real models perform. **Simulated** result for the shipped routes (seed `eval-v1`, pinned by `test_shipped_routes_simulated_report_numbers`):
 
-| Route (simulated providers) | Quality | Cost for 40 cases | p50 latency |
-|---|---|---|---|
-| `smart-fast` (haiku → gpt-4.1-mini → llama3.1) | 0.975 | $0.001200 | 0.659 s |
-| `heavy-reasoning` (sonnet → gpt-4.1) | 0.950 | $0.003789 | 1.411 s |
-| `cheap-batch` (gpt-4.1-nano → gemini flash) | 0.775 | $0.000155 | 0.305 s |
-| `local-first` (llama3.1 → haiku) | 0.650 | $0.000050 | 1.243 s |
+| Route (simulated providers) | Quality | Cost for 40 cases | Per 1,000 requests | p50 latency |
+|---|---|---|---|---|
+| `heavy-reasoning` (sonnet → gpt-4.1) | 1.000 | $0.335109 | $8.38 | 1.416 s |
+| `smart-fast` (haiku → gpt-4.1-mini → llama3.1) | 0.850 | $0.110550 | $2.76 | 0.627 s |
+| `fast-chat` (latency order over haiku, gpt-4.1-mini, gemini flash) | 0.850 | $0.110550 | $2.76 | 0.627 s |
+| `cheap-batch` (gpt-4.1-nano → gemini flash) | 0.625 | $0.012150 | $0.30 | 0.323 s |
+| `local-first` (llama3.1 → haiku) | 0.600 | $0.005578 | $0.14 | 1.281 s |
+| `regulated-fast` (llama3.1 only) | 0.600 | $0.005578 | $0.14 | 1.281 s |
 
-With 40 cases one case is 0.025 of quality, so a profile of 0.96 can score below one of 0.90 by chance (as `heavy-reasoning` vs `smart-fast` does here). Case sets and gate thresholds need sizing with that granularity in mind.
+The replay runs targets in configured order, so `fast-chat` scores as `smart-fast` (same first deployment) and `regulated-fast` as `local-first`. Per 1,000 requests, `smart-fast` costs about what the sample company's member-facing apps pay ($2.53 per 1,000 across all apps on the Spend screen). With 40 cases one case is 0.025 of quality; case sets and gate thresholds need sizing with that granularity in mind.
 
 ### Route-eval gate
 
-[scripts/eval_gate.py](../scripts/eval_gate.py) exits 1 when an alias's quality drops more than `--max-quality-drop` (default 0.02) or its cost rises more than `--max-cost-increase` (default 10%) between two routes files or two reports, and 2 on configuration errors. Locally, swapping `smart-fast`'s first target to `gpt-4.1-nano` fails it on quality (0.975 → 0.775), and swapping it to `claude-sonnet-4-5` fails it on cost (+216%) (**simulated**; `test_cli_report_and_gate`). Example for a pull-request job (not wired into this repository's CI):
+[scripts/eval_gate.py](../scripts/eval_gate.py) exits 1 when an alias's quality drops more than `--max-quality-drop` (default 0.02) or its cost rises more than `--max-cost-increase` (default 10%) between two routes files or two reports, and 2 on configuration errors. Locally, swapping `smart-fast`'s first target to `gpt-4.1-nano` fails it on quality (0.850 → 0.625), and swapping it to `claude-sonnet-4-5` fails it on cost (+203%) (**simulated**; `test_cli_report_and_gate`). The console's example asks whether the member assistant could move from `smart-fast` to `cheap-batch`, the route the nightly fraud-alert batch uses: 89% cheaper, but quality falls 0.225, so the gate fails. Example for a pull-request job (not wired into this repository's CI):
 
 ```bash
 git show origin/main:config/routes.yaml > /tmp/routes_main.yaml
@@ -101,4 +104,4 @@ python scripts/eval_gate.py --routes-before /tmp/routes_main.yaml --routes-after
 
 ## Sample data
 
-The console's usage file (90 days) and 500-request log are **sample** data for the fictional Cypress Harbor Credit Union, generated from fixed seeds and stated assumptions. They are checked for internal consistency (above), not against any real institution. See [console](console.md#sample-business).
+The console's usage file (90 days) and 500-request log are **sample** data for the fictional Cypress Harbor Credit Union, generated from fixed seeds and stated assumptions in [demo/cypress_harbor.py](../demo/cypress_harbor.py) and [config/routes.yaml](../config/routes.yaml). They are checked for internal consistency (above), not against any real institution. See [console](console.md#sample-business).

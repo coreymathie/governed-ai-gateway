@@ -14,7 +14,7 @@
 | **Architecture** | One enforcement and accounting point: auth → policy → budgets → anomaly → content hooks → cache → TPM → fallback chain with circuit breakers → settle. An MCP tool gateway applies the same governance to agent tool calls. |
 | **Key decisions** | LiteLLM for wire formats, control plane in dependency-free modules; ordered fallback with per-deployment breakers; anomalies judged against each key's own baseline; semantic cache off until calibrated; MCP default deny. Recorded in [6 ADRs](#key-decisions-and-trade-offs). |
 | **Controls** | Org → team → key budgets, TPM/RPM limits, spend-anomaly pause, policy-as-code (YAML, optional OPA) with data residency, PII redaction hooks, hash-chained audit trail, showback. [Mapped to](docs/controls.md) NIST AI RMF / AI 600-1 and FinOps capabilities. |
-| **Evidence** | 290 tests, a 157-check headless-browser smoke test of the console, 6 ADRs, a [threat model](docs/threat-model.md). Route evals use a deterministic simulation, not real-model measurements. |
+| **Evidence** | 305 tests, a 159-check headless-browser smoke test of the console, 6 ADRs, a [threat model](docs/threat-model.md). Route evals use a deterministic simulation, not real-model measurements. |
 | **Out of scope** | Content-level guardrails (prompt-injection classification, output filtering), SSO for administrators, state shared across gateway instances, TLS termination, and any evaluation against real models. |
 | **Try it** | [Live console](https://coreymathie.github.io/governed-ai-gateway/demo/): this repo's `router/*.py` modules running in the browser against simulated providers. Or `docker compose up`. |
 
@@ -24,7 +24,7 @@
 
 [![The Governed AI Gateway console's Spend screen: AI spend against team budgets, requests served, cost per 1,000 requests, cache savings, success rate, spend stopped by an anomaly pause, October's spend and forecast by team, and the latest requests for a sample credit union](docs/img/console.png)](https://coreymathie.github.io/governed-ai-gateway/demo/)
 
-The console is set in **Cypress Harbor Credit Union**, a *fictional* credit union whose seven teams run eleven AI applications through the gateway; its 90 days of usage and 500-request log are labelled **sample** data. A visitor can read spend against team budgets, open any request to see every control it passed, take a simulated provider down and watch breakers open, edit a policy and preview its decisions, and try allowed and denied MCP tool calls. The hosted console runs the repository's own `router/*.py` modules in the browser via Pyodide against **simulated** providers, with no API keys and no provider calls; `docker compose up` runs the same console live against the gateway. How the console works: [docs/console.md](docs/console.md).
+The console is set in **Cypress Harbor Credit Union**, a *fictional* South Florida credit union (92,400 members, $1.4B in assets) whose seven teams run eleven AI applications through the gateway; its 90 days of usage and 500-request log are labelled **sample** data. One table ([demo/cypress_harbor.py](demo/cypress_harbor.py)) and the credit union's route config ([config/routes.yaml](config/routes.yaml)) drive the usage file, the request log, the in-browser engine and the route evals, and `tests/test_sample_consistency.py` checks that they agree. A visitor can read spend against team budgets, open any request to see every control it passed, take a simulated provider down and watch breakers open, edit a policy and preview its decisions, and try allowed and denied MCP tool calls. The hosted console runs the repository's own `router/*.py` modules in the browser via Pyodide against **simulated** providers, with no API keys and no provider calls; `docker compose up` runs the same console live against the gateway. How the console works: [docs/console.md](docs/console.md).
 
 ## Problem and context
 
@@ -38,19 +38,19 @@ A regulated institution adds constraints. Member data in regulated workloads mus
 
 ### Worked example: a credit union's seven teams (sample)
 
-The console models the operating model for the fictional Cypress Harbor Credit Union. Each team holds gateway keys for its applications; budgets, residency and anomaly limits attach to the team and key, not to the application code. Budgets and volumes are illustrative assumptions in the **sample** data.
+The console models the operating model for the fictional Cypress Harbor Credit Union, examined by NCUA and the Florida Office of Financial Regulation (CFPB rules such as Regulation E apply; CFPB examination starts at $10B in assets). Each team holds gateway keys for its applications; budgets, residency and anomaly limits attach to the team and key, not to the application code. Volumes, token sizes and budgets are illustrative assumptions in the **sample** data, sized for about 12,000 AI requests a day.
 
 | Team | AI applications and route aliases (sample) | Monthly budget (sample) |
 |---|---|---|
-| Member services | `member-assistant`, `agent-assist` on `smart-fast` | $3,600 |
-| Digital banking | `online-banking`, `mobile-banking` on `fast-chat` (latency-aware) | $2,600 |
-| Risk analytics | `fraud-scoring-batch` on `heavy-reasoning`; `dispute-triage` on `regulated-fast` (on-prem only) | $4,200 |
-| Lending | `loan-doc-extraction` on `smart-fast` and `heavy-reasoning` | $2,000 |
-| Compliance | `reg-change-digest` on `heavy-reasoning`; `bsa-case-notes` on `regulated-fast` (on-prem only) | $700 |
-| IT | `code-assistant` on `smart-fast` and `heavy-reasoning` | $1,000 |
-| Marketing | `content-drafts` on `smart-fast` | $500 |
+| Member services | `member-assistant`, `agent-assist` on `smart-fast` | $450 |
+| Digital banking | `online-banking`, `mobile-banking` on `fast-chat` (latency-aware) | $325 |
+| Risk analytics | `fraud-alert-narratives` (nightly batch) on `cheap-batch`; `dispute-triage` on `regulated-fast` (on-prem only) | $15 |
+| Lending | `loan-doc-extraction` on `smart-fast` and `heavy-reasoning` | $200 |
+| Compliance | `reg-change-digest` on `heavy-reasoning`; `bsa-case-notes` on `regulated-fast` (on-prem only) | $25 |
+| IT and engineering | `code-assistant` on `local-first` and `heavy-reasoning` | $60 |
+| Marketing | `content-drafts` on `smart-fast` | $24 |
 
-In the sample, the risk-analytics `fraud-scoring-batch` key is paused on September 24 at 10.2x its 7-day baseline; the spend it prevented ($2,310) is an estimate, not a measurement. The Spend screen shows each team's month-to-date spend, its month-end forecast at the current daily rate, and its budget; showback by team, key and model is the chargeback basis.
+The budgets are the team monthly caps in `config/routes.yaml`, which also sets a daily cap on every application key. Over the 30 days to October 7 the sample spends $943 (86% of $1,099 in team budgets) on 373,000 requests, $2.53 per 1,000 requests. On September 24 an engineer's coding agent looped on `heavy-reasoning` with the `code-assistant` key; the anomaly check paused the key 69 seconds after the loop started, at 10.2x its 7-day hourly baseline. The spend it prevented ($12.72) is an estimate, limited by the key's $7.50 daily cap, not a measurement. The Spend screen shows each team's month-to-date spend, its month-end forecast at the current daily rate, and its budget; showback by team, key and model is the chargeback basis.
 
 ## Reference architecture
 
@@ -109,7 +109,7 @@ flowchart LR
 | [0002](docs/adr/0002-ordered-fallback-and-circuit-breakers.md) | Ordered fallback by default, per-deployment circuit breakers, latency ordering opt-in | Outages stop costing every request a timeout; breaker state is per process, so N workers allow N × `failure_threshold` failures |
 | [0003](docs/adr/0003-per-key-baseline-anomaly-model.md) | Judge spend against each key's own baseline (fraud velocity checks), not fixed thresholds | One rule fits keys of any scale and is explainable; slow drift is invisible, and verdicts are cached for 30 s |
 | [0004](docs/adr/0004-exact-match-cache-now-semantic-later.md) | Exact-match cache now; semantic cache only with a measured false-hit rate | No false hits, at the cost of missing paraphrases; cached completions are plaintext at rest |
-| [0005](docs/adr/0005-semantic-cache-off-by-default-calibrated.md) | Semantic cache ships off; threshold calibrated on half the pairs, reported on the other half | The held-out result misses the 1% target, so enabling it is a per-team decision after local calibration |
+| [0005](docs/adr/0005-semantic-cache-off-by-default-calibrated.md) | Semantic cache ships off; threshold calibrated on half the pairs, reported on the other half | The held-out sample (10 hits) cannot certify the 1% target, so enabling it is a per-team decision after local calibration |
 | [0006](docs/adr/0006-mcp-tool-gateway-scope.md) | MCP tool gateway: request/response tool calls only, default deny, fraud-style velocity | A small, fully tested surface; no stdio servers, server-initiated streams or upstream OAuth |
 
 ## Controls and risk mapping
@@ -138,15 +138,15 @@ The audit trail records policy decisions, content-hook actions, MCP tool-call de
 
 | Result | Value | Label | How measured, and limits |
 |---|---|---|---|
-| Test suite | 290 tests: 289 passed, 1 skipped | **measured** | `python -m pytest -q`, offline with LiteLLM's completion call stubbed. The skipped test needs tiktoken's `cl100k_base` encoding. |
-| Console smoke | 157 checks passed (113 demo, 44 live) | **measured** | `python scripts/demo_smoke.py --both` in headless Chromium, Pyodide served from a local copy: every screen's key interaction, no console errors, no failed or third-party requests, no horizontal scroll at 390 px or 1366 px. |
-| Semantic cache, held-out false-hit rate | 9.1% (1 of 11 hits; 95% upper bound 37.7%) at threshold 0.88; 28.6% with guards off | **measured** | `python scripts/calibrate_semcache.py` on 160 bundled fictional pairs with the hashing embedder; not production traffic. |
-| Route evaluation | `smart-fast` 0.975 quality, $0.001200 for 40 cases | **simulated** | Invented provider profiles; tests the harness, fallback and pricing, not model quality. No real-model evaluation has been run. |
-| Route-eval gate | Fails `smart-fast` on quality (0.975 → 0.775) or cost (+216%) | **simulated** | `scripts/eval_gate.py`; an example pull-request job, not wired into this repository's CI. |
+| Test suite | 305 tests: 304 passed, 1 skipped | **measured** | `python -m pytest -q`, offline with LiteLLM's completion call stubbed. The skipped test needs tiktoken's `cl100k_base` encoding. |
+| Console smoke | 159 checks passed (115 demo, 44 live) | **measured** | `python scripts/demo_smoke.py --both` in headless Chromium, Pyodide served from a local copy: every screen's key interaction, no console errors, no failed or third-party requests, no horizontal scroll at 390 px or 1366 px. |
+| Semantic cache, held-out false-hit rate | 0.0% (0 of 10 hits; 95% upper bound 27.8%) at threshold 0.90, hit rate 26.3%; also 0.0% with guards off | **measured** | `python scripts/calibrate_semcache.py` on 160 bundled fictional credit-union question pairs with the hashing embedder; not production traffic. |
+| Route evaluation | `smart-fast` 0.850 quality, $0.110550 for 40 cases ($2.76 per 1,000 requests); `heavy-reasoning` 1.000; `cheap-batch` 0.625 | **simulated** | 40 credit-union tasks with prompts the size the apps send; invented provider profiles. Tests the harness, fallback and pricing, not model quality. No real-model evaluation has been run. |
+| Route-eval gate | Fails moving the member assistant from `smart-fast` to `cheap-batch` on quality (0.850 → 0.625); fails a Sonnet-first `smart-fast` on cost (+203%) | **simulated** | `scripts/eval_gate.py`; an example pull-request job, not wired into this repository's CI. |
 | OPA policy tests | 8/8 passed on OPA 1.4.2 | **measured** | Run locally; CI does not run OPA. |
-| Request log consistency | Each team's cost per 1,000 requests within 30% of the usage file | **sample** | `tests/test_sample_requests.py` over the 500-request log. |
+| Sample data consistency | Spend by model within 1 point of what the request mix implies; one route per app across config, engine, log and Spend; incident counts and thresholds from the data and `routes.yaml`; every day inside every cap | **sample** | `tests/test_sample_consistency.py`, `tests/test_sample_requests.py`. |
 
-**Why the semantic cache ships disabled.** The threshold chosen on the calibration half (0.88, 0 of 13 hits wrong) misses the 1% target on the held-out half: a dozen hits cannot certify 1%, and the lexical embedder cannot tell "rotate" from "revoke" an API key. A team enabling it calibrates first on pairs labelled from its own traffic, preferably with a provider embedding model. Full calibration table, route results, gate, shadow-mode guarantees and test inventory: [docs/evaluation.md](docs/evaluation.md).
+**Why the semantic cache ships disabled.** The threshold chosen on the calibration half (0.90, 0 of 12 hits wrong) had no wrong hits on the held-out half either, but 10 hits cannot certify a 1% false-hit rate: the 95% upper bound is 27.8%, and requiring the bound to meet 1% selects no threshold. Just below the chosen threshold the lexical embedder confuses lookalikes ("turn on" and "turn off" two-step verification scores 0.894; at 0.85 the calibration half has 4 wrong hits in 25). A team enabling it calibrates first on pairs labelled from its own traffic, preferably with a provider embedding model. Full calibration table, route results, gate, shadow-mode guarantees and test inventory: [docs/evaluation.md](docs/evaluation.md).
 
 ## Operations
 
@@ -168,13 +168,13 @@ The audit trail records policy decisions, content-hook actions, MCP tool-call de
 - Spend caps compare against recorded spend, so in-flight requests can overshoot a cap by their own cost.
 - Every request that reaches policy evaluation writes one audit row (plus the usage row); with SQLite that is an extra serialized write per request.
 - Cached completions are stored in plaintext SQLite when the cache is on. Application keys are not: only a salted HMAC is stored.
-- The semantic cache is in memory per worker; provider embedding calls are not priced or recorded. Its bundled calibration does not meet a 1% false-hit target on held-out pairs.
+- The semantic cache is in memory per worker; provider embedding calls are not priced or recorded. Its bundled calibration (10 held-out hits) cannot certify a 1% false-hit target.
 - PII detection is pattern-based (no names or addresses). Streams cannot be combined with `post_response` hooks.
 - The audit chain makes tampering evident, not impossible: anyone who can write the SQLite file can rebuild the chain.
 - SQLite serializes writes; heavy concurrent traffic needs a server database. "Today" and "this month" are UTC.
 - Request traces, like breakers, are in memory per worker and bounded; the usage table and audit trail are the durable record. Budget overrides and key holds set from the console are in SQLite and shared, but each worker caches budget overrides until it changes them itself.
 - `PUT /admin/config/{name}` (off unless `ROUTER_ALLOW_CONFIG_WRITES=true`) rewrites the YAML file, so comments in an edited file are whatever the editor sent; it reloads only the worker that receives it.
-- The console's demo mode simulates providers, time (a virtual clock) and the hours before "now" on its overview chart; its budgets are scaled down so they can be hit. Live mode with `ROUTER_MOCK_PROVIDERS=true` simulates providers only.
+- The console's demo mode simulates providers, time (a virtual clock) and the hours before "now" on its overview chart; its caps and anomaly baselines are the credit union's divided by 25 so a few dozen requests can reach them. Live mode with `ROUTER_MOCK_PROVIDERS=true` simulates providers only.
 - Teams that outgrow this design can move to LiteLLM's own proxy, which does far more; the routes file maps over cleanly.
 
 ## Roadmap
@@ -243,10 +243,10 @@ python scripts/build_console_data.py    # regenerate demo/data/*.json after chan
 | `router/` | The gateway: API, admission pipeline, policy, budgets, breakers, caches, MCP gateway, telemetry, store |
 | `config/` | `routes.yaml`, `policies.yaml`, `regulated.yaml`, MCP example and mock configs |
 | `policies/` | Example OPA policy and its tests |
-| `demo/` | The console (static app, demo and live adapters) and its committed sample data |
+| `demo/` | The console (static app, demo and live adapters), the sample company's app table (`cypress_harbor.py`) and its committed sample data |
 | `dashboard/` | The classic server-rendered dashboard |
-| `evals/` | Route-eval cases, simulated provider profiles, semantic-cache pairs |
-| `scripts/` | Eval, gate, calibration, sample-data generators, console smoke test |
+| `evals/` | Route-eval cases (credit-union tasks), simulated provider profiles, semantic-cache pairs |
+| `scripts/` | Eval, gate, calibration, eval-case and sample-data generators, console smoke test |
 | `tests/` | The offline test suite |
 | `docs/` | [Architecture](docs/architecture.md), [configuration](docs/configuration.md), [operations](docs/operations.md), [evaluation](docs/evaluation.md), [console](docs/console.md), [controls](docs/controls.md), [threat model](docs/threat-model.md), [ADRs](docs/adr/) |
 
