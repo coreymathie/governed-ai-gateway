@@ -1,8 +1,14 @@
 # Architecture
 
+This document is the reference architecture of the gateway: the request pipeline and its enforcement points, the module that owns each responsibility, and the design choices behind them. Each design choice links to the ADR that records its trade-offs. Configuration is in [configuration](configuration.md) and run-time behaviour in [operations](operations.md).
+
+## Request pipeline
+
+Stages 0 to 5 run before any provider is called; each of them except the cache is an enforcement point that can refuse the request.
+
 ```
    ┌────────────┐   POST /v1/chat/completions   ┌──────────────────────────────────────────┐
-   │  Your app  │──────────────────────────────▶│  gateway (FastAPI, :4000)                 │
+   │ Client app │──────────────────────────────▶│  gateway (FastAPI, :4000)                 │
    └────────────┘   Authorization: Bearer key   │                                          │
                                                 │  0. body size limit (413)      main.py   │
                                                 │  1. auth + requests/min        auth.py   │
@@ -69,17 +75,17 @@ The modules marked "none" (plus `configcheck.py`, and `models.py` on demand with
 
 ## Design choices
 
-**Aliases with ordered targets.** A config file you can read says "try X first, then Y, then Z". Operators can diff it in a PR, roll it back and review it. `strategy: latency` is opt-in per alias. See [ADR 0002](adr/0002-ordered-fallback-and-circuit-breakers.md).
+**Aliases with ordered targets.** A readable config file states "try X first, then Y, then Z". Operators diff it in a pull request, review it and roll it back. `strategy: latency` is opt-in per alias. See [ADR 0002](adr/0002-ordered-fallback-and-circuit-breakers.md).
 
-**Circuit breakers per deployment.** A provider that keeps failing, or that returns 429/503 with `Retry-After`, is skipped until a cooldown passes and a probe succeeds, so an outage stops adding its timeout to every request. If every target is open the gateway answers 503 with `Retry-After` without calling anyone.
+**Circuit breakers per deployment.** A provider that keeps failing, or that returns 429/503 with `Retry-After`, is skipped until a cooldown passes and a probe succeeds, so an outage stops adding its timeout to every request. If every target is open, the gateway answers 503 with `Retry-After` without calling any provider.
 
 **Admission control before the provider call.** Budgets (org → team → key, daily and monthly), TPM reservations and anomaly pauses are all decided before any money is spent. Caps compare against spend already recorded, so concurrent in-flight requests can overshoot a cap by their own cost; TPM reservations are estimates, corrected to provider-reported usage when the call returns.
 
-**Spend anomalies, fraud-style.** Each key's spend this hour is compared with its own 7-day baseline: flagged at 3x, paused at 10x when `auto_pause_on_anomaly` is on. A key with less than 24 hours of history isn't judged. See [ADR 0003](adr/0003-per-key-baseline-anomaly-model.md).
+**Spend anomalies, fraud-style.** Each key's spend this hour is compared with its own 7-day baseline: flagged at 3x, paused at 10x when `auto_pause_on_anomaly` is on. A key with fewer than 24 active hours of history is not judged. The pattern is the velocity check used in card-fraud monitoring. See [ADR 0003](adr/0003-per-key-baseline-anomaly-model.md).
 
-**Policy before everything else.** `config/policies.yaml` is evaluated right after authentication: it can refuse the request (alias lists, size, max_tokens) or remove deployments from the route (provider and model lists), and the rest of the pipeline only ever sees the permitted deployments, so fallback can't reach an excluded provider. An optional OPA check runs after the local policy and can only narrow it. Every failure mode of the policy layer denies. The cache key includes a fingerprint of the decision, so answers never cross policies.
+**Policy before everything else.** `config/policies.yaml` is evaluated right after authentication: it can refuse the request (alias lists, size, max_tokens) or remove deployments from the route (provider and model lists), and the rest of the pipeline only ever sees the permitted deployments, so fallback cannot reach an excluded provider. An optional OPA check runs after the local policy and can only narrow it. Every failure mode of the policy layer denies. The cache key includes a fingerprint of the decision, so answers never cross policies.
 
-**Tools get the same treatment as models.** `POST /mcp/{server}` authenticates the caller's gateway key, applies the team's tool allow-list, velocity windows and daily caps from `config/mcp.yaml`, forwards one JSON-RPC message upstream, and records the call in usage and the audit trail. Anything it can't decide or complete is an error to the client, never a partial result. See [ADR 0006](adr/0006-mcp-tool-gateway-scope.md).
+**Tools get the same treatment as models.** `POST /mcp/{server}` authenticates the caller's gateway key, applies the team's tool allow-list, velocity windows and daily caps from `config/mcp.yaml`, forwards one JSON-RPC message upstream, and records the call in usage and the audit trail. Anything it cannot decide or complete is an error to the client, never a partial result. See [ADR 0006](adr/0006-mcp-tool-gateway-scope.md).
 
 **Measure before switching.** `scripts/eval_routes.py` replays a case set through candidate routes with the same fallback chain and pricing the gateway uses, and `scripts/eval_gate.py` turns a quality drop or cost rise into a failing exit code. Shadow mode then mirrors a sample of live traffic to the candidate after the client has its answer, through the candidate's own policy decision, with separate breakers and a separate ledger, so the comparison never changes live behaviour or live budgets.
 
@@ -93,20 +99,25 @@ The modules marked "none" (plus `configcheck.py`, and `models.py` on demand with
 
 **Routing headers.** Successful responses carry `x-router-used-provider`, `x-router-used-model` and `x-router-cache`; responses that went through the provider chain (including 502/503 errors) also carry `x-router-strategy`, `x-router-attempts`, and, when relevant, `x-router-fallback-from` and `x-router-circuit-skipped`.
 
-**Reload on request.** `POST /admin/reload` re-reads the routes file in the worker that receives it; an invalid file is rejected and the previous config stays active. It doesn't watch the file, and with several workers each one must be reloaded (or restarted).
+**Reload on request.** `POST /admin/reload` re-reads the routes and policy files in the worker that receives it; an invalid file is rejected and the previous config stays active. It does not watch the file, and with several workers each one must be reloaded (or restarted).
 
 **SQLite by default.** Small and self-contained: the store is one module behind plain functions, so moving to Postgres means rewriting that file. No throughput figures are claimed for it. SQLite serializes writes, so heavy concurrent traffic needs a server database.
 
 **Process-local state.** Rate limits, TPM windows, breaker state and latency averages live in each worker's memory. Multiple workers or instances each enforce their own limits; a shared store is on the roadmap.
 
+**Decision traces and the audit trail are separate records.** Each request's stages (decision, summary, wall time) are held as a decision trace in a bounded per-worker buffer for explanation and debugging (`router/traces.py`). Policy decisions, content-hook actions, MCP tool-call decisions and administrative changes go to the audit trail, an append-only, hash-chained SQLite table that is the durable evidence (`router/audit.py`).
+
 ## Observability
 
-- **Traces:** one OpenTelemetry CLIENT span per provider attempt, named `chat {model}`, with `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `error.type`, plus `router.cost_usd`, `router.alias`, `router.attempt`, `router.strategy`. Nothing is exported unless the host configures an OpenTelemetry SDK/exporter. Message content is never recorded.
+Operational detail, including the full admin API and failure modes, is in [operations](operations.md).
+
+- **Spans:** one OpenTelemetry CLIENT span per provider attempt, named `chat {model}`, with `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `error.type`, plus `router.cost_usd`, `router.alias`, `router.attempt`, `router.strategy`. Nothing is exported unless the host configures an OpenTelemetry SDK/exporter. Message content is never recorded.
 - **Metrics** (`/metrics`, admin key): `router_requests_total{alias,provider,outcome}` (ok, error, skipped, cache_hit), `router_spend_usd_total`, `router_cache_saved_usd_total`, `router_tokens_total{direction}`, `router_rejections_total{reason}`, `router_circuit_state`, `router_circuit_transitions_total`, `router_provider_latency_ewma_seconds`, `router_tpm_in_use`.
 - **Admin API:** `/admin/circuits`, `/admin/budgets`, `/admin/showback`, `/admin/anomalies`, `/admin/usage/today`, `/admin/recent`, `/admin/policies`, `/admin/shadow`, `/admin/semantic-cache`, `/admin/mcp`, `/admin/audit`, `/admin/audit/verify`, `/admin/content-log`.
-- **Audit:** `router_policy_actions_total{category,action}` mirrors what `audit_log` records.
+- **Audit trail:** `router_policy_actions_total{category,action}` mirrors what `audit_log` records.
 
 ## Further reading
 
 - [Threat model](threat-model.md): STRIDE, OWASP LLM Top 10 (2025)
 - [Controls mapping](controls.md): NIST AI RMF / AI 600-1, FinOps for AI
+- [Configuration](configuration.md), [operations](operations.md), [evaluation](evaluation.md), [console](console.md)

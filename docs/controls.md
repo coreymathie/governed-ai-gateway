@@ -1,11 +1,11 @@
 # Controls mapping
 
-How the gateway's controls line up with two frameworks AI platform teams commonly report against:
+This document maps each gateway control to the framework functions and risks it supports, with the code that enforces it and the test that provides evidence. It is written for governance, risk and audit reviewers who need to place each control against a framework they already report on. The two frameworks are:
 
 - **NIST AI Risk Management Framework (AI RMF 1.0)** functions (Govern, Map, Measure, Manage), and the risks named in its **Generative AI Profile, NIST AI 600-1**.
 - **FinOps Foundation Framework capabilities**, as the FinOps Foundation applies them to AI usage (FinOps for AI): allocation, unit economics, budgeting, anomaly management and so on.
 
-This is a self-assessed mapping to help reviewers place each feature. It is not a certification or an audit result. Every "implemented" row names the code and a test; anything else is marked **partial** or **roadmap**.
+This is a self-assessed mapping. It is not a certification, an attestation or an audit result, and it does not claim compliance with either framework. Every "implemented" row names the code and a test; anything else is marked **partial** or **roadmap**. Threats and residual risks are in the [threat model](threat-model.md).
 
 ## NIST AI RMF
 
@@ -26,7 +26,7 @@ This is a self-assessed mapping to help reviewers place each feature. It is not 
 | Manage | MCP tool gateway: default-deny per-team tool allow-lists, velocity and identical-call limits, daily count/spend caps, redacted argument audit, fail closed | implemented | `router/mcp_policy.py`, `router/mcp_gateway.py`; `tests/test_mcp_gateway.py` |
 | Manage | Budget hierarchy, TPM limits, RPM limits, anomaly auto-pause, all enforced before the provider call | implemented | `router/budgets.py`, `router/tokens.py`, `router/auth.py`; tests listed in the threat model (LLM10) |
 | Manage | PII redaction / block hooks before the provider call and on the response, per route and team; fail closed if a hook errors | implemented | `router/pii.py`, `router/privacy.py`; `test_route_redaction_reaches_provider_redacted_and_is_audited`, `test_team_block_refuses_before_any_provider_call`, `test_failing_hook_fails_closed` |
-| Govern | Append-only, hash-chained audit trail of content-policy and admin actions | implemented | `router/audit.py`; `test_audit_log_is_append_only_and_tamper_evident`, `test_admin_actions_are_audited` |
+| Govern | Append-only, hash-chained audit trail of policy decisions, content-hook actions, MCP tool-call decisions and admin changes; per-request decision traces (metadata only) for explaining individual requests | implemented | `router/audit.py`, `router/traces.py`; `test_audit_log_is_append_only_and_tamper_evident`, `test_admin_actions_are_audited`, `test_mock_provider_answers_without_keys_and_traces_every_stage` |
 
 ### NIST AI 600-1 (Generative AI Profile) risks
 
@@ -38,7 +38,7 @@ This is a self-assessed mapping to help reviewers place each feature. It is not 
 | Confabulation | Semantic cache off by default, with number/negation guards, team/policy partitions and a published held-out false-hit rate (9.1% on the bundled pairs at 0.88, which misses the 1% target); route changes gated on measured quality (eval harness) | implemented (`router/semcache.py`; `tests/test_semcache.py`, ADR 0005); the bundled calibration does **not** meet a 1% target |
 | Human-AI Configuration | Breaker/fallback and policy decisions visible to callers via response headers; operators see state on the dashboard; agent tool use bounded by the MCP gateway's allow-lists and velocity limits | implemented |
 | Environmental Impacts | Cache avoids repeated calls; local-model routes | partial: energy is not measured |
-| Other 600-1 risks (CBRN information, dangerous or violent content, harmful bias, information integrity, intellectual property, obscene content) | Content-level risks; the gateway doesn't inspect content | out of scope (a policy/guardrail hook is **roadmap**) |
+| Other 600-1 risks (CBRN information, dangerous or violent content, harmful bias, information integrity, intellectual property, obscene content) | Content-level risks; the gateway does not inspect content | out of scope (a policy/guardrail hook is **roadmap**) |
 
 ## FinOps for AI
 
@@ -51,9 +51,15 @@ This is a self-assessed mapping to help reviewers place each feature. It is not 
 | Anomaly Management | Per-key velocity vs. 7-day baseline, flag at 3x, optional pause at 10x | implemented | `router/anomaly.py`; ADR 0003 |
 | Workload Optimization | Exact-match cache with dollars-saved accounting; local-first routes; latency strategy; cost-vs-quality route evaluation and shadow comparisons before switching routes | implemented | `router/routing.py`, `router/evals.py`, `router/shadow.py`; `test_deterministic_repeat_is_served_from_cache`, `test_cli_report_and_gate`, `test_shadow_mirrors_to_candidate_off_the_books` |
 | Rate Optimization | Price overrides for negotiated or self-hosted rates | implemented (pricing input only) | `router/costs.py`; `test_price_overrides_take_precedence` |
-| Forecasting | Spend forecasts by team | **roadmap** | — |
+| Forecasting | Spend forecasts by team | **partial**: the console's Spend screen projects each team's month-end spend at its current daily rate over the **sample** data; the gateway API has no forecast | `demo/screens.js` |
 | Policy & Governance | Caps and limits in versioned config; policy-as-code with model allow/deny lists and max_tokens ceilings | implemented | `config/routes.yaml`, `config/policies.yaml`; `tests/test_policy.py` |
 
 ## Roadmap items referenced above
 
-- SSO for admin; hashed app keys; shared (multi-instance) limit and breaker state.
+- SSO (OIDC) for the admin API and dashboard.
+- Shared (multi-instance) limit and breaker state.
+- Pinned, hashed dependencies.
+- Spend forecasts by team in the gateway API.
+- A policy or guardrail hook for content-level risks.
+
+Application keys hashed at rest, previously listed here, shipped in 0.6.0 (`router/store.py`, `tests/test_keys_at_rest.py`).
