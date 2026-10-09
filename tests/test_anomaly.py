@@ -1,4 +1,7 @@
 # Corey Mathie, 2026
+"""Spend-anomaly verdicts per key: new keys not judged, flagged at 3x and paused at 10x the 7-day hourly baseline,
+failed calls not counted as spend."""
+
 from datetime import UTC, datetime, timedelta
 
 import pytest

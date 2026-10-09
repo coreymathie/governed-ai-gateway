@@ -53,7 +53,7 @@ log = logging.getLogger("router")
 breakers = BreakerRegistry()
 latency = LatencyTracker()
 tpm = TokenRateLimiter()
-semantic = semcache.SemanticCache(threshold=0.88)
+semantic = semcache.SemanticCache(threshold=0.90)
 _hashing = semcache.HashingEmbedder()
 _applied: RouterConfig | None = None
 _overrides: list[dict] | None = None  # budget caps set through the admin API (store.budget_overrides)

@@ -7,10 +7,13 @@ import { $, $$, download, empty, esc, int, ms } from "./ui.js";
 export const TEAM_LABELS = {
   "member-services": "Member services", "digital-banking": "Digital banking", "risk-analytics": "Risk analytics",
   lending: "Lending", compliance: "Compliance", "it-engineering": "IT and engineering", marketing: "Marketing",
+  contractors: "Contractors (IT vendors)",
 };
+// Same names as MODEL_NAMES in demo/cypress_harbor.py.
 const MODEL_NAMES = {
-  "anthropic/claude-haiku-4-5": "Claude Haiku 4.5", "anthropic/claude-sonnet-4-5": "Claude Sonnet 4.5",
-  "openai/gpt-4.1-mini": "GPT-4.1 mini", "gemini/gemini-2.5-flash": "Gemini 2.5 Flash", "ollama/llama3.1:8b": "Llama 3.1 8B (on-prem)",
+  "anthropic/claude-haiku-4-5": "Claude Haiku 4.5", "anthropic/claude-sonnet-4-5": "Claude Sonnet 4.5", "openai/gpt-4.1": "GPT-4.1",
+  "openai/gpt-4.1-mini": "GPT-4.1 mini", "openai/gpt-4.1-nano": "GPT-4.1 nano", "gemini/gemini-2.5-flash": "Gemini 2.5 Flash",
+  "ollama/llama3.1:8b": "Llama 3.1 8B (on-prem)",
 };
 export const modelName = (id) => MODEL_NAMES[id] || id || "–";
 const PROVIDERS = { anthropic: "Anthropic", openai: "OpenAI", gemini: "Google", ollama: "On-prem" };
@@ -150,15 +153,20 @@ async function renderLog(view, ctx) {
 function story(r) {
   const o = outcomeOf(r);
   const who = esc(`${r.app} (${TEAM_LABELS[r.team] || r.team})`);
-  if (o.key === "refused") return `${who} asked for ${r.alias === "heavy-reasoning" ? "a premium reasoning model" : esc(r.alias)}. The policy for this key doesn't allow it, so the gateway refused before any provider saw the prompt. Nothing was charged.`;
+  if (o.key === "refused") return `${who} asked for ${r.alias === "heavy-reasoning" ? "the premium reasoning route (heavy-reasoning)" : `the ${esc(r.alias)} route`}. The policy for the key's team doesn't allow that route, so the gateway refused before any provider saw the prompt. Nothing was charged.`;
   if (o.key === "limited") return `${who} sent more requests in one minute than its key allows. The gateway turned this one away and told the app when to retry. Nothing was charged.`;
   if (o.key === "failed") return `${who} sent a regulated request. The on-prem model didn't answer in time, and regulated work never falls back to a cloud provider, so the request failed instead of leaving the network.`;
   if (o.key === "cache") return `${who} asked a question the team had asked recently. The gateway answered from its cache in ${ms(r.latency_ms)}, so no model was called and the ${money(r.saved_usd)} the call would have cost was saved.`;
-  const fb = r.fell_back ? `The first model didn't answer (${esc(firstError(r))}), so the gateway retried on ${modelName(r.served_by)} within the same request. ` : "";
+  const first = firstAttempt(r);
+  const fb = !r.fell_back ? "" : first && first.outcome === "skipped"
+    ? `${modelName(first.deployment)} was failing and its circuit breaker was open, so the gateway sent the request straight to ${modelName(r.served_by)} without waiting for it. `
+    : `The first model didn't answer (${esc(firstError(r))}), so the gateway retried on ${modelName(r.served_by)} within the same request. `;
   const pii = r.redacted ? `Personal data was replaced before the prompt left the gateway (${Object.entries(r.redacted).map(([k, v]) => `${v} ${k}`).join(", ")}). ` : "";
   return `${who} sent a request${r.regulated ? " that must stay on-prem" : ""}. ${pii}${fb}${modelName(r.served_by)} answered in ${ms(r.latency_ms)} and it cost ${money(r.cost_usd)}, charged to ${TEAM_LABELS[r.team] || r.team}.`;
 }
-const firstError = (r) => (r.stages.find((s) => s.stage === "chain")?.detail?.attempts || []).find((a) => a.outcome === "error")?.error || "error";
+const chainAttempts = (r) => r.stages.find((s) => s.stage === "chain")?.detail?.attempts || [];
+const firstAttempt = (r) => chainAttempts(r)[0];
+const firstError = (r) => chainAttempts(r).find((a) => a.outcome !== "ok")?.error || "error";
 
 // Business-view wording for each stage; the technical view shows the gateway's own summary.
 function plain(r, s) {
@@ -168,10 +176,13 @@ function plain(r, s) {
   switch (s.stage) {
     case "auth": return s.decision === "deny" ? "Too many requests from this app in one minute." : `The ${r.app} app's key; usage is charged to ${team}.`;
     case "policy":
-      if (s.decision === "deny") return "Refused: this key's policy doesn't allow premium reasoning models.";
+      if (s.decision === "deny") return `Refused: team ${r.team} may not use the ${r.alias} route${r.alias === "heavy-reasoning" ? " (premium reasoning models)" : ""}.`;
       return r.regulated ? "Allowed, on the condition that it stays on the on-prem model." : `Allowed on the ${r.alias} route${s.summary.includes("pii_redact") ? ", with personal-data redaction required" : ""}.`;
-    case "budgets": return d.team_month_usd != null ? `${team} has used ${total(d.team_month_usd)} of its ${total(d.team_monthly_budget_usd)} budget this month.` : s.summary;
-    case "anomaly": return "Normal for this app at this time of day.";
+    case "budgets": {
+      const key = d.key_daily_cap_usd != null ? ` The app's key has used ${total(d.key_today_usd)} of its ${total(d.key_daily_cap_usd)} daily cap.` : "";
+      return (d.team_monthly_budget_usd != null ? `${team} has used ${total(d.team_month_usd)} of its ${total(d.team_monthly_budget_usd)} budget this month.` : `${team} has no monthly budget.`) + key;
+    }
+    case "anomaly": return s.summary.startsWith("not judged") ? "Not judged yet: this key has less than a day of history." : "Normal for this app at this time of day.";
     case "pre_hooks": return s.decision === "skip" ? "Not checked for this app." : d.redacted ? `Replaced ${redacted(d.redacted)} before the prompt left the gateway.` : "Checked; none found.";
     case "cache": return s.decision === "hit" ? `Asked recently, so answered from the cache instead of calling a model.` : s.decision === "skip" ? "Not cached: this app asks for varied answers." : "Not asked recently, so sent to a model.";
     case "semantic_cache": return "Off for this team.";
@@ -179,6 +190,7 @@ function plain(r, s) {
     case "chain": {
       const a = d.attempts || [];
       if (s.decision === "error") return "The on-prem model timed out. Regulated work has no cloud fallback, so the request failed.";
+      if (a.length > 1 && a[0].outcome === "skipped") return `${modelName(a[0].deployment)} was skipped (its circuit breaker was open); ${modelName(r.served_by)} answered instead.`;
       return a.length > 1 ? `${modelName(a[0].deployment)} failed (${a[0].error}); ${modelName(r.served_by)} answered instead.` : `${modelName(r.served_by)} answered on the first try.`;
     }
     case "settle": return `${int(r.prompt_tokens)} tokens in and ${int(r.completion_tokens)} out cost ${money(r.cost_usd)}.`;
@@ -195,7 +207,7 @@ function timeline(r) {
     return `<li><span class="ic ${esc(s.decision)}" aria-hidden="true">${DECISION_ICON[s.decision] || "·"}</span>
       <div class="st"><b><span class="biz-only">${esc(STAGE_PLAIN[s.stage] || s.stage)}</span><span class="tech-only">${esc(STAGE_TECH[s.stage] || s.stage)}</span></b><span class="small faint num tech-only">${s.ms == null ? "" : ms(s.ms)}</span></div>
       <div class="sm"><span class="biz-only">${esc(plain(r, s))}</span><span class="tech-only">${esc(s.summary)}</span></div>
-      ${attempts ? `<div class="attempts">${attempts.map((a) => `<div class="attempt"><span class="pill ${a.outcome === "ok" ? "pass" : "deny"}" aria-hidden="true">${a.outcome === "ok" ? "✓" : "✕"}</span><span>${esc(modelName(a.deployment))}</span><span class="small muted">${a.outcome === "ok" ? ms(a.seconds * 1000) : esc(a.error)}</span></div>`).join("")}</div>` : ""}
+      ${attempts ? `<div class="attempts">${attempts.map((a) => `<div class="attempt"><span class="pill ${a.outcome === "ok" ? "pass" : a.outcome === "skipped" ? "skip" : "deny"}" aria-hidden="true">${a.outcome === "ok" ? "✓" : a.outcome === "skipped" ? "–" : "✕"}</span><span>${esc(modelName(a.deployment))}</span><span class="small muted">${a.outcome === "ok" ? ms(a.seconds * 1000) : esc(a.error)}</span></div>`).join("")}</div>` : ""}
       ${Object.keys(rest).length ? `<details class="tech-only"><summary>details</summary><pre class="box">${esc(JSON.stringify(rest, null, 2))}</pre></details>` : ""}</li>`;
   }).join("")}</ol>`;
 }
@@ -214,18 +226,19 @@ async function renderDetail(view, ctx, id) {
   const idx = data.requests.indexOf(r);
   const newer = data.requests[idx - 1], older = data.requests[idx + 1];
   const inIncident = r.ts >= "2026-10-06T18:05:00Z" && r.ts <= "2026-10-06T18:17:00Z";
-  const used = budget ? budget.team_month_usd / budget.team_monthly_budget_usd : 0;
+  const teamBudget = budget && budget.team_monthly_budget_usd != null ? budget : null;
+  const used = teamBudget ? teamBudget.team_month_usd / teamBudget.team_monthly_budget_usd : 0;
   view.innerHTML = `<div class="rq-nav"><a href="#/requests" class="back">← All requests</a><span class="row">${newer ? `<a class="btn sm ghost" href="#/requests/${esc(newer.id)}" aria-label="Newer request">← Newer</a>` : ""}${older ? `<a class="btn sm ghost" href="#/requests/${esc(older.id)}" aria-label="Older request">Older →</a>` : ""}</span></div>
     <div class="page-head rq-head"><div><div class="small muted">${esc(longStamp(r.ts))}</div>
       <h1>${esc(r.app)} <span class="muted">·</span> ${r.served_by ? esc(modelName(r.served_by)) : esc(o.label)}</h1>
       <div class="row" style="margin-top:6px"><span class="pill ${o.cls}">${esc(o.label)}</span><span class="chip">${esc(TEAM_LABELS[r.team] || r.team)}</span><span class="chip">${esc(r.caller)}</span>${r.redacted ? '<span class="chip">personal data redacted</span>' : ""}${r.regulated ? '<span class="chip">on-prem only</span>' : ""}<span class="tag sample">sample</span></div></div></div>
-    ${inIncident ? `<div class="note" role="note">Sent during the <a href="#/overview">October 6 Anthropic overload</a> (2:05 to 2:17 pm). <a href="#/requests?day=${encodeURIComponent(dayKey(r.ts))}&outcome=fallback">Other requests rescued by fallback that day</a>.</div>` : ""}
+    ${inIncident ? `<div class="note" role="note">Sent during the <a href="#/overview">October 6 Anthropic overload</a> (2:05 to 2:17 pm): Claude Haiku's circuit breaker opened after five failures, and requests skipped it until it recovered. <a href="#/requests?day=${encodeURIComponent(dayKey(r.ts))}&outcome=fallback">Other requests rescued by fallback that day</a>.</div>` : ""}
     <section class="card rq-story"><h2>What happened</h2><p>${story(r)}</p>${r.reason ? `<p class="small muted">Gateway response: ${r.status} · ${esc(r.reason)}</p>` : ""}</section>
     <div class="kpis rq-kpis">
       <div class="kpi"><div class="l">Cost</div><div class="v">${r.saved_usd ? "$0" : money(r.cost_usd)}</div><div class="s">${r.saved_usd ? `saved ${money(r.saved_usd)} by the cache` : r.prompt_tokens && r.completion_tokens && settle ? `${int(r.prompt_tokens)} tokens in, ${int(r.completion_tokens)} out` : "not charged"}</div></div>
       <div class="kpi"><div class="l">Response time</div><div class="v">${r.outcome === "rejected" ? "–" : ms(r.latency_ms)}</div><div class="s">${ms(r.overhead_ms)} of it in the gateway</div></div>
-      <div class="kpi"><div class="l">Model</div><div class="v sm">${esc(r.served_by ? modelName(r.served_by) : "none")}</div><div class="s">${r.fell_back ? `after ${esc(modelName(r.stages.find((s) => s.stage === "chain").detail.attempts[0].deployment))} failed` : `route <code>${esc(r.alias)}</code>`}</div></div>
-      ${budget ? `<div class="kpi"><div class="l">${esc(TEAM_LABELS[r.team] || r.team)} budget</div><div class="v sm">${total(budget.team_month_usd)} <span class="muted small">of ${total(budget.team_monthly_budget_usd)}</span></div><div class="s"><span class="meter ${used >= 0.9 ? "bad" : used >= 0.75 ? "warn" : "ok"}" role="img" aria-label="${Math.round(used * 100)}% of the month's budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i></span> October so far, before this day</div></div>` : ""}
+      <div class="kpi"><div class="l">Model</div><div class="v sm">${esc(r.served_by ? modelName(r.served_by) : "none")}</div><div class="s">${r.fell_back ? `after ${esc(modelName(firstAttempt(r).deployment))} ${firstAttempt(r).outcome === "skipped" ? "was skipped" : "failed"}` : `route <code>${esc(r.alias)}</code>`}</div></div>
+      ${teamBudget ? `<div class="kpi"><div class="l">${esc(TEAM_LABELS[r.team] || r.team)} budget</div><div class="v sm">${total(teamBudget.team_month_usd)} <span class="muted small">of ${total(teamBudget.team_monthly_budget_usd)}</span></div><div class="s"><span class="meter ${used >= 0.9 ? "bad" : used >= 0.75 ? "warn" : "ok"}" role="img" aria-label="${Math.round(used * 100)}% of the month's budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i></span> October so far, before this day</div></div>` : ""}
     </div>
     <div class="grid g-main" style="margin-top:16px">
       <section class="card"><div class="card-head"><div><h2>Every control it passed</h2><p>In order, as the gateway recorded them.</p></div></div>${timeline(r)}</section>

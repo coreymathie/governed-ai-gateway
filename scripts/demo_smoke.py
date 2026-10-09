@@ -274,11 +274,20 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         page.select_option("#rqDay", "10/06/2026")
         n = page.locator("#rqBody tr[data-id]").count()
         check(n >= 6, f"requests: October 6 fallbacks listed ({n})")
-        page.click("#rqBody tr[data-id] >> nth=0")
+        # The oldest is the first request of the overload, sent before the breaker opened.
+        page.click(f"#rqBody tr[data-id] >> nth={n - 1}")
         page.wait_for_selector(".rq-story")
         check(
             "529 overloaded" in page.inner_text(".rq-tl") and "Anthropic overload" in page.inner_text("#view"),
-            "requests: fallback attempt and the incident shown",
+            "requests: failed attempt and the incident shown",
+        )
+        page.go_back()
+        page.wait_for_selector("#rqBody tr[data-id]")
+        page.click("#rqBody tr[data-id] >> nth=0")  # a later one: the breaker was open, so Claude Haiku was skipped
+        page.wait_for_selector(".rq-story")
+        check(
+            "circuit open" in page.inner_text(".rq-tl") and "circuit breaker was open" in page.inner_text(".rq-story"),
+            "requests: skipped attempt (open breaker) shown",
         )
         page.click("[data-view='technical']")
         check(
@@ -446,7 +455,7 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         goto(page, base, "#/policies?file=routes")
         page.click("#cfValidate")
         wait_idle(page, 120_000)
-        check("5 aliases" in page.inner_text("#cfResult"), "policies: routes.yaml validates with pydantic RouterConfig")
+        check("6 aliases" in page.inner_text("#cfResult"), "policies: routes.yaml validates with pydantic RouterConfig")
 
         # --- budgets & keys ---
         goto(page, base, "#/budgets")
@@ -464,13 +473,14 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         page.click("#bkSpike")
         wait_idle(page)
         page.wait_for_timeout(300)
-        check("pause" in page.inner_text("#bkAnom"), "anomaly: runaway batch job reaches pause level")
-        page.locator('#bkKeys tr:has-text("fraud-scoring-batch") [data-act="unpause"]').click()
+        check("pause" in page.inner_text("#bkAnom"), "anomaly: looping coding agent reaches pause level")
+        page.locator('#bkKeys tr:has-text("code-assistant") [data-act="unpause"]').click()
         wait_idle(page)
         check(
-            "override" in page.inner_text('#bkKeys tr:has-text("fraud-scoring-batch")'),
+            "override" in page.inner_text('#bkKeys tr:has-text("code-assistant")'),
             "anomaly: unpause is an override",
         )
+        check("divided by 25" in page.inner_text("#bkBudgets"), "budgets: the scale-down from routes.yaml is stated")
         check(page.locator("#bkShow tbody tr").count() >= 3, "showback: rows")
         with page.expect_download() as dl:
             page.click("#sbCsv")
@@ -490,7 +500,7 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         # --- MCP ---
         goto(page, base, "#/mcp")
         page.select_option("#mcTeam", "member-services")
-        page.select_option("#mcTool", "tickets/search_tickets")
+        page.select_option("#mcTool", "cases/search_cases")
         page.click("#mcCall")
         wait_idle(page)
         check(page.inner_text("#mcOut").startswith("allow"), "mcp: allowed call")
@@ -500,14 +510,14 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         wait_idle(page)
         check("not allowed" in page.inner_text("#mcOut"), "mcp: tool outside the allow-list denied")
         page.select_option("#mcTeam", "member-services")
-        page.select_option("#mcTool", "tickets/close_ticket")
+        page.select_option("#mcTool", "cases/close_case")
         page.click("#mcBurst")
         wait_idle(page)
         check("rate_limited" in page.inner_text("#mcOut"), "mcp: burst hits the velocity limit")
 
         # --- evals ---
         goto(page, base, "#/evals")
-        check(page.inner_text("#calThr") == "0.88" and page.inner_text("#calHold") == "9.1%", "evals: calibration")
+        check(page.inner_text("#calThr") == "0.90" and page.inner_text("#calHold") == "0.0%", "evals: calibration")
         check(page.inner_text("#gateResult") == "FAIL", "evals: CI gate example fails on quality")
         page.click("#calRun")
         wait_idle(page)
@@ -517,7 +527,8 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         # --- settings ---
         goto(page, base, "#/settings")
         files = page.locator("#stFiles li").count()
-        expected = page.evaluate("import('./adapters.js').then(m => m.ROUTER_MODULES.length)") + 2  # engine + models
+        modules = page.evaluate("import('./adapters.js').then(m => m.ROUTER_MODULES.length)")
+        expected = modules + 3  # the company table, the engine and models
         check(files == expected, f"settings: {files} files listed with hashes")
         page.locator('tr[data-team="digital-banking"] [data-mode]').select_option("redact")
         page.wait_for_timeout(300)
@@ -662,14 +673,14 @@ def run_live(p, shots: Path | None, headed: bool) -> Checks:
 
         goto(page, base, "#/mcp")
         page.select_option("#mcTeam", "member-services")
-        page.select_option("#mcTool", "tickets/search_tickets")
+        page.select_option("#mcTool", "cases/search_cases")
         page.click("#mcCall")
         wait_idle(page)
         check(page.inner_text("#mcOut").startswith("allow"), "mcp: call through the gateway to the simulated server")
         check("[REDACTED:EMAIL]" in page.inner_text("#mcLog"), "mcp: audit row shows redacted arguments")
 
         goto(page, base, "#/evals")
-        check(page.inner_text("#calThr") == "0.88", "evals: committed reports load")
+        check(page.inner_text("#calThr") == "0.90", "evals: committed reports load")
 
         layout_checks(check, b, base, shots, "live")
         check(not b.errors, f"no page or console errors {b.errors[:3]}")

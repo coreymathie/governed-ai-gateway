@@ -1,3 +1,7 @@
+# Route config for Cypress Harbor Credit Union (fictional), the sample company the console is set in.
+# The console's sample data, request log and in-browser engine read their aliases, budgets and per-key
+# caps from this file (demo/cypress_harbor.py says which app calls which alias).
+#
 # Model aliases: your code calls these, the router picks the real provider.
 # Entries are tried in order; on error/timeout/429 the next is used, and a
 # deployment whose circuit breaker is open is skipped (see `resilience`).
@@ -9,24 +13,28 @@
 #                                                           configured order breaks near-ties
 
 aliases:
+  # Member assistant, agent assist, loan-document extraction, marketing drafts.
   smart-fast:
     - { provider: anthropic, model: claude-haiku-4-5, timeout_s: 20 }
     - { provider: openai,    model: gpt-4.1-mini,     timeout_s: 20 }
     - { provider: ollama,    model: llama3.1:8b,      timeout_s: 60 }
 
+  # Regulatory-change digests, harder loan documents, code review.
   heavy-reasoning:
     - { provider: anthropic, model: claude-sonnet-4-5, timeout_s: 60 }
     - { provider: openai,    model: gpt-4.1,           timeout_s: 60 }
 
+  # The nightly fraud-alert narratives: high volume, latency-tolerant.
   cheap-batch:
     - { provider: openai,    model: gpt-4.1-nano,      timeout_s: 15 }
     - { provider: gemini,    model: gemini-2.5-flash,  timeout_s: 15 }
 
+  # Code assistant: proprietary source stays on the on-prem GPU server unless it is busy or down.
   local-first:
     - { provider: ollama,    model: llama3.1:8b,       timeout_s: 60 }
     - { provider: anthropic, model: claude-haiku-4-5,  timeout_s: 20 }
 
-  # Same deployments as smart-fast, ordered by observed latency (EWMA).
+  # Online and mobile banking chat: the same class of model, ordered by observed latency (EWMA).
   fast-chat:
     strategy: latency
     targets:
@@ -34,11 +42,16 @@ aliases:
       - { provider: openai,    model: gpt-4.1-mini,     timeout_s: 20 }
       - { provider: gemini,    model: gemini-2.5-flash, timeout_s: 20 }
 
+  # Dispute evidence and BSA case notes: on-prem only, no cloud fallback. config/policies.yaml also
+  # restricts this route to ollama, so an edit here cannot add a public provider.
+  regulated-fast:
+    - { provider: ollama,    model: llama3.1:8b,       timeout_s: 60 }
+
 policies:
   # Default caps, checked before any provider call against spend already
   # recorded (UTC day / month). 0 = no cap. Override per team or key below.
-  per_key_daily_usd: 50.0
-  per_team_daily_usd: 500.0
+  per_key_daily_usd: 5.0
+  per_team_daily_usd: 20.0
   per_key_monthly_usd: 0
   per_team_monthly_usd: 0
   # Tokens per minute. Each request reserves an estimate (prompt + max_tokens,
@@ -48,18 +61,38 @@ policies:
   default_output_tokens_estimate: 256
   rate_limit_rpm: 120
   # Block a key whose spend this hour reaches 10x its 7-day hourly baseline.
-  # Off by default: turn it on once keys have a week of history.
-  auto_pause_on_anomaly: false
+  # Keys with less than 24 hours of history are not judged.
+  auto_pause_on_anomaly: true
   # Serve repeated deterministic requests (temperature 0) from cache for an hour.
   # Cache entries are scoped per team. Set cache_ttl_seconds: 0 to turn it off.
   cache_ttl_seconds: 3600
   cache_max_temperature: 0.0
 
 # Org -> team -> key budget hierarchy. Unset fields inherit the policies above.
+# Team monthly caps are the budgets on the console's Spend screen; key caps sit at
+# about three times each app's busiest day.
 budgets:
-  org: {}                       # e.g. { daily_usd: 2000, monthly_usd: 40000 }
-  teams: {}                     # e.g. { data: { daily_usd: 200, tpm: 400000 } }
-  keys: {}                      # by key label, e.g. { nightly-batch: { monthly_usd: 300 } }
+  org: { daily_usd: 100, monthly_usd: 1500 }
+  teams:
+    member-services: { daily_usd: 45,  monthly_usd: 450 }
+    digital-banking: { daily_usd: 30,  monthly_usd: 325 }
+    risk-analytics:  { daily_usd: 2,   monthly_usd: 15 }
+    lending:         { daily_usd: 30,  monthly_usd: 200 }
+    compliance:      { daily_usd: 3,   monthly_usd: 25 }
+    it-engineering:  { daily_usd: 10,  monthly_usd: 60 }
+    marketing:       { daily_usd: 4,   monthly_usd: 24 }
+  keys:                         # by key label: one key per application
+    member-assistant:       { daily_usd: 35 }
+    agent-assist:           { daily_usd: 20 }
+    online-banking:         { daily_usd: 20 }
+    mobile-banking:         { daily_usd: 15 }
+    fraud-alert-narratives: { daily_usd: 1 }
+    dispute-triage:         { daily_usd: 0.5 }
+    loan-doc-extraction:    { daily_usd: 25 }
+    reg-change-digest:      { daily_usd: 2.5 }
+    bsa-case-notes:         { daily_usd: 0.5 }
+    code-assistant:         { daily_usd: 7.5 }
+    content-drafts:         { daily_usd: 3.5 }
 
 resilience:
   circuit_breaker:
@@ -77,10 +110,10 @@ resilience:
     min_samples: 3              # warm-up per deployment before it's ranked
     tolerance: 0.10             # within 10% of the fastest counts as a tie
 
-# Optional price overrides, USD per 1M tokens. They win over LiteLLM's catalog
-# (negotiated rates) and over the $0 default for local models (GPU chargeback).
-prices: {}
-#  "ollama/llama3.1:8b": { input_usd_per_1m: 0.05, output_usd_per_1m: 0.05 }
+# Price overrides, USD per 1M tokens. They win over LiteLLM's catalog (negotiated
+# rates) and over the $0 default for local models (here, a GPU chargeback rate).
+prices:
+  "ollama/llama3.1:8b": { input_usd_per_1m: 0.05, output_usd_per_1m: 0.05 }
 
 # Content hooks (router/pii.py) and content logging (router/privacy.py).
 # Hooks: pii_redact (replace emails, phones, SSNs, Luhn-valid cards and API-key-like
@@ -93,8 +126,10 @@ prices: {}
 privacy:
   kinds: [secret, email, card, ssn, phone]
   default: { pre_request: [], post_response: [] }
-  routes: {}                    # e.g. { smart-fast: { pre_request: [pii_redact] } }
-  teams: {}                     # e.g. { support: { pre_request: [pii_redact], post_response: [pii_redact], log_content: true } }
+  routes:
+    regulated-fast: { pre_request: [pii_redact] }
+  teams:
+    member-services: { pre_request: [pii_redact], post_response: [pii_redact] }
   content_log_max_chars: 4000
 
 # Shadow mode (router/shadow.py): mirror a sampled share of an alias's live traffic
@@ -107,14 +142,15 @@ shadow: {}
 
 # Semantic cache (router/semcache.py): serve a cached answer when a new prompt's last
 # user turn is similar enough to a cached one. OFF by default. On the bundled
-# fictional pairs the offline hashing embedder at 0.88 had a 9.1% false-hit rate
-# on held-out pairs (1 of 11 hits), so calibrate on your own labelled traffic first:
+# fictional credit-union pairs the offline hashing embedder at 0.90 had no wrong hits among
+# 10 held-out hits (0.0%), but 10 hits cannot certify 1% (95% upper bound 27.8%), so
+# calibrate on your own labelled traffic first:
 #   python scripts/calibrate_semcache.py --pairs your_pairs.jsonl --target 0.01
 # Entries are partitioned by team, alias, policy decision, content hooks, earlier
 # turns and generation parameters, and live in this worker's memory only.
 semantic_cache:
   enabled: false
-  threshold: 0.88
+  threshold: 0.90
   ttl_seconds: 3600
   max_entries_per_partition: 1000
   max_temperature: 0.0

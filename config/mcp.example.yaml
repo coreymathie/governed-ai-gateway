@@ -8,11 +8,11 @@
 version: 1
 
 servers:
-  tickets:
+  cases:                          # the member-case system (disputes, service requests)
     url: http://127.0.0.1:9101/mcp
     timeout_s: 10
-    headers_from_env: { Authorization: MCP_TICKETS_AUTH }   # e.g. "Bearer ..." in the environment
-  files:
+    headers_from_env: { Authorization: MCP_CASES_AUTH }   # e.g. "Bearer ..." in the environment
+  files:                          # procedures and policies on the shared drive
     url: http://127.0.0.1:9102/mcp
     timeout_s: 5
 
@@ -28,9 +28,9 @@ defaults:
 
 teams:
   member-services:
-    - { server: tickets, tool: "search_*" }
-    - { server: tickets, tool: get_ticket }
-    - { server: tickets, tool: close_ticket, per_minute: 5, per_day: 200 }
+    - { server: cases, tool: "search_*" }
+    - { server: cases, tool: get_case }
+    - { server: cases, tool: close_case, per_minute: 5, per_day: 200 }
   risk-analytics:
     - { server: files, tool: read_file, per_minute: 30, cost_usd: 0.001, daily_usd: 2.0 }
   # Nothing here allows files/delete_file, so no team can call it, or see it in tools/list.

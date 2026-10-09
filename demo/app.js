@@ -222,7 +222,7 @@ export function closeDrawer({ fromRoute = false } = {}) {
 // ---------- guided tour ----------
 
 const TOUR = [
-  { nav: "overview", title: "Spend", body: "What AI costs each team this month against its budget, the forecast for the month, cache savings, and what the gateway stopped: refused requests, a runaway batch job, provider outages." },
+  { nav: "overview", title: "Spend", body: "What AI costs each team this month against its budget, the forecast for the month, cache savings, and what the gateway stopped: refused requests, a looping coding agent, provider outages." },
   { nav: "requests", title: "Requests", body: "Every call with the app that made it, the model that answered, its cost and each control it passed. Open one to see why it was allowed, refused or rerouted." },
   { nav: "playground", title: "Playground", body: "Send a request as any app, compare two routes side by side, or take a simulated provider down and watch the fallback." },
   { nav: "policies", title: "Policies", body: "Edit the real config/policies.yaml and routes.yaml, validate them with the gateway's own loaders, preview the decisions, then apply." },

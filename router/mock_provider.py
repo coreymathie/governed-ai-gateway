@@ -180,14 +180,14 @@ async def _stream(rid: str, created: int, model: str, text: str, pt: int, ct: in
 # ---------- simulated MCP servers ----------
 
 MCP_TOOLS = {
-    "tickets": {
-        "search_tickets": "Search support tickets (simulated)",
-        "get_ticket": "Fetch one ticket by id (simulated)",
-        "close_ticket": "Close a ticket with a note (simulated)",
-        "reassign_ticket": "Move a ticket to another queue (simulated)",
+    "cases": {
+        "search_cases": "Search member cases: disputes, service requests (simulated)",
+        "get_case": "Fetch one member case by id (simulated)",
+        "close_case": "Close a member case with a note (simulated)",
+        "reassign_case": "Move a member case to another queue (simulated)",
     },
     "files": {
-        "read_file": "Read a file from the shared drive (simulated)",
+        "read_file": "Read a procedure or policy file from the shared drive (simulated)",
         "delete_file": "Delete a file (simulated)",
     },
 }

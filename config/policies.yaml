@@ -22,7 +22,7 @@ teams:
     required_hooks: [pii_redact]
     max_tokens_ceiling: 2048
 
-  # Example of model allow/deny lists for a lower-trust team.
+  # Vendor developers' keys: no premium reasoning route, no Sonnet-class or GPT-4.1 models.
   contractors:
     allow_aliases: [smart-fast, cheap-batch, local-first]
     deny_models: ["anthropic/claude-sonnet-*", "openai/gpt-4.1"]
@@ -30,6 +30,12 @@ teams:
 routes:
   heavy-reasoning:
     max_tokens_mode: reject     # over the ceiling is a caller bug here, not something to clamp
+
+  # Dispute evidence and BSA case notes: on-prem only and redacted, whatever routes.yaml lists.
+  regulated-fast:
+    allowed_providers: [ollama]
+    required_hooks: [pii_redact]
+    max_tokens_ceiling: 2048
 
 # Optional Open Policy Agent check after the local policy. Used when OPA_URL is set;
 # with enabled: true and no OPA_URL, every request is refused (fail closed).

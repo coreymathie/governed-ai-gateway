@@ -106,7 +106,7 @@ async function renderBusiness(view, app) {
     ${kpi("Cost per 1,000 requests", `$${t.per1k.toFixed(2)}`, "after caching and cheaper routes", delta(t.per1k, p?.per1k, { better: "down" }), spark(series((d) => (d.spend_usd / d.requests) * 1000)))}
     ${kpi("Saved by the cache", money(t.saved), "repeated questions answered at $0", delta(t.saved, p?.saved), spark(series((d) => d.saved_usd), "var(--chart-3)"))}
     ${kpi("Requests that succeeded", pct(t.availability, 3), `${int(t.fallbacks)} rescued by fallback · ${int(t.failed)} failed`, delta(t.availability, p?.availability, { kind: "pts" }), spark(series((d) => 1 - d.failed / d.requests), "var(--chart-3)"))}
-    ${kpi("Spend stopped by anomaly pause", anomalyIn ? money(data.anomaly.prevented_usd) : "$0", anomalyIn ? `runaway ${esc(data.anomaly.key)} paused at ${data.anomaly.baseline_multiple}× baseline` : "no runaway keys in this period", anomalyIn ? '<span class="delta good">caught within the hour</span>' : '<span class="delta flat">none needed</span>', "", anomalyIn ? "warn" : "")}
+    ${kpi("Spend stopped by anomaly pause", anomalyIn ? reqMoney(data.anomaly.prevented_usd) : "$0", anomalyIn ? `looping agent on ${esc(data.anomaly.key)} paused at ${data.anomaly.baseline_multiple}× its baseline; estimate up to its daily cap` : "no runaway keys in this period", anomalyIn ? `<span class="delta good">paused ${int(data.anomaly.seconds_to_pause)} s after it started</span>` : '<span class="delta flat">none needed</span>', "", anomalyIn ? "warn" : "")}
     ${kpi("Policy decisions enforced", int(t.denied), "model, residency and size rules that said no", delta(t.denied, p?.denied, { better: "down" }), spark(series((d) => d.policy_denied), "var(--chart-4)"))}
     ${kpi("Regulated requests kept on-prem", big(t.regulated), "BSA and dispute evidence never left the network", delta(t.regulated, p?.regulated), spark(series((d) => d.regulated_on_prem)))}
   </div>
@@ -123,8 +123,8 @@ async function renderBusiness(view, app) {
     <section class="card"><div class="card-head"><div><h2>Budgets by team</h2><p>Spend in the ${range} days against each team's budget for the same length of time.</p></div></div>
       ${budgetTable(data.teams, t, range)}</section>
     <div class="stack">
-      <section class="card"><div class="card-head"><div><h2>Spend by model</h2><p>Last 30 days. On-prem Llama serves the regulated work at near-zero marginal cost.</p></div><span class="tag sample">sample</span></div>
-        ${hbars(data.models.map((m, i) => ({ name: m.model, value: m.spend_30d_usd * (range / 30), color: TEAM_COLORS[(i + 1) % TEAM_COLORS.length] })), { format: money })}</section>
+      <section class="card"><div class="card-head"><div><h2>Spend by model</h2><p>Last 30 days, from each app's route and token sizes. On-prem Llama serves the regulated work at near-zero marginal cost.</p></div><span class="tag sample">sample</span></div>
+        ${hbars(data.models.map((m, i) => ({ name: modelName(m.model), value: m.spend_30d_usd, sub: `${big(m.requests_30d)} req`, color: TEAM_COLORS[(i + 1) % TEAM_COLORS.length] })), { format: (v) => (v < 10 ? "$" + v.toFixed(2) : money(v)) })}</section>
       <section class="card"><div class="card-head"><div><h2>Provider incidents</h2><p>Outages the fallback chain absorbed.</p></div><span class="tag sample">sample</span></div>
         <ol class="events">${data.incidents.map((x) => `<li class="ev-reliability"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(x.date))} · ${esc(x.provider)} · ${x.duration_minutes} min</div><h3>${esc(x.what)}</h3><p>${esc(x.handled)}</p></div></li>`).join("")}</ol></section>
     </div>
@@ -232,9 +232,9 @@ const overview = {
         <div class="card-head"><div><h2 id="tryTitle">What to try</h2><p>${hasTraffic ? "Each one takes under a minute." : "Start with some traffic, then break something."}</p></div></div>
         <div class="try-grid">
           <a class="try" href="#/playground?tab=resilience"><b>Take a provider down</b><span>Toggle an outage on Anthropic and watch its breaker open and requests fall back to OpenAI.</span><span class="go">Resilience →</span></a>
-          <a class="try" href="#/playground?tab=chat&sample=pii"><b>Send a prompt with PII</b><span>As the support team, the redaction hook replaces the email, phone, card and API key before any provider sees them.</span><span class="go">Playground →</span></a>
+          <a class="try" href="#/playground?tab=chat&sample=pii"><b>Send a prompt with PII</b><span>As member services, the redaction hook replaces the email, phone, card and API key before any provider sees them.</span><span class="go">Playground →</span></a>
           <a class="try" href="#/playground?tab=compare"><b>Compare two routes</b><span>Run the same prompt through smart-fast and cheap-batch: latency, cost and who answered, side by side.</span><span class="go">Compare →</span></a>
-          <a class="try" href="#/budgets?spike=1"><b>Catch a runaway key</b><span>${demo ? "A batch job loops on the premium route: flagged at 3×, paused at 10× its 7-day baseline." : "Pause any key, or let an anomaly-paused key through for the rest of the hour."}</span><span class="go">Budgets & Keys →</span></a>
+          <a class="try" href="#/budgets?spike=1"><b>Catch a runaway key</b><span>${demo ? "A coding agent loops on heavy-reasoning, as on September 24: flagged at 3×, paused at 10× its 7-day baseline." : "Pause any key, or let an anomaly-paused key through for the rest of the hour."}</span><span class="go">Budgets & Keys →</span></a>
           <a class="try" href="#/policies"><b>Tighten a policy</b><span>Edit config/policies.yaml, see which team × route decisions change before you apply it.</span><span class="go">Policies →</span></a>
           <a class="try" href="#/traces"><b>Read a trace</b><span>Open any request to see each stage it passed: policy, budgets, hooks, caches, every fallback attempt.</span><span class="go">Traces →</span></a>
         </div>
@@ -346,7 +346,7 @@ async function renderChat(box, A, ctx, params) {
         <label class="field full">Prompt<textarea id="chText" rows="6">${esc(sample === "pii" ? SAMPLE_PROMPTS.pii : SAMPLE_PROMPTS.faq)}</textarea></label>
       </div>
       <div class="row" style="margin-top:10px"><span class="small muted">Samples:</span>
-        <button class="sm ghost" data-sample="pii">Ticket with PII</button><button class="sm ghost" data-sample="faq">FAQ</button><button class="sm ghost" data-sample="release">Release note</button></div>
+        <button class="sm ghost" data-sample="pii">Case with PII</button><button class="sm ghost" data-sample="faq">FAQ</button><button class="sm ghost" data-sample="release">Release note</button></div>
       <div class="row" style="margin-top:14px"><button class="primary" id="chSend" ${keys.length ? "" : "disabled"}>Send request</button>
         ${A.mode === "live" && keys.length ? `<span class="small muted">Need another team? <a href="#/budgets">create a key</a>.</span>` : ""}</div>
       ${A.mode === "demo" ? `<p class="small muted" style="margin-top:12px">Tip: <b>member-assistant</b> has redaction on; team <b>regulated</b> (create a key in Budgets & Keys) may only reach the local model.</p>` : ""}
@@ -689,7 +689,7 @@ const budgetsScreen = {
     const A = ctx.app.adapter;
     view.innerHTML =
       head("Budgets & Keys", `Org → team → key caps, app keys, anomaly pause, and showback. ${modeNote(A)}`,
-        A.mode === "demo" ? `<button id="bkSpike">Simulate a runaway batch job</button>` : "") +
+        A.mode === "demo" ? `<button id="bkSpike">Simulate a looping coding agent</button>` : "") +
       `<div class="grid g2"><section class="card" id="bkBudgets">${loading()}</section><section class="card" id="bkAnom">${loading()}</section></div>
        <section class="card" id="bkKeys" style="margin-top:16px">${loading()}</section>
        <section class="card" id="bkShow" style="margin-top:16px">${loading()}</section>`;
@@ -701,7 +701,7 @@ const budgetsScreen = {
           const p = cap ? Math.min(100, (100 * spent) / cap) : 0;
           return `<div class="meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p.toFixed(0)}"><i class="${p >= 100 ? "bad" : p >= 80 ? "warn" : ""}" style="width:${p}%"></i></div>`;
         };
-        el.innerHTML = `<div class="card-head"><div><h2>Daily budgets</h2><p>${A.mode === "demo" ? "Scaled-down simulated caps so you can hit them." : "Caps set here are stored by the gateway and win over routes.yaml."}</p></div></div>
+        el.innerHTML = `<div class="card-head"><div><h2>Daily budgets</h2><p>${A.mode === "demo" ? `Scaled down: the credit union's caps in <code>config/routes.yaml</code> divided by ${int(b.scale || 1)}, as are the anomaly baselines, because this tab sends dozens of requests where the credit union sends thousands an hour. Lower a cap to see a 402.` : "Caps set here are stored by the gateway and win over routes.yaml."}</p></div></div>
           <div class="budget" style="margin-bottom:14px"><div class="row spread small"><b>Org</b><span class="num">${usd(b.org.spent_usd)} of ${b.org.cap_usd ? usd(b.org.cap_usd, 2) : "no cap"}</span></div>${bar(b.org.spent_usd, b.org.cap_usd)}</div>
           ${b.teams.length ? b.teams.map((t) => `<div class="budget" style="margin-bottom:14px" data-team="${esc(t.team)}">
             <div class="row spread small"><b>${esc(t.team)}</b><span class="num">${usd(t.spent_usd)} of ${t.cap_usd ? usd(t.cap_usd) : "no cap"}${t.tpm ? ` · TPM ${int(t.tpm_used)}/${int(t.tpm)}` : ""}</span></div>${bar(t.spent_usd, t.cap_usd)}
@@ -802,8 +802,10 @@ const budgetsScreen = {
 // MCP tools
 // =============================================================================================
 
-const LIVE_MCP_TOOLS = { tickets: ["search_tickets", "get_ticket", "close_ticket", "reassign_ticket"], files: ["read_file", "delete_file"] };
-const MCP_ARGS = { search_tickets: { query: "refund requested by jordan@example.com" }, get_ticket: { id: "T-1042" }, close_ticket: { id: "T-1042", note: "refunded" }, reassign_ticket: { id: "T-1042", to: "tier-2" }, read_file: { path: "reports/q3-summary.txt" }, delete_file: { path: "reports/q3-summary.txt" } };
+// Same tools and example arguments as DEMO_MCP_TOOLS / DEMO_MCP_ARGS in demo/engine.py (the member-case system and
+// the policy file share; fictional member, case and reserved example domain).
+const LIVE_MCP_TOOLS = { cases: ["search_cases", "get_case", "close_case", "reassign_case"], files: ["read_file", "delete_file"] };
+const MCP_ARGS = { search_cases: { query: "open dispute cases for member 4471, jordan@example.com" }, get_case: { id: "C-1042" }, close_case: { id: "C-1042", note: "provisional credit made final" }, reassign_case: { id: "C-1042", to: "card-disputes" }, read_file: { path: "policies/bsa-procedures.txt" }, delete_file: { path: "policies/bsa-procedures.txt" } };
 
 const mcpScreen = {
   id: "mcp",
@@ -826,7 +828,7 @@ const mcpScreen = {
         </section>
         <section class="card"><div class="card-head"><div><h2>Try a tool call</h2><p>${A.caps.mcpCalls ? "Goes through the same policy check, limiter and audit as an agent's call." : "Calls need MCP servers: run the gateway with ROUTER_MOCK_PROVIDERS=true and ROUTER_MCP_FILE=config/mcp.mock.yaml."}</p></div></div>
           <div class="form-grid"><label class="field wide">Team<select id="mcTeam">${[...new Set([...teams, "digital-banking"])].map((t) => opt(t, t, t === "member-services")).join("")}</select></label>
-          <label class="field wide">Tool<select id="mcTool">${allTools.map(([s, t]) => opt(`${s}/${t}`, `${s}/${t}`, t === "search_tickets")).join("")}</select></label>
+          <label class="field wide">Tool<select id="mcTool">${allTools.map(([s, t]) => opt(`${s}/${t}`, `${s}/${t}`, t === "search_cases")).join("")}</select></label>
           <label class="field full">Arguments (JSON)<textarea id="mcArgs" rows="3" class="mono"></textarea></label></div>
           <div class="row" style="margin-top:10px"><button class="primary" id="mcCall" ${A.caps.mcpCalls ? "" : "disabled"}>Call</button><button id="mcBurst" ${A.caps.mcpCalls ? "" : "disabled"}>Call 6× (velocity)</button></div>
           <div id="mcResult" style="margin-top:10px" aria-live="polite">${last || ""}</div>
@@ -876,7 +878,7 @@ const evalsScreen = {
     const rows = Object.entries(routes.routes).map(([alias, r]) => ({ alias, ...r.summary, targets: r.targets }));
     const h = cal.holdout_at_chosen, g = cal.holdout_without_guards_at_chosen;
     body.innerHTML = `
-      <section class="card"><div class="card-head"><div><h2>Route evaluation: cost vs. quality</h2><p>${esc(routes.cases_source)} (${rows[0] ? rows[0].cases : 0} fictional cases) replayed through every alias with the gateway's fallback chain and pricing. <code>${esc(routes.command)}</code></p></div>${simTag("simulated: invented model profiles")}</div>
+      <section class="card"><div class="card-head"><div><h2>Route evaluation: cost vs. quality</h2><p>${esc(routes.cases_source)} (${rows[0] ? rows[0].cases : 0} credit-union tasks, fictional, with prompts the size the apps send) replayed through every alias in <code>config/routes.yaml</code> with the gateway's fallback chain and pricing. <code>${esc(routes.command)}</code></p></div>${simTag("simulated: invented model profiles")}</div>
         <div class="grid g2 stack-md"><div>${scatter(Object.values(rows.reduce((acc, r) => {
           const k = `${r.cost_per_1k_requests_usd}|${r.quality}`;
           acc[k] = acc[k] ? { ...acc[k], name: `${acc[k].name} · ${r.alias}` } : { name: r.alias, x: r.cost_per_1k_requests_usd, y: r.quality };
@@ -890,27 +892,28 @@ const evalsScreen = {
       <div class="grid g2 stack-md" style="margin-top:16px">
         <section class="card"><div class="card-head"><div><h2>CI gate example</h2><p>${esc(gate.question)}</p></div>${simTag()}</div>
           <div class="row" style="margin-bottom:10px"><span class="pill ${gate.ok ? "ok" : "bad"}" id="gateResult">${gate.ok ? "PASS" : "FAIL"}</span><span class="small muted">limits: quality drop ≤ ${gate.limits.max_quality_drop}, cost increase ≤ ${pct(gate.limits.max_cost_increase, 0)}</span></div>
-          <div class="table-wrap"><table><thead><tr><th></th><th class="num">Quality</th><th class="num">Cost (40 cases)</th></tr></thead><tbody>
+          <div class="table-wrap"><table><thead><tr><th></th><th class="num">Quality</th><th class="num">Cost (${int(rows[0] ? rows[0].cases : 0)} cases)</th></tr></thead><tbody>
             <tr><td>${esc(gate.baseline.alias)} (baseline)</td><td class="num">${gate.baseline.quality}</td><td class="num">${usd(gate.baseline.total_cost_usd, 6)}</td></tr>
             <tr><td>${esc(gate.candidate.alias)} (candidate)</td><td class="num">${gate.candidate.quality}</td><td class="num">${usd(gate.candidate.total_cost_usd, 6)}</td></tr></tbody></table></div>
           <ul class="small">${gate.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>
-          <p class="small muted">Cheaper by ${pct(-gate.cost_change_pct, 0)}, but the quality drop fails the gate. <code>scripts/eval_gate.py</code> exits 1 on this in CI.</p>
+          <p class="small muted">${gate.cost_change_pct < 0 ? `Cheaper by ${pct(-gate.cost_change_pct, 0)}` : `Cost up ${pct(gate.cost_change_pct, 0)}`}${gate.ok ? ", and within both limits." : `, but ${gate.quality_delta < -gate.limits.max_quality_drop ? "the quality drop" : "the cost rise"} fails the gate.`} <code>scripts/eval_gate.py</code> exits ${gate.ok ? 0 : 1} on this in CI.</p>
         </section>
         <section class="card"><div class="card-head"><div><h2>Test suite</h2><p>${esc(tests.measured)}.</p></div>${measuredTag("counted")}</div>
           <div class="row" style="margin-bottom:10px"><b class="num" style="font-size:22px">${int(tests.total)}</b><span class="muted">test functions in ${tests.files.length} files</span>${tests.last_run ? `<span class="pill ${tests.last_run.exit_code === 0 ? "ok" : "bad"}">${esc(tests.last_run.summary)}</span><span class="small faint">last recorded run ${esc(tests.last_run.date)}</span>` : ""}</div>
+          <p class="small muted">${int(tests.total)} functions are counted from the source. pytest collects ${tests.last_run && tests.last_run.collected ? int(tests.last_run.collected) : "more"} tests because each case of a parametrized test runs, and is reported, separately.</p>
           <div class="table-wrap scroll"><table><thead><tr><th>File</th><th class="num">Tests</th></tr></thead><tbody>${tests.files.map((f) => `<tr><td><code>${esc(f.file)}</code>${f.about ? `<span class="sub">${esc(f.about)}</span>` : ""}</td><td class="num">${f.tests}</td></tr>`).join("")}</tbody></table></div>
         </section>
       </div>
-      <section class="card" style="margin-top:16px"><div class="card-head"><div><h2>Semantic cache calibration</h2><p>${esc(cal.pairs.total)} labelled pairs (fictional), threshold chosen on ${esc(cal.pairs.calibration)}, reported on ${esc(cal.pairs.holdout)} held out. Target false-hit rate ${pct(cal.target_false_hit_rate)}. <code>${esc(cal.command)}</code></p></div>${measuredTag("measured on bundled pairs")}</div>
+      <section class="card" style="margin-top:16px"><div class="card-head"><div><h2>Semantic cache calibration</h2><p>${esc(cal.pairs.total)} labelled pairs of member questions (fictional), threshold chosen on ${esc(cal.pairs.calibration)}, reported on ${esc(cal.pairs.holdout)} held out. Target false-hit rate ${pct(cal.target_false_hit_rate)}. <code>${esc(cal.command)}</code></p></div>${measuredTag("measured on bundled pairs")}</div>
         <div class="grid g2"><div>${curves(cal.calibration_grid, cal.chosen && cal.chosen.threshold, { compact: compactCharts() })}<div class="legend"><span><i style="background:#a78bfa"></i>hit rate</span><span><i style="background:#f87171"></i>false-hit rate</span><span><i style="background:#fbbf24"></i>chosen threshold</span></div></div>
         <div>
           <div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-            <div class="kpi"><div class="l">Chosen threshold</div><div class="v" id="calThr">${cal.chosen ? cal.chosen.threshold : "none"}</div><div class="s">${esc(cal.rule)}</div></div>
+            <div class="kpi"><div class="l">Chosen threshold</div><div class="v" id="calThr">${cal.chosen ? cal.chosen.threshold.toFixed(2) : "none"}</div><div class="s">${esc(cal.rule)}</div></div>
             <div class="kpi"><div class="l">Holdout hit rate</div><div class="v">${pct(h.hit_rate)}</div><div class="s">${h.true_hits} of ${cal.positives.holdout} same-meaning pairs</div></div>
             <div class="kpi ${h.false_hit_rate > cal.target_false_hit_rate ? "warn" : ""}"><div class="l">Holdout false-hit rate</div><div class="v" id="calHold">${pct(h.false_hit_rate)}</div><div class="s">${h.false_hits} of ${h.hits} hits · 95% upper ${pct(h.false_hit_rate_upper95)}</div></div>
             <div class="kpi"><div class="l">Without guards</div><div class="v">${pct(g.false_hit_rate)}</div><div class="s">false-hit rate at the same threshold</div></div>
           </div>
-          <p class="small muted">The held-out false-hit rate misses the 1% target, which is why the semantic cache ships off. Calibrate on pairs labelled from your own traffic before turning it on.</p>
+          <p class="small muted">${h.false_hit_rate > cal.target_false_hit_rate ? "The held-out false-hit rate misses the 1% target, which is why the semantic cache ships off." : `No held-out hit was wrong, but ${int(h.hits)} hits cannot certify a 1% rate (95% upper bound ${pct(h.false_hit_rate_upper95)}), so the semantic cache still ships off.`} Calibrate on pairs labelled from your own traffic before turning it on.</p>
           ${A.caps.calibrate ? `<div class="row"><button id="calRun">Re-run calibration in your browser</button><span class="small muted" id="calMsg" aria-live="polite"></span></div>` : ""}
         </div></div>
       </section>`;

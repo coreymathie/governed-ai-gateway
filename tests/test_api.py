@@ -48,7 +48,7 @@ def client():
         yield c
 
 
-def _key(client, label="web", team="product", is_admin=False) -> dict:
+def _key(client, label="web", team="digital-banking", is_admin=False) -> dict:
     r = client.post("/admin/keys", json={"label": label, "team": team, "is_admin": is_admin}, headers=ADMIN)
     assert r.status_code == 200
     return {"Authorization": f"Bearer {r.json()['key']}"}
@@ -96,8 +96,8 @@ def test_auto_pause_blocks_runaway_key(client, calls, monkeypatch):
     key = store.get_active_key(h["Authorization"].split()[1]).id  # usage rows reference the key id
     for hrs in range(2, 50):
         ts = (datetime.now(UTC) - timedelta(hours=hrs)).strftime("%Y-%m-%d %H:%M:%S")
-        store.record_call(key, "product", "smart-fast", "openai", "m", 1, 1, 0.01, ts=ts)
-    store.record_call(key, "product", "smart-fast", "openai", "m", 1, 1, 0.50)  # 50x this hour
+        store.record_call(key, "digital-banking", "smart-fast", "openai", "m", 1, 1, 0.01, ts=ts)
+    store.record_call(key, "digital-banking", "smart-fast", "openai", "m", 1, 1, 0.50)  # 50x this hour
 
     assert client.post("/v1/chat/completions", json=BODY, headers=h).status_code == 200  # policy off
     monkeypatch.setattr(config_loader.current().policies, "auto_pause_on_anomaly", True)
@@ -133,8 +133,8 @@ def test_bad_reload_keeps_previous_config(client, router_env):
 
 
 def test_usage_summary(client, calls):
-    h = _key(client, team="ops")
+    h = _key(client, team="it-engineering")
     client.post("/v1/chat/completions", json=BODY, headers=h)
     u = client.get("/admin/usage/today", headers=ADMIN).json()
     assert u["calls_today"] == 2  # one failed anthropic attempt + one openai success
-    assert u["per_team"]["ops"] > 0 and u["total_spend_usd"] == u["per_team"]["ops"]
+    assert u["per_team"]["it-engineering"] > 0 and u["total_spend_usd"] == u["per_team"]["it-engineering"]

@@ -165,7 +165,7 @@ class SemanticCacheSettings(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     enabled: bool = False
-    threshold: float = Field(0.88, gt=0, le=1)  # from scripts/calibrate_semcache.py on the bundled pairs
+    threshold: float = Field(0.90, gt=0, le=1)  # from scripts/calibrate_semcache.py on the bundled pairs
     ttl_seconds: int = Field(3600, ge=1)
     max_entries_per_partition: int = Field(1000, ge=1)
     max_temperature: float = Field(0.0, ge=0)  # only deterministic requests are served from or stored in it

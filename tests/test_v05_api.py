@@ -52,7 +52,7 @@ def anthropic_down(monkeypatch):
     return calls
 
 
-def _key(client, label="web", team="product"):
+def _key(client, label="web", team="digital-banking"):
     r = client.post("/admin/keys", json={"label": label, "team": team}, headers=ADMIN)
     return {"Authorization": f"Bearer {r.json()['key']}"}
 
@@ -220,7 +220,7 @@ def test_streaming_records_ttft_and_routing_headers(client, monkeypatch):
 
 def test_stream_closed_early_is_still_recorded():
     """Client disconnect closes the SSE generator; the finally block must still record usage."""
-    key = store.create_key("s", team="product")
+    key = store.create_key("s", team="digital-banking")
     api_key = ApiKey(**key.model_dump(exclude={"key"}))
     body = ChatCompletionRequest(**{**BODY, "stream": True})
     target = RouteTarget(provider="openai", model="gpt-4.1-mini")
@@ -257,16 +257,16 @@ def test_team_tpm_limit_rejects_with_retry_after_and_settles_to_real_usage(clien
         return FakeResponse(model=model, pt=100, ct=50)
 
     monkeypatch.setattr(litellm, "acompletion", ok)
-    h = _key(client, team="product")
+    h = _key(client, team="digital-banking")
     big = {**BODY, "max_tokens": 600}
     assert client.post("/v1/chat/completions", json=big, headers=h).status_code == 200
     # Estimate (~600+) was corrected to the real 150 tokens, so the next request fits.
-    assert routing.tpm.used("team:product") == 150
+    assert routing.tpm.used("team:digital-banking") == 150
     assert client.post("/v1/chat/completions", json=big, headers=h).status_code == 200
     r = client.post("/v1/chat/completions", json={**BODY, "max_tokens": 900}, headers=h)
     assert r.status_code == 429 and "per-team token rate limit" in r.text
     assert 1 <= int(r.headers["retry-after"]) <= 60
-    other_team = _key(client, label="d", team="data")
+    other_team = _key(client, label="d", team="risk-analytics")
     assert client.post("/v1/chat/completions", json=big, headers=other_team).status_code == 200
     assert 'router_rejections_total{reason="tpm_team"} 1' in client.get("/metrics", headers=ADMIN).text
     assert "router_tokens_total" in client.get("/metrics", headers=ADMIN).text
@@ -294,28 +294,33 @@ def test_per_key_tpm_override_by_label(client, router_env, anthropic_down):
 
 def test_org_daily_cap_blocks_every_team(client, router_env, anthropic_down):
     _routes(router_env, "budgets:\n  org: { daily_usd: 0.0000001 }\n")
-    a = _key(client, team="product")
+    a = _key(client, team="digital-banking")
     assert client.post("/v1/chat/completions", json=BODY, headers=a).status_code == 200
-    r = client.post("/v1/chat/completions", json=BODY, headers=_key(client, label="x", team="data"))
+    r = client.post("/v1/chat/completions", json=BODY, headers=_key(client, label="x", team="risk-analytics"))
     assert r.status_code == 402 and "org daily spend cap reached" in r.text
     assert 'router_rejections_total{reason="budget_org_daily"} 1' in client.get("/metrics", headers=ADMIN).text
 
 
 def test_team_monthly_override(client, router_env, anthropic_down):
-    _routes(router_env, "budgets:\n  teams:\n    data: { monthly_usd: 0.0000001 }\n")
-    d = _key(client, team="data")
+    _routes(router_env, "budgets:\n  teams:\n    risk-analytics: { monthly_usd: 0.0000001 }\n")
+    d = _key(client, team="risk-analytics")
     client.post("/v1/chat/completions", json=BODY, headers=d)
     r = client.post("/v1/chat/completions", json=BODY, headers=d)
     assert r.status_code == 402 and "per-team monthly" in r.text
-    assert client.post("/v1/chat/completions", json=BODY, headers=_key(client, team="product")).status_code == 200
+    assert (
+        client.post("/v1/chat/completions", json=BODY, headers=_key(client, team="digital-banking")).status_code == 200
+    )
 
 
 def test_budgets_endpoint_reports_utilization(client, router_env, anthropic_down):
-    _routes(router_env, "budgets:\n  org: { daily_usd: 10, monthly_usd: 100 }\n  teams:\n    ops: { daily_usd: 1 }\n")
-    client.post("/v1/chat/completions", json=BODY, headers=_key(client, team="ops"))
+    _routes(
+        router_env,
+        "budgets:\n  org: { daily_usd: 10, monthly_usd: 100 }\n  teams:\n    it-engineering: { daily_usd: 1 }\n",
+    )
+    client.post("/v1/chat/completions", json=BODY, headers=_key(client, team="it-engineering"))
     b = client.get("/admin/budgets", headers=ADMIN).json()
     assert b["org"]["daily"]["cap_usd"] == 10 and b["org"]["daily"]["spent_usd"] > 0
-    assert b["teams"]["ops"]["daily"]["cap_usd"] == 1
+    assert b["teams"]["it-engineering"]["daily"]["cap_usd"] == 1
     assert client.get("/admin/budgets", headers=_key(client, label="n")).status_code == 403
 
 
@@ -323,17 +328,17 @@ def test_budgets_endpoint_reports_utilization(client, router_env, anthropic_down
 
 
 def test_showback_json_and_csv(client, anthropic_down):
-    h = _key(client, label="web", team="product")
+    h = _key(client, label="web", team="digital-banking")
     raw_key = h["Authorization"].split()[1]
     for _ in range(3):
         client.post("/v1/chat/completions", json=BODY, headers=h)
-    client.post("/v1/chat/completions", json=BODY, headers=_key(client, label="etl", team="data"))
+    client.post("/v1/chat/completions", json=BODY, headers=_key(client, label="etl", team="risk-analytics"))
 
     j = client.get("/admin/showback", headers=ADMIN).json()
     assert j["group_by"] == ["team", "key", "provider", "model"] and j["period"]["timezone"] == "UTC"
-    ok = next(r for r in j["rows"] if r["team"] == "product" and r["provider"] == "openai")
+    ok = next(r for r in j["rows"] if r["team"] == "digital-banking" and r["provider"] == "openai")
     assert ok["requests"] == 3 and ok["cost_usd"] > 0 and ok["cost_per_1k_requests"] > 0
-    failed = next(r for r in j["rows"] if r["provider"] == "anthropic" and r["team"] == "product")
+    failed = next(r for r in j["rows"] if r["provider"] == "anthropic" and r["team"] == "digital-banking")
     assert failed["failed_attempts"] == 3 and failed["requests"] == 0
     assert j["totals"]["requests"] == 4
 
@@ -341,7 +346,7 @@ def test_showback_json_and_csv(client, anthropic_down):
     assert by_team.headers["content-type"].startswith("text/csv")
     assert "attachment" in by_team.headers["content-disposition"]
     rows = list(csv.DictReader(io.StringIO(by_team.text)))
-    assert {r["team"] for r in rows} == {"product", "data"}
+    assert {r["team"] for r in rows} == {"digital-banking", "risk-analytics"}
     assert raw_key not in by_team.text and raw_key not in str(j)
 
 

@@ -129,11 +129,14 @@ def test_shipped_routes_simulated_report_numbers():
     q = {name: r["summary"]["quality"] for name, r in rep["routes"].items()}
     cost = {name: r["summary"]["total_cost_usd"] for name, r in rep["routes"].items()}
     assert q == {
-        "cheap-batch": 0.775, "fast-chat": 0.975, "heavy-reasoning": 0.95, "local-first": 0.65, "smart-fast": 0.975,
+        "cheap-batch": 0.625, "fast-chat": 0.85, "heavy-reasoning": 1.0, "local-first": 0.6, "regulated-fast": 0.6,
+        "smart-fast": 0.85,
     }  # fmt: skip
-    assert cost["smart-fast"] == pytest.approx(0.0012, abs=1e-6)
-    assert cost["cheap-batch"] == pytest.approx(0.000155, abs=1e-6)
-    assert cost["heavy-reasoning"] == pytest.approx(0.003789, abs=1e-6)
+    assert cost["smart-fast"] == pytest.approx(0.11055, abs=1e-6)
+    assert cost["cheap-batch"] == pytest.approx(0.01215, abs=1e-6)
+    assert cost["heavy-reasoning"] == pytest.approx(0.335109, abs=1e-6)
+    # Realistic prompt sizes: per 1,000 requests, smart-fast costs about what the sample company's apps pay.
+    assert 2.0 < rep["routes"]["smart-fast"]["summary"]["cost_per_1k_requests_usd"] < 4.0
     md = evals.to_markdown(rep)
     assert "Provider: **simulated** (deterministic simulation" in md and "| `smart-fast` |" in md
 
@@ -180,7 +183,7 @@ def test_cli_report_and_gate(tmp_path, capsys):
         )
     )
     assert eval_gate.main([*args, "--routes-after", str(pricier)]) == 1
-    assert "cost rose 215.8%" in capsys.readouterr().out
+    assert "cost rose 203.1%" in capsys.readouterr().out
     rep_json = str(out.with_suffix(".json"))
     pair = ["--baseline-report", rep_json, "--candidate-report", rep_json]
     assert eval_gate.main([*pair, "--alias", "smart-fast", "--candidate-alias", "cheap-batch"]) == 1
@@ -245,7 +248,7 @@ def _shadow(router_env, block: str, policies: str = "version: 1\n"):
     config_loader.reload_all()
 
 
-def _key(client, team="product"):
+def _key(client, team="digital-banking"):
     r = client.post("/admin/keys", json={"label": f"{team}-k", "team": team}, headers=ADMIN)
     return {"Authorization": f"Bearer {r.json()['key']}"}
 

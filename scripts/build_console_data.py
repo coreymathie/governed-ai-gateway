@@ -7,10 +7,10 @@ Write the JSON the console's Evals screen reads (demo/data/), using the reposito
 
 Outputs (deterministic except the optional pytest record):
     demo/data/eval_routes.json        scripts/eval_routes.py defaults: every alias, simulated providers
-    demo/data/eval_gate.json          scripts/eval_gate.py logic: smart-fast vs. cheap-batch on the same cases
+    demo/data/eval_gate.json          scripts/eval_gate.py logic: the member assistant's smart-fast vs. cheap-batch
     demo/data/semcache_calibration.json   scripts/calibrate_semcache.py defaults (bundled fictional pairs)
     demo/data/tests.json              test functions per file (counted from the source), plus the last
-                                      recorded pytest summary when --run-tests is given
+                                      recorded pytest summary and collected count when --run-tests is given
 
 tests/test_console_data.py fails if the committed files drift from what this script produces.
 """
@@ -50,7 +50,8 @@ def gate_example(rep: dict) -> dict:
     base, cand = rep["routes"]["smart-fast"]["summary"], rep["routes"]["cheap-batch"]["summary"]
     result = evals.gate(base, cand, 0.02, 0.10)
     return {
-        "question": "Would moving smart-fast traffic to cheap-batch pass the CI gate?",
+        "question": "Would moving the member assistant from smart-fast to cheap-batch, the route the nightly "
+        "fraud-alert batch uses, pass the CI gate?",
         "command": "python scripts/eval_gate.py --baseline-report r.json --candidate-report r.json "
         "--alias smart-fast --candidate-alias cheap-batch",
         "baseline": {"alias": "smart-fast", **{k: base[k] for k in ("quality", "total_cost_usd", "errors")}},
@@ -65,7 +66,9 @@ def calibration() -> dict:
     rep = calibrate_semcache.run(str(ROOT / "evals/semcache_pairs.jsonl"), 0.01, 0.50, 0.99, 0.01)
     rep["pairs_file"] = "evals/semcache_pairs.jsonl"
     rep["command"] = "python scripts/calibrate_semcache.py"
-    rep["measured"] = "measured: the hashing embedder on 160 bundled fictional pairs (not production traffic)"
+    rep["measured"] = (
+        "measured: the hashing embedder on 160 bundled fictional credit-union pairs (not production traffic)"
+    )
     return rep
 
 
@@ -85,7 +88,13 @@ def pytest_summary() -> dict:
     lines = [ln for ln in proc.stdout.splitlines() if re.search(r"\d+ (passed|failed)", ln)]
     line = lines[-1].strip("= ") if lines else "no summary"
     line = re.sub(r" in [\d.]+s.*$", "", line)
-    return {"summary": line, "date": datetime.now(UTC).strftime("%Y-%m-%d"), "exit_code": proc.returncode}
+    collected = sum(int(n) for n in re.findall(r"(\d+) (?:passed|failed|skipped|error|errors|xfailed|xpassed)", line))
+    return {
+        "summary": line,
+        "collected": collected,
+        "date": datetime.now(UTC).strftime("%Y-%m-%d"),
+        "exit_code": proc.returncode,
+    }
 
 
 def build(run_tests: bool = False) -> dict[str, dict]:

@@ -56,15 +56,20 @@ class Clock:
 def test_lookup_threshold_guard_partition_ttl_and_lru():
     e, clock = semcache.HashingEmbedder(), Clock()
     c = semcache.SemanticCache(threshold=0.85, ttl_seconds=60, max_entries=2, clock=clock)
-    q = "How do I export my invoices as CSV?"
+    q = "How do I download my statements as PDF?"
     c.put("team-a", q, e.embed(q), "answer-1")
-    hit = c.lookup("team-a", "how do I export my invoices as csv", e.embed("how do I export my invoices as csv"))
+    hit = c.lookup(
+        "team-a", "how do I download my statements as pdf", e.embed("how do I download my statements as pdf")
+    )
     assert hit.hit and hit.entry.value == "answer-1" and hit.reason == "hit"
     assert c.lookup("team-b", q, e.embed(q)).reason == "empty"  # partitions never mix
-    far = c.lookup("team-a", "What is the capital of Austria?", e.embed("What is the capital of Austria?"))
+    far = c.lookup("team-a", "Is there parking at the branch?", e.embed("Is there parking at the branch?"))
     assert not far.hit and far.reason == "below_threshold"
-    n, m = "Is the 2025 model compatible with the charger?", "Is the 2023 model compatible with the charger?"
-    c.put("team-a", n, e.embed(n), "2025 answer")
+    n, m = (
+        "How many days do I have to report a 60 day old charge?",
+        "How many days do I have to report a 90 day old charge?",
+    )
+    c.put("team-a", n, e.embed(n), "60-day answer")
     g = c.lookup("team-a", m, e.embed(m))
     assert not g.hit and g.reason == "guard: numbers differ" and g.similarity > 0.85
     c.put("team-a", "third entry", e.embed("third entry"), "x")  # evicts the least recently used
@@ -92,23 +97,24 @@ def test_wilson_bound_and_pick_rules():
 
 
 def test_bundled_pairs_calibration_numbers():
-    """The figures quoted in the README: bundled fictional pairs, hashing-v1 embedder, target 1%."""
+    """The figures quoted in the README: bundled fictional credit-union pairs, hashing-v1 embedder, target 1%."""
     pairs = semcache.load_pairs(PAIRS.read_text().splitlines())
     assert len(pairs) == 160 and sum(p.same for p in pairs) == 80
     rep = calibrate_semcache.run(str(PAIRS), 0.01, 0.50, 0.99, 0.01)
     assert rep["pairs"] == {"total": 160, "calibration": 80, "holdout": 80}
-    assert rep["chosen"]["threshold"] == 0.88
-    assert (rep["chosen"]["hits"], rep["chosen"]["false_hits"], rep["chosen"]["hit_rate"]) == (13, 0, 0.3095)
+    assert rep["chosen"]["threshold"] == 0.90
+    assert (rep["chosen"]["hits"], rep["chosen"]["false_hits"], rep["chosen"]["hit_rate"]) == (12, 0, 0.2857)
     h, g = rep["holdout_at_chosen"], rep["holdout_without_guards_at_chosen"]
-    assert (h["true_hits"], h["hits"], h["hit_rate"], h["false_hit_rate"]) == (10, 11, 0.2632, 0.0909)
-    assert (g["false_hits"], g["hits"], g["false_hit_rate"]) == (4, 14, 0.2857)
+    assert (h["true_hits"], h["hits"], h["hit_rate"], h["false_hit_rate"]) == (10, 10, 0.2632, 0.0)
+    assert h["false_hit_rate_upper95"] == 0.2775  # ten hits cannot certify a 1% false-hit rate
+    assert (g["false_hits"], g["hits"], g["false_hit_rate"]) == (0, 10, 0.0)
     assert calibrate_semcache.run(str(PAIRS), 0.01, 0.5, 0.99, 0.01, conservative=True)["chosen"] is None
 
 
 def test_calibration_script_outputs(tmp_path, capsys):
     assert calibrate_semcache.main(["--out", str(tmp_path / "cal")]) == 0
     md = (tmp_path / "cal.md").read_text()
-    assert "0.88 **(chosen)**" in md and "Holdout at 0.88" in md and "not a prediction for production" in md
+    assert "0.90 **(chosen)**" in md and "Holdout at 0.90" in md and "not a prediction for production" in md
     assert json.loads((tmp_path / "cal.json").read_text())["embedder"] == "hashing-v1"
     assert calibrate_semcache.main(["--conservative"]) == 1
     with pytest.raises(ValueError):
@@ -170,7 +176,7 @@ def _config(router_env, semantic: str = "{ enabled: true }", policies: str = "ve
     config_loader.reload_all()
 
 
-def _key(client, team="product"):
+def _key(client, team="digital-banking"):
     r = client.post("/admin/keys", json={"label": f"{team}-k", "team": team}, headers=ADMIN)
     return {"Authorization": f"Bearer {r.json()['key']}"}
 
@@ -184,11 +190,11 @@ def _ask(client, h, text, system=None, **extra):
 def test_semantic_hit_serves_cached_answer_for_free(client, provider, router_env):
     _config(router_env)
     h = _key(client)
-    first = _ask(client, h, "How do I export my invoices as CSV?")
+    first = _ask(client, h, "How do I download my statements as PDF?")
     assert first.headers["x-router-cache"] == "miss" and first.headers["x-router-semantic-match"] == "empty"
-    second = _ask(client, h, "how do I export my invoices as csv")
+    second = _ask(client, h, "how do I download my statements as pdf")
     assert second.headers["x-router-cache"] == "semantic-hit"
-    assert float(second.headers["x-router-semantic-similarity"]) >= 0.88
+    assert float(second.headers["x-router-semantic-similarity"]) >= 0.90
     assert second.json()["choices"][0]["message"]["content"] == "answer #1" and len(provider) == 1
     recent = client.get("/admin/recent", headers=ADMIN).json()
     assert recent[0]["cached"] == 1 and recent[0]["cost_usd"] == 0 and recent[0]["saved_usd"] == pytest.approx(0.00035)
@@ -199,24 +205,24 @@ def test_semantic_hit_serves_cached_answer_for_free(client, provider, router_env
 def test_number_guard_and_threshold_misses_call_the_provider(client, provider, router_env):
     _config(router_env)
     h = _key(client)
-    _ask(client, h, "Is the 2025 model compatible with the charger?")
-    r = _ask(client, h, "Is the 2023 model compatible with the charger?")
+    _ask(client, h, "How many days do I have to report a 60 day old charge?")
+    r = _ask(client, h, "How many days do I have to report a 90 day old charge?")
     assert r.headers["x-router-cache"] == "miss" and r.headers["x-router-semantic-match"] == "guard-numbers-differ"
-    r = _ask(client, h, "What is the capital of Austria?")
+    r = _ask(client, h, "Is there parking at the branch?")
     assert r.headers["x-router-semantic-match"] == "below_threshold" and len(provider) == 3
 
 
 def test_cache_never_crosses_teams_policies_or_context(client, provider, router_env):
-    q = "How do I export my invoices as CSV?"
+    q = "How do I download my statements as PDF?"
     _config(router_env)
-    product = _key(client, "product")
-    _ask(client, product, q)
-    assert _ask(client, _key(client, "support"), q).headers["x-router-cache"] == "miss"  # other team
-    assert _ask(client, product, q, system="Answer in French.").headers["x-router-cache"] == "miss"  # other context
-    assert _ask(client, product, q, max_tokens=50).headers["x-router-cache"] == "miss"  # other parameters
-    assert _ask(client, product, q).headers["x-router-cache"] == "semantic-hit"
-    _config(router_env, policies="teams: { product: { allowed_providers: [ollama] } }\n")
-    r = _ask(client, product, q)
+    banking = _key(client, "digital-banking")
+    _ask(client, banking, q)
+    assert _ask(client, _key(client, "member-services"), q).headers["x-router-cache"] == "miss"  # other team
+    assert _ask(client, banking, q, system="Answer in French.").headers["x-router-cache"] == "miss"  # other context
+    assert _ask(client, banking, q, max_tokens=50).headers["x-router-cache"] == "miss"  # other parameters
+    assert _ask(client, banking, q).headers["x-router-cache"] == "semantic-hit"
+    _config(router_env, policies="teams: { digital-banking: { allowed_providers: [ollama] } }\n")
+    r = _ask(client, banking, q)
     assert r.headers["x-router-cache"] == "miss" and r.headers["x-router-used-provider"] == "ollama"  # other policy
 
 
@@ -239,13 +245,13 @@ def test_provider_embedder_and_failure_falls_through(client, provider, router_en
         seen.append(model)
         if input[0].startswith("boom"):
             raise RuntimeError("embedding service down")
-        return {"data": [{"embedding": [1.0, 0.0, 0.0] if "invoice" in input[0] else [0.0, 1.0, 0.0]}]}
+        return {"data": [{"embedding": [1.0, 0.0, 0.0] if "statement" in input[0] else [0.0, 1.0, 0.0]}]}
 
     monkeypatch.setattr(litellm, "aembedding", aembedding)
     _config(router_env, "{ enabled: true, embedder: provider, embedding_model: openai/text-embedding-3-small }")
     h = _key(client)
-    _ask(client, h, "invoice export please")
-    assert _ask(client, h, "please export my invoice").headers["x-router-cache"] == "semantic-hit"
+    _ask(client, h, "statement download please")
+    assert _ask(client, h, "please download my statement").headers["x-router-cache"] == "semantic-hit"
     assert seen == ["openai/text-embedding-3-small"] * 2
     r = _ask(client, h, "boom question")
     assert r.status_code == 200 and r.headers["x-router-cache"] == "miss"
@@ -257,13 +263,16 @@ def test_provider_embedder_and_failure_falls_through(client, provider, router_en
 
 
 def test_per_team_opt_in_and_threshold(client, provider, router_env):
-    _config(router_env, "{ enabled: true, teams: [support, data], team_thresholds: { data: 0.99 } }")
-    q, q2 = "How do I export my invoices as CSV?", "Please, how do I export my invoices as CSV"
-    for team in ("product", "support", "data"):
+    _config(
+        router_env,
+        "{ enabled: true, teams: [member-services, risk-analytics], team_thresholds: { risk-analytics: 0.99 } }",
+    )
+    q, q2 = "How do I download my statements as PDF?", "Please, how do I download my statements as PDF"
+    for team in ("digital-banking", "member-services", "risk-analytics"):
         h = _key(client, team)
         _ask(client, h, q)
         r = _ask(client, h, q2)
-        expected = {"product": None, "support": "hit", "data": "below_threshold"}[team]
+        expected = {"digital-banking": None, "member-services": "hit", "risk-analytics": "below_threshold"}[team]
         assert r.headers.get("x-router-semantic-match") == expected, team
     with pytest.raises(ValueError, match="team_thresholds"):
         RouterConfig.model_validate(
