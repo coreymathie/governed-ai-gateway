@@ -6,13 +6,17 @@
 
 **A reference implementation of a central AI gateway for regulated financial institutions: one OpenAI-compatible endpoint that decides, per request, who may call which model, where the data may go, what it may cost and what happens when a provider fails, and records each decision as evidence.**
 
-## Executive summary
+## At a glance
 
-- **Business problem.** Once several teams call model APIs directly, spend is unbounded and unattributed, a provider outage propagates into every application, and no one can say per request what a call cost, where it went or why. A regulated institution also needs data residency for sensitive workloads and evidence of who changed which control.
-- **Architectural approach.** A single gateway is the platform control point between client applications and four providers (OpenAI, Anthropic, Gemini, on-prem Ollama), and between agents and MCP tool servers. Every request passes the same admission pipeline before any provider sees the prompt, then an ordered fallback chain guarded by per-deployment circuit breakers, with opt-in latency-aware routing.
-- **Key controls.** Policy as code (YAML, optional OPA) for model allow/deny lists, data residency and request limits; PII redaction hooks with content logging off by default; a hash-chained audit trail of policy decisions and administrative changes, plus a decision trace for every request; an org → team → key budget hierarchy, tokens-per-minute limits, showback/chargeback and spend-anomaly detection modelled on card-fraud velocity checks; an MCP tool gateway with default-deny allow-lists.
-- **Evidence.** 290 tests (289 passed, 1 skipped) run offline; a 157-check browser smoke test covers every console screen in both modes (113 demo, 44 live). The semantic cache ships disabled because its **measured** false-hit rate on held-out pairs is 9.1% (1 of 11 hits; 95% upper bound 37.7%) against a 1% target. A route-eval gate fails a routing change that lowers quality or raises cost beyond set limits (**simulated** providers).
-- **Out of scope.** Content-level guardrails (prompt-injection classification, output filtering), SSO for administrators, state shared across gateway instances, TLS termination, and any evaluation against real models.
+| | |
+|---|---|
+| **Problem** | Teams calling LLM APIs directly produce spend no one can bound or attribute, outages that propagate to every app, and model and tool calls with no policy or audit trail. |
+| **Architecture** | One enforcement and accounting point: auth → policy → budgets → anomaly → content hooks → cache → TPM → fallback chain with circuit breakers → settle. An MCP tool gateway applies the same governance to agent tool calls. |
+| **Key decisions** | LiteLLM for wire formats, control plane in dependency-free modules; ordered fallback with per-deployment breakers; anomalies judged against each key's own baseline; semantic cache off until calibrated; MCP default deny. Recorded in [6 ADRs](#key-decisions-and-trade-offs). |
+| **Controls** | Org → team → key budgets, TPM/RPM limits, spend-anomaly pause, policy-as-code (YAML, optional OPA) with data residency, PII redaction hooks, hash-chained audit trail, showback. [Mapped to](docs/controls.md) NIST AI RMF / AI 600-1 and FinOps capabilities. |
+| **Evidence** | 290 tests, a 157-check headless-browser smoke test of the console, 6 ADRs, a [threat model](docs/threat-model.md). Route evals use a deterministic simulation, not real-model measurements. |
+| **Out of scope** | Content-level guardrails (prompt-injection classification, output filtering), SSO for administrators, state shared across gateway instances, TLS termination, and any evaluation against real models. |
+| **Try it** | [Live console](https://coreymathie.github.io/governed-ai-gateway/demo/): this repo's `router/*.py` modules running in the browser against simulated providers. Or `docker compose up`. |
 
 ## Live demo
 
