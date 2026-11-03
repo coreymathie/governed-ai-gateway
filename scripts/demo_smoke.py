@@ -7,7 +7,8 @@ load router/*.py, then visits every screen, performs its key interaction and ass
 Live mode starts the gateway with uvicorn on a free port (simulated providers, temporary database and
 config copies, a random admin key), opens /console/?mode=live and exercises the screens against the real
 HTTP API. Both fail on any page error, console error, failed request or request to an unexpected host,
-and check there is no horizontal scroll at 390 px or 1366 px.
+and check there is no horizontal scroll at 390 px or 1366 px. Every mode also opens Spend with the browser
+locale set to fr-FR and checks that money still reads "$…" and that figures carry translate="no".
 
     pip install playwright            # plus a Chromium build (playwright install chromium)
     python scripts/demo_smoke.py                              # demo mode, Pyodide from jsDelivr
@@ -98,9 +99,18 @@ class Checks:
 class Browser:
     """One page with the error, failure and foreign-host listeners every check relies on."""
 
-    def __init__(self, p, origin: str, pyodide_dir: Path | None, headed: bool, ignore_http_errors: bool = False):
+    def __init__(
+        self,
+        p,
+        origin: str,
+        pyodide_dir: Path | None,
+        headed: bool,
+        ignore_http_errors: bool = False,
+        locale: str | None = None,
+    ):
         self.browser = p.chromium.launch(headless=not headed)
-        self.ctx = self.browser.new_context(viewport={"width": 1366, "height": 900}, accept_downloads=True)
+        opts = {"locale": locale} if locale else {}
+        self.ctx = self.browser.new_context(viewport={"width": 1366, "height": 900}, accept_downloads=True, **opts)
         self.page = self.ctx.new_page()
         self.errors: list[str] = []
         self.failures: list[str] = []
@@ -178,6 +188,52 @@ def layout_checks(check: Checks, b: Browser, base: str, shots: Path | None, pref
 # ---------------------------------------------------------------------------------------------
 
 
+# Figures that page translation (for example Chrome's) must leave alone: KPI values and sub-lines, charts,
+# meters and numeric table cells. Each must carry translate="no" itself or sit inside an element that does.
+FIGURES = ".kpi .v, .kpi .s, .kpi-foot, svg.chart, .meter, td.num, .month-card .big"
+MONEY_TILES = ("AI spend", "Cost per 1,000 requests", "Saved by the cache", "Spend stopped by anomaly pause")
+
+
+def figure_checks(check: Checks, page, where: str) -> None:
+    tiles = page.evaluate(
+        "() => [...document.querySelectorAll('.kpi.sample')].map((k) => [k.querySelector('.l').innerText,"
+        " k.querySelector('.v').innerText, k.querySelector('.s').innerText])"
+    )
+    money = [v for label, v, _ in tiles if label in MONEY_TILES]
+    check(
+        len(money) == len(MONEY_TILES) and all(v.startswith("$") for v in money),
+        f"{where}: money KPI tiles read $… ({', '.join(money)})",
+    )
+    text = " ".join(" ".join(t) for t in tiles)
+    check("USD" not in text and re.search(r"\$\d", text), f"{where}: KPI tiles show $ amounts and no 'USD'")
+    untagged = page.evaluate(
+        "(sel) => [...document.querySelectorAll(sel)].filter((e) => !e.closest('[translate=no]')).length",
+        FIGURES,
+    )
+    count = page.locator(FIGURES).count()
+    check(count > 40 and untagged == 0, f"{where}: {count} figure elements carry translate=no ({untagged} without)")
+
+
+def run_locale(p, headed: bool, locale: str = "fr-FR") -> Checks:
+    """Spend under a non-US browser locale: figures stay en-US ("$1,099") and are marked not to translate."""
+    check = Checks(locale)
+    srv, port = serve(REPO)
+    origin = f"http://127.0.0.1:{port}"
+    b = Browser(p, origin, None, headed, locale=locale)
+    page = b.page
+    page.route(CDN + "**", lambda route: route.abort())  # Spend renders from sample data; no engine needed
+    try:
+        page.goto(f"{origin}/demo/#/overview")
+        page.wait_for_selector(".kpi.sample", timeout=30_000)
+        check(page.evaluate("navigator.language") == locale, f"browser reports {locale}")
+        figure_checks(check, page, f"spend ({locale})")
+        check("$" in page.inner_text(".month-card .big >> nth=0"), f"spend ({locale}): October spend reads $…")
+    finally:
+        b.close()
+        srv.shutdown()
+    return check
+
+
 def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> Checks:
     check = Checks("demo")
     srv, port = serve(REPO)
@@ -232,6 +288,7 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         goto(page, base, "#/overview")
         check("fictional" in page.inner_text(".note.sample"), "spend: sample company labelled fictional")
         check(page.locator(".kpi.sample").count() == 8, "spend: eight KPI tiles")
+        figure_checks(check, page, "spend")
         check(page.locator("#view svg.chart rect").count() >= 150, "spend: daily spend chart by team")
         check(page.locator(".month-card table.budgets tbody tr").count() == 7, "spend: October budgets for seven teams")
         check("Forecast for October" in page.inner_text(".month-card"), "spend: month-end forecast against budget")
@@ -717,6 +774,7 @@ def main() -> int:
         return 2
     results = []
     with sync_playwright() as p:
+        results.append(run_locale(p, args.headed))  # needs no CDN, so it runs in every mode
         if not args.live:
             results.append(run_demo(p, args.pyodide_dir, args.screenshots, args.headed))
         if args.live or args.both:

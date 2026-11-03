@@ -3,7 +3,7 @@
 import { SAMPLE_PROMPTS, fetchJson, store } from "./adapters.js";
 import { latestRequests, modelName, money as reqMoney, outcome, requestTabs, requestsScreen, stamp } from "./requests.js";
 import {
-  $, $$, busy, compactCharts, curves, download, empty, errorState, esc, hbars, hourlyChart, int, loading, measuredTag, ms, pct,
+  $, $$, busy, compactCharts, curves, download, empty, errorState, esc, figs, hbars, hourlyChart, int, loading, measuredTag, ms, pct,
   realTag, scatter, simTag, stackedDaily, stageChips, statusPill, toast, usd,
 } from "./ui.js";
 
@@ -48,7 +48,7 @@ function spark(values, color = "var(--accent)") {
   const W = 110, H = 26, min = Math.min(...values), span = Math.max(...values) - min || 1;
   const pts = values.map((v, i) => [(i / Math.max(1, values.length - 1)) * (W - 4) + 2, H - 3 - ((v - min) / span) * (H - 6)]);
   const [lx, ly] = pts[pts.length - 1];
-  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><path d="${pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join("")}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.3" fill="${color}"/></svg>`;
+  return `<svg translate="no" class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><path d="${pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join("")}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.3" fill="${color}"/></svg>`;
 }
 
 function delta(cur, prev, { better = "up", kind = "pct" } = {}) {
@@ -76,7 +76,7 @@ function agg(days) {
 }
 
 function kpi(label, value, sub, d, sp, cls = "") {
-  return `<div class="kpi sample ${cls}"><div class="l">${esc(label)}</div><div class="v">${value}</div><div class="kpi-foot">${d}${sp}</div><div class="s">${sub}</div></div>`;
+  return `<div class="kpi sample ${cls}"><div class="l">${esc(label)}</div><div class="v" translate="no">${value}</div><div class="kpi-foot" translate="no">${d}${sp}</div><div class="s" translate="no">${sub}</div></div>`;
 }
 
 async function renderBusiness(view, app) {
@@ -106,14 +106,14 @@ async function renderBusiness(view, app) {
     ${kpi("Cost per 1,000 requests", `$${t.per1k.toFixed(2)}`, "after caching and cheaper routes", delta(t.per1k, p?.per1k, { better: "down" }), spark(series((d) => (d.spend_usd / d.requests) * 1000)))}
     ${kpi("Saved by the cache", money(t.saved), "repeated questions answered at $0", delta(t.saved, p?.saved), spark(series((d) => d.saved_usd), "var(--chart-3)"))}
     ${kpi("Requests that succeeded", pct(t.availability, 3), `${int(t.fallbacks)} rescued by fallback · ${int(t.failed)} failed`, delta(t.availability, p?.availability, { kind: "pts" }), spark(series((d) => 1 - d.failed / d.requests), "var(--chart-3)"))}
-    ${kpi("Spend stopped by anomaly pause", anomalyIn ? reqMoney(data.anomaly.prevented_usd) : "$0", anomalyIn ? `looping agent on ${esc(data.anomaly.key)} paused at ${data.anomaly.baseline_multiple}× its baseline; estimate up to its daily cap` : "no runaway keys in this period", anomalyIn ? `<span class="delta good">paused ${int(data.anomaly.seconds_to_pause)} s after it started</span>` : '<span class="delta flat">none needed</span>', "", anomalyIn ? "warn" : "")}
+    ${kpi("Spend stopped by anomaly pause", anomalyIn ? reqMoney(data.anomaly.prevented_usd) : "$0", anomalyIn ? `sample scenario: a looping agent on ${esc(data.anomaly.key)} paused at ${data.anomaly.baseline_multiple}× its baseline; the figure is an estimate up to its daily cap` : "no runaway keys in this period", anomalyIn ? `<span class="delta good">paused ${int(data.anomaly.seconds_to_pause)} s after it started</span>` : '<span class="delta flat">none needed</span>', "", anomalyIn ? "warn" : "")}
     ${kpi("Policy decisions enforced", int(t.denied), "model, residency and size rules that said no", delta(t.denied, p?.denied, { better: "down" }), spark(series((d) => d.policy_denied), "var(--chart-4)"))}
     ${kpi("Regulated requests kept on-prem", big(t.regulated), "BSA and dispute evidence never left the network", delta(t.regulated, p?.regulated), spark(series((d) => d.regulated_on_prem)))}
   </div>
   <div class="grid g2" style="margin-bottom:16px">
     ${monthCard(data)}
     <section class="card"><div class="card-head"><div><h2>Latest requests</h2><p>October 7, Eastern time. Each one opens with every control it passed.</p></div><a class="small" href="#/requests">All requests →</a></div>
-      <ul class="latest">${latest.map((r) => { const o = outcome(r); return `<li><span class="t">${esc(stamp(r.ts))}</span><span><a href="#/requests/${esc(r.id)}">${esc(r.app)}</a> <span class="muted small">· ${esc(modelName(r.served_by))}</span></span><span class="row"><span class="pill ${o.cls}">${esc(o.label)}</span><span class="small num">${r.saved_usd ? "$0" : reqMoney(r.cost_usd)}</span></span></li>`; }).join("")}</ul></section>
+      <ul class="latest">${latest.map((r) => { const o = outcome(r); return `<li><span class="t">${esc(stamp(r.ts))}</span><span><a href="#/requests/${esc(r.id)}">${esc(r.app)}</a> <span class="muted small">· ${esc(modelName(r.served_by))}</span></span><span class="row"><span class="pill ${o.cls}">${esc(o.label)}</span><span class="small num" translate="no">${r.saved_usd ? "$0" : reqMoney(r.cost_usd)}</span></span></li>`; }).join("")}</ul></section>
   </div>
   <section class="card"><div class="card-head"><div><h2>Daily AI spend by team</h2><p>Every request is attributed to a team and an app before it reaches a provider.</p></div><span class="tag sample">sample</span></div>
     ${stackedDaily(days.map((d) => ({ label: shortDate(d.date), short: shortDate(d.date), values: Object.fromEntries(Object.entries(d.teams).map(([k, v]) => [k, v.spend_usd])) })), teamSeries, { compact: compactCharts(), ariaLabel: "Daily AI spend by team", format: (v) => "$" + Math.round(v).toLocaleString("en-US") })}
@@ -126,22 +126,22 @@ async function renderBusiness(view, app) {
       <section class="card"><div class="card-head"><div><h2>Spend by model</h2><p>Last 30 days, from each app's route and token sizes. On-prem Llama serves the regulated work at near-zero marginal cost.</p></div><span class="tag sample">sample</span></div>
         ${hbars(data.models.map((m, i) => ({ name: modelName(m.model), value: m.spend_30d_usd, sub: `${big(m.requests_30d)} req`, color: TEAM_COLORS[(i + 1) % TEAM_COLORS.length] })), { format: (v) => (v < 10 ? "$" + v.toFixed(2) : money(v)) })}</section>
       <section class="card"><div class="card-head"><div><h2>Provider incidents</h2><p>Outages the fallback chain absorbed.</p></div><span class="tag sample">sample</span></div>
-        <ol class="events">${data.incidents.map((x) => `<li class="ev-reliability"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(x.date))} · ${esc(x.provider)} · ${x.duration_minutes} min</div><h3>${esc(x.what)}</h3><p>${esc(x.handled)}</p></div></li>`).join("")}</ol></section>
+        <ol class="events">${data.incidents.map((x) => `<li class="ev-reliability"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(x.date))} · ${esc(x.provider)} · ${x.duration_minutes} min</div><h3>${figs(esc(x.what))}</h3><p>${figs(esc(x.handled))}</p></div></li>`).join("")}</ol></section>
     </div>
   </div>
   <div class="grid g2" style="margin-top:16px">
     <section class="card"><div class="card-head"><div><h2>Governance</h2><p>What finance, risk and examiners ask the platform team.</p></div><span class="tag sample">sample</span></div>
       <ul class="checklist">
-        <li><span class="ck" aria-hidden="true">✓</span><div><b>Requests attributed to a team and app</b><span class="small muted">Chargeback-ready; nothing reaches a provider unattributed</span></div><span class="cv">${pct(data.governance.requests_with_attribution, 0)}</span></li>
-        <li><span class="ck" aria-hidden="true">✓</span><div><b>Audit trail verified intact</b><span class="small muted">Hash-chained admin and policy changes</span></div><span class="cv">${pct(data.governance.audit_chain_verified_rate, 0)}</span></li>
-        <li><span class="ck" aria-hidden="true">✓</span><div><b>Prompts with personal data redacted</b><span class="small muted">Member-services hook replaces emails, phones and card numbers</span></div><span class="cv">${big(t.pii)}</span></li>
-        <li><span class="ck" aria-hidden="true">✓</span><div><b>Prompt and completion logging</b><span class="small muted">Metadata only unless a team opts in</span></div><span class="cv small">${esc(data.governance.content_logging_default)}</span></li>
-        <li><span class="ck" aria-hidden="true">✓</span><div><b>App keys rotated in the last 90 days</b><span class="small muted">Secrets shown once, stored hashed</span></div><span class="cv">${int(data.governance.keys_rotated_90d)}</span></li>
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>Requests attributed to a team and app</b><span class="small muted">Chargeback-ready; nothing reaches a provider unattributed</span></div><span class="cv" translate="no">${pct(data.governance.requests_with_attribution, 0)}</span></li>
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>Audit trail verified intact</b><span class="small muted">Hash-chained admin and policy changes</span></div><span class="cv" translate="no">${pct(data.governance.audit_chain_verified_rate, 0)}</span></li>
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>Prompts with personal data redacted</b><span class="small muted">Member-services hook replaces emails, phones and card numbers</span></div><span class="cv" translate="no">${big(t.pii)}</span></li>
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>Prompt and completion logging</b><span class="small muted">Metadata only unless a team opts in</span></div><span class="cv small" translate="no">${esc(data.governance.content_logging_default)}</span></li>
+        <li><span class="ck" aria-hidden="true">✓</span><div><b>App keys rotated in the last 90 days</b><span class="small muted">Secrets shown once, stored hashed</span></div><span class="cv" translate="no">${int(data.governance.keys_rotated_90d)}</span></li>
       </ul></section>
     <section class="card"><div class="card-head"><div><h2>Recent activity</h2></div><span class="tag sample">sample</span></div>
-      <ol class="events">${data.notable.map((n) => `<li class="ev-${esc(n.kind)}"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(n.date))} · ${esc({ policy: "Policy", reliability: "Reliability", finops: "FinOps", risk: "Risk" }[n.kind] || n.kind)}</div><h3>${esc(n.title)}</h3><p>${esc(n.detail)}</p>${EVENT_LINKS[n.date] ? `<a class="ev-link" href="${EVENT_LINKS[n.date][0]}">${esc(EVENT_LINKS[n.date][1])} →</a>` : ""}</div></li>`).join("")}</ol></section>
+      <ol class="events">${data.notable.map((n) => `<li class="ev-${esc(n.kind)}"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(n.date))} · ${esc({ policy: "Policy", reliability: "Reliability", finops: "FinOps", risk: "Risk" }[n.kind] || n.kind)}</div><h3>${figs(esc(n.title))}</h3><p>${figs(esc(n.detail))}</p>${EVENT_LINKS[n.date] ? `<a class="ev-link" href="${EVENT_LINKS[n.date][0]}">${esc(EVENT_LINKS[n.date][1])} →</a>` : ""}</div></li>`).join("")}</ol></section>
   </div>
-  <p class="small faint" style="margin-top:12px">Assumptions: ${esc(data.assumptions.note)}</p>`;
+  <p class="small faint" style="margin-top:12px">Assumptions: ${figs(esc(data.assumptions.note))}</p>`;
   $$("[data-range]", view).forEach((b) => b.addEventListener("click", () => { app.cache.range = Number(b.dataset.range); renderBusiness(view, app); }));
   if ($("#hideNote", view)) $("#hideNote", view).onclick = () => { app.cache.bannerHidden = true; $("#sampleNote", view).remove(); };
 }
@@ -162,20 +162,20 @@ function monthCard(data) {
   const spend = rows.reduce((a, r) => a + r.spend, 0), budget = rows.reduce((a, r) => a + r.budget, 0), forecast = rows.reduce((a, r) => a + r.forecast, 0);
   const over = rows.filter((r) => r.forecast > r.budget);
   return `<section class="card month-card"><div class="card-head"><div><h2>October so far</h2><p>${elapsed} of ${inMonth} days. The marker shows where each team lands at its current daily rate.</p></div></div>
-    <div class="month-top"><div><div class="small muted">Spent</div><div class="big">${money(spend)}</div></div><div><div class="small muted">Forecast for October</div><div class="big">${money(forecast)}</div></div><div><div class="small muted">Budget</div><div class="big">${money(budget)}</div></div></div>
-    <p class="small ${over.length ? "warn-text" : "muted"}">${over.length ? `${over.map((r) => esc(TEAM_LABELS[r.team] || r.team)).join(", ")} ${over.length === 1 ? "is" : "are"} on track to go over budget.` : `Every team is on track to finish under budget; the total forecast is ${Math.round((forecast / budget) * 100)}% of budget.`}</p>
-    <div class="table-wrap"><table class="budgets"><thead><tr><th>Team</th><th class="num">So far</th><th>Forecast against budget</th></tr></thead><tbody>${rows.map((r) => {
+    <div class="month-top"><div><div class="small muted">Spent</div><div class="big" translate="no">${money(spend)}</div></div><div><div class="small muted">Forecast for October</div><div class="big" translate="no">${money(forecast)}</div></div><div><div class="small muted">Budget</div><div class="big" translate="no">${money(budget)}</div></div></div>
+    <p class="small ${over.length ? "warn-text" : "muted"}">${over.length ? `${over.map((r) => esc(TEAM_LABELS[r.team] || r.team)).join(", ")} ${over.length === 1 ? "is" : "are"} on track to go over budget.` : `Every team is on track to finish under budget; the total forecast is <span translate="no">${Math.round((forecast / budget) * 100)}%</span> of budget.`}</p>
+    <div class="table-wrap"><table class="budgets"><thead><tr><th>Team</th><th class="num" translate="no">So far</th><th>Forecast against budget</th></tr></thead><tbody>${rows.map((r) => {
       const used = r.spend / r.budget, fc = r.forecast / r.budget;
       const cls = fc > 1 ? "bad" : fc >= 0.9 ? "warn" : "ok";
-      return `<tr><td>${esc(TEAM_LABELS[r.team] || r.team)}</td><td class="num">${money(r.spend)}</td><td><span class="meter has-fc ${cls}" role="img" aria-label="${Math.round(used * 100)}% used, forecast ${Math.round(fc * 100)}% of budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i><b class="fc" style="left:${Math.min(99, fc * 100).toFixed(1)}%"></b></span> <span class="nw small">${money(r.forecast)} of ${money(r.budget)}</span></td></tr>`;
+      return `<tr><td>${esc(TEAM_LABELS[r.team] || r.team)}</td><td class="num" translate="no">${money(r.spend)}</td><td><span translate="no" class="meter has-fc ${cls}" role="img" aria-label="${Math.round(used * 100)}% used, forecast ${Math.round(fc * 100)}% of budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i><b class="fc" style="left:${Math.min(99, fc * 100).toFixed(1)}%"></b></span> <span class="nw small" translate="no">${money(r.forecast)} of ${money(r.budget)}</span></td></tr>`;
     }).join("")}</tbody></table></div></section>`;
 }
 
 function budgetTable(teams, t, range) {
-  return `<div class="table-wrap"><table class="budgets"><thead><tr><th>Team</th><th class="num">Spend</th><th>Of budget</th></tr></thead><tbody>${teams.map((x) => {
+  return `<div class="table-wrap"><table class="budgets"><thead><tr><th>Team</th><th class="num" translate="no">Spend</th><th>Of budget</th></tr></thead><tbody>${teams.map((x) => {
     const spend = t.teams[x.team]?.spend || 0, cap = x.monthly_budget_usd * (range / 30), used = spend / cap;
     const cls = used >= 0.9 ? "bad" : used >= 0.75 ? "warn" : "ok";
-    return `<tr><td>${esc(TEAM_LABELS[x.team] || x.team)}<span class="sub">${x.apps.map(esc).join(", ")}</span></td><td class="num">${money(spend)}</td><td><span class="meter ${cls}" role="img" aria-label="${Math.round(used * 100)}% of budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i></span> <span class="nw small">${Math.round(used * 100)}% of ${money(cap)}</span></td></tr>`;
+    return `<tr><td>${esc(TEAM_LABELS[x.team] || x.team)}<span class="sub">${x.apps.map(esc).join(", ")}</span></td><td class="num" translate="no">${money(spend)}</td><td><span translate="no" class="meter ${cls}" role="img" aria-label="${Math.round(used * 100)}% of budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i></span> <span class="nw small" translate="no">${Math.round(used * 100)}% of ${money(cap)}</span></td></tr>`;
   }).join("")}</tbody></table></div>`;
 }
 
@@ -197,12 +197,12 @@ const overview = {
       const flagged = k.anomalies_flagged + k.anomalies_paused;
       body.innerHTML = `
       <div class="kpis">
-        <div class="kpi"><div class="l">${demo ? "Spend this session" : "Spend today (UTC)"}</div><div class="v">${usd(k.spend_usd)}</div><div class="s">${demo ? "simulated prices" : esc(ov.date)}</div></div>
-        <div class="kpi"><div class="l">Requests served</div><div class="v">${int(k.requests)}</div><div class="s">${int(k.failed_attempts)} failed provider attempts</div></div>
-        <div class="kpi ${t.fallback_rate > 0.2 ? "warn" : ""}"><div class="l">Fallback rate</div><div class="v">${pct(t.fallback_rate)}</div><div class="s">${int(t.fallbacks)} of ${int(t.served)} · ${esc(t.window)}</div></div>
-        <div class="kpi"><div class="l">Cache savings</div><div class="v">${usd(k.cache.saved_usd)}</div><div class="s">${int(k.cache.hits)} hits · ${pct(k.cache.hit_rate)} hit rate</div></div>
-        <div class="kpi ${k.anomalies_paused ? "bad" : flagged ? "warn" : ""}"><div class="l">Anomaly flags</div><div class="v">${int(flagged)}</div><div class="s">${int(k.anomalies_paused)} at pause level (10x)</div></div>
-        <div class="kpi ${k.open_circuits ? "bad" : ""}"><div class="l">Open circuits</div><div class="v">${int(k.open_circuits)}</div><div class="s">${Object.entries(t.by_status || {}).map(([s, n]) => `${n}×${s}`).join(" · ") || "no refusals"}</div></div>
+        <div class="kpi"><div class="l">${demo ? "Spend this session" : "Spend today (UTC)"}</div><div class="v" translate="no">${usd(k.spend_usd)}</div><div class="s" translate="no">${demo ? "simulated prices" : esc(ov.date)}</div></div>
+        <div class="kpi"><div class="l">Requests served</div><div class="v" translate="no">${int(k.requests)}</div><div class="s" translate="no">${int(k.failed_attempts)} failed provider attempts</div></div>
+        <div class="kpi ${t.fallback_rate > 0.2 ? "warn" : ""}"><div class="l">Fallback rate</div><div class="v" translate="no">${pct(t.fallback_rate)}</div><div class="s" translate="no">${int(t.fallbacks)} of ${int(t.served)} · ${esc(t.window)}</div></div>
+        <div class="kpi"><div class="l">Cache savings</div><div class="v" translate="no">${usd(k.cache.saved_usd)}</div><div class="s" translate="no">${int(k.cache.hits)} hits · ${pct(k.cache.hit_rate)} hit rate</div></div>
+        <div class="kpi ${k.anomalies_paused ? "bad" : flagged ? "warn" : ""}"><div class="l">Anomaly flags</div><div class="v" translate="no">${int(flagged)}</div><div class="s" translate="no">${int(k.anomalies_paused)} at pause level (10x)</div></div>
+        <div class="kpi ${k.open_circuits ? "bad" : ""}"><div class="l">Open circuits</div><div class="v" translate="no">${int(k.open_circuits)}</div><div class="s" translate="no">${Object.entries(t.by_status || {}).map(([s, n]) => `${n}×${s}`).join(" · ") || "no refusals"}</div></div>
       </div>
       <div class="grid g-main">
         <section class="card" aria-labelledby="hourlyTitle">
@@ -214,8 +214,8 @@ const overview = {
         </section>
         <section class="card" aria-labelledby="riskTitle">
           <div class="card-head"><h2 id="riskTitle">Risk signals</h2><a href="#/budgets" class="small">Budgets & Keys →</a></div>
-          ${ov.anomalies.length ? `<div class="table-wrap"><table><thead><tr><th>Key</th><th>Team</th><th class="num">× baseline</th><th>Verdict</th></tr></thead><tbody>
-            ${ov.anomalies.map((a) => `<tr><td>${esc(a.label)}</td><td>${esc(a.team)}</td><td class="num">${a.multiple.toFixed(1)}×</td><td><span class="pill ${esc(a.verdict)}">${esc(a.verdict)}</span></td></tr>`).join("")}
+          ${ov.anomalies.length ? `<div class="table-wrap"><table><thead><tr><th>Key</th><th>Team</th><th class="num" translate="no">× baseline</th><th>Verdict</th></tr></thead><tbody>
+            ${ov.anomalies.map((a) => `<tr><td>${esc(a.label)}</td><td>${esc(a.team)}</td><td class="num" translate="no">${a.multiple.toFixed(1)}×</td><td><span class="pill ${esc(a.verdict)}">${esc(a.verdict)}</span></td></tr>`).join("")}
             </tbody></table></div>` : `<p class="muted small">No key is spending above 3× its 7-day hourly baseline.</p>`}
           <div class="hr"></div>
           <h3 style="margin-bottom:8px">Circuit breakers</h3>
@@ -478,7 +478,7 @@ async function renderCache(box, A) {
     <section class="card"><div class="card-head"><h2>Log</h2><span class="small muted" id="smCounts"></span></div><div id="smLog"></div></section></div>`;
   const paintLog = (v) => {
     $("#smCounts").textContent = `${v.counts.hit} hits · ${v.counts.miss} misses · ${v.counts.guard} guarded`;
-    $("#smLog").innerHTML = v.log.length ? `<div class="table-wrap"><table><thead><tr><th>Team</th><th>Question</th><th>Result</th><th class="num">Similarity</th></tr></thead><tbody>${v.log.map((r) => `<tr><td>${esc(r.team)}</td><td>${esc(r.text)}<span class="sub">${esc(r.reason)}</span></td><td><span class="pill ${r.result === "hit" ? "hit" : "miss"}">${esc(r.result)}</span></td><td class="num">${r.similarity.toFixed(3)}</td></tr>`).join("")}</tbody></table></div>` : empty("Nothing asked yet", "Ask the first example, then the second: the reworded question is served from cache.");
+    $("#smLog").innerHTML = v.log.length ? `<div class="table-wrap"><table><thead><tr><th>Team</th><th>Question</th><th>Result</th><th class="num" translate="no">Similarity</th></tr></thead><tbody>${v.log.map((r) => `<tr><td>${esc(r.team)}</td><td>${esc(r.text)}<span class="sub">${esc(r.reason)}</span></td><td><span class="pill ${r.result === "hit" ? "hit" : "miss"}">${esc(r.result)}</span></td><td class="num" translate="no">${r.similarity.toFixed(3)}</td></tr>`).join("")}</tbody></table></div>` : empty("Nothing asked yet", "Ask the first example, then the second: the reworded question is served from cache.");
   };
   paintLog(view);
   $("#smThr").oninput = () => ($("#smThrOut").textContent = $("#smThr").value);
@@ -522,11 +522,11 @@ const tracesScreen = {
         }
         const total = rows.length;
         rows = rows.slice(0, shown);
-        body.innerHTML = `<div class="table-wrap"><table class="dense"><thead><tr><th>Trace</th><th>Key · team</th><th>Alias</th><th>Status</th><th>Served by</th><th class="num">Attempts</th><th class="num">Latency</th><th class="num">Cost</th></tr></thead><tbody>
+        body.innerHTML = `<div class="table-wrap"><table class="dense"><thead><tr><th>Trace</th><th>Key · team</th><th>Alias</th><th>Status</th><th>Served by</th><th class="num" translate="no">Attempts</th><th class="num" translate="no">Latency</th><th class="num" translate="no">Cost</th></tr></thead><tbody>
           ${rows.map((t) => `<tr class="click" tabindex="0" data-id="${esc(t.id)}"><td class="nw"><code>${esc(t.id)}</code><span class="sub">${esc(t.ts)}</span></td>
             <td class="nw">${esc(t.key)}<span class="sub">${esc(t.team)}</span></td><td class="nw">${esc(t.alias)}</td><td>${statusPill(t.status, t.outcome)}${t.reason && t.status >= 400 ? `<span class="sub" title="${esc(t.reason)}">${esc(t.reason.slice(0, 48))}${t.reason.length > 48 ? "…" : ""}</span>` : ""}</td>
             <td>${t.served_by ? `<code>${breakAfterSlash(t.served_by)}</code>` : '<span class="faint">–</span>'}${t.fell_back ? '<span class="sub">after fallback</span>' : ""}</td>
-            <td class="num">${int(t.attempts)}</td><td class="num">${ms(t.latency_ms)}</td><td class="num">${t.saved_usd ? `<span title="saved ${usd(t.saved_usd)}">$0</span>` : usd(t.cost_usd)}</td></tr>`).join("")}
+            <td class="num" translate="no">${int(t.attempts)}</td><td class="num" translate="no">${ms(t.latency_ms)}</td><td class="num" translate="no">${t.saved_usd ? `<span title="saved ${usd(t.saved_usd)}">$0</span>` : usd(t.cost_usd)}</td></tr>`).join("")}
           </tbody></table></div><div class="row" style="margin-top:8px"><span class="small faint">Showing ${rows.length} of ${total} traces${A.simulated ? " · simulated providers" : ""}. Click a row for its timeline.</span>${total > rows.length ? '<button class="sm" id="trMore">Show 50 more</button>' : ""}</div>`;
         if ($("#trMore")) $("#trMore").onclick = () => { shown += 50; load(); };
         $$("tr[data-id]", body).forEach((tr) => {
@@ -702,9 +702,9 @@ const budgetsScreen = {
           return `<div class="meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p.toFixed(0)}"><i class="${p >= 100 ? "bad" : p >= 80 ? "warn" : ""}" style="width:${p}%"></i></div>`;
         };
         el.innerHTML = `<div class="card-head"><div><h2>Daily budgets</h2><p>${A.mode === "demo" ? `Scaled down: the credit union's caps in <code>config/routes.yaml</code> divided by ${int(b.scale || 1)}, as are the anomaly baselines, because this tab sends dozens of requests where the credit union sends thousands an hour. Lower a cap to see a 402.` : "Caps set here are stored by the gateway and win over routes.yaml."}</p></div></div>
-          <div class="budget" style="margin-bottom:14px"><div class="row spread small"><b>Org</b><span class="num">${usd(b.org.spent_usd)} of ${b.org.cap_usd ? usd(b.org.cap_usd, 2) : "no cap"}</span></div>${bar(b.org.spent_usd, b.org.cap_usd)}</div>
+          <div class="budget" style="margin-bottom:14px"><div class="row spread small"><b>Org</b><span class="num" translate="no">${usd(b.org.spent_usd)} of ${b.org.cap_usd ? usd(b.org.cap_usd, 2) : "no cap"}</span></div>${bar(b.org.spent_usd, b.org.cap_usd)}</div>
           ${b.teams.length ? b.teams.map((t) => `<div class="budget" style="margin-bottom:14px" data-team="${esc(t.team)}">
-            <div class="row spread small"><b>${esc(t.team)}</b><span class="num">${usd(t.spent_usd)} of ${t.cap_usd ? usd(t.cap_usd) : "no cap"}${t.tpm ? ` · TPM ${int(t.tpm_used)}/${int(t.tpm)}` : ""}</span></div>${bar(t.spent_usd, t.cap_usd)}
+            <div class="row spread small"><b>${esc(t.team)}</b><span class="num" translate="no">${usd(t.spent_usd)} of ${t.cap_usd ? usd(t.cap_usd) : "no cap"}${t.tpm ? ` · TPM ${int(t.tpm_used)}/${int(t.tpm)}` : ""}</span></div>${bar(t.spent_usd, t.cap_usd)}
             <div class="row" style="margin-top:6px"><span class="row nw"><label class="small muted" for="cap-${esc(t.team)}">Daily cap $</label><input id="cap-${esc(t.team)}" type="number" min="0" step="0.01" value="${t.cap_usd || ""}" style="width:110px" data-cap/></span>
             <span class="row nw"><label class="small muted" for="tpm-${esc(t.team)}">TPM</label><input id="tpm-${esc(t.team)}" type="number" min="0" step="1000" value="${t.tpm || ""}" style="width:110px" data-tpm/></span><button class="sm" data-save>Save</button></div></div>`).join("") : empty("No teams yet", "Teams appear when a key is created for them.")}
           ${(b.warnings || []).map((w) => `<div class="note warn">${esc(w)}</div>`).join("")}`;
@@ -736,9 +736,9 @@ const budgetsScreen = {
           <label class="field" style="min-width:150px">Team<input id="nkTeam" type="text" list="teamList" placeholder="e.g. regulated"/><datalist id="teamList">${teams.map((t) => `<option value="${esc(t)}">`).join("")}</datalist></label>
           <button class="primary" id="nkCreate" style="align-self:flex-end">Create key</button></div>
           <div id="nkSecret">${lastSecret ? lastSecret : ""}</div>
-          ${keys.length ? `<div class="table-wrap"><table><thead><tr><th>Label</th><th>Team</th><th>Fingerprint</th><th class="num">Spend today</th><th>Anomaly</th><th>State</th><th class="right">Actions</th></tr></thead><tbody>
+          ${keys.length ? `<div class="table-wrap"><table><thead><tr><th>Label</th><th>Team</th><th>Fingerprint</th><th class="num" translate="no">Spend today</th><th>Anomaly</th><th>State</th><th class="right">Actions</th></tr></thead><tbody>
             ${keys.map((k) => `<tr data-key="${esc(k.id)}"><td class="nw">${esc(k.label)}${k.is_admin ? ' <span class="pill info">admin</span>' : ""}<span class="sub"><code>${esc(k.key_prefix)}…</code></span></td><td>${esc(k.team)}</td><td><code>${esc(k.fingerprint)}</code></td>
-              <td class="num">${usd(k.spent_today_usd)}</td><td><span class="pill ${esc(k.verdict)}">${esc(k.verdict)}</span>${k.multiple ? `<span class="sub">${Number(k.multiple).toFixed(1)}× baseline</span>` : ""}</td>
+              <td class="num" translate="no">${usd(k.spent_today_usd)}</td><td><span class="pill ${esc(k.verdict)}">${esc(k.verdict)}</span>${k.multiple ? `<span class="sub">${Number(k.multiple).toFixed(1)}× baseline</span>` : ""}</td>
               <td>${k.revoked_at ? '<span class="pill neutral">revoked</span>' : k.hold ? `<span class="pill ${esc(k.hold)}">${esc(k.hold)}</span>` : '<span class="pill ok">active</span>'}</td>
               <td class="right">${k.revoked_at ? "" : `<div class="row" style="justify-content:flex-end;flex-wrap:nowrap">${k.hold === "paused" || k.verdict === "pause" ? `<button class="sm" data-act="unpause">Unpause</button>` : `<button class="sm" data-act="pause">Pause</button>`}<button class="sm danger" data-act="revoke">Revoke</button></div>`}</td></tr>`).join("")}
           </tbody></table></div>` : empty("No keys yet", "Create the first app key above.")}`;
@@ -779,8 +779,8 @@ const budgetsScreen = {
         const cols = sb.columns;
         el.innerHTML = `<div class="card-head"><div><h2>Showback</h2><p>Cost and unit metrics for chargeback (<code>router/showback.py</code>)${sb.period ? `, ${esc(sb.period.start)} to ${esc(sb.period.end)} UTC` : ", this session"}.</p></div>
           <div class="row"><div class="seg" role="group" aria-label="Group by">${GROUPS.map(([g, l]) => `<button data-g="${g}" aria-pressed="${g === group}">${l}</button>`).join("")}</div><button id="sbCsv">Download CSV</button></div></div>
-          ${sb.rows.length ? `<div class="table-wrap"><table class="dense"><thead><tr>${cols.map((c) => `<th>${esc(SHOWBACK_COLS[c] || c)}</th>`).join("")}<th class="num">Requests</th><th class="num">Cache hits</th><th class="num">Failed</th><th class="num">Tokens</th><th class="num">Cost</th><th class="num">Saved</th><th class="num">$/1K req</th><th class="num">Share</th></tr></thead><tbody>
-            ${sb.rows.slice(0, 50).map((r) => `<tr>${cols.map((c) => `<td class="nw">${c === "key_fp" ? `<code>${esc(r[c])}</code>` : esc(r[c])}</td>`).join("")}<td class="num">${int(r.requests)}</td><td class="num">${int(r.cache_hits)}</td><td class="num">${int(r.failed_attempts)}</td><td class="num">${int(r.input_tokens + r.output_tokens)}</td><td class="num">${usd(r.cost_usd)}</td><td class="num">${usd(r.saved_usd)}</td><td class="num">${usd(r.cost_per_1k_requests)}</td><td class="num">${pct(r.share_of_cost)}</td></tr>`).join("")}
+          ${sb.rows.length ? `<div class="table-wrap"><table class="dense"><thead><tr>${cols.map((c) => `<th>${esc(SHOWBACK_COLS[c] || c)}</th>`).join("")}<th class="num" translate="no">Requests</th><th class="num" translate="no">Cache hits</th><th class="num" translate="no">Failed</th><th class="num" translate="no">Tokens</th><th class="num" translate="no">Cost</th><th class="num" translate="no">Saved</th><th class="num" translate="no">$/1K req</th><th class="num" translate="no">Share</th></tr></thead><tbody>
+            ${sb.rows.slice(0, 50).map((r) => `<tr>${cols.map((c) => `<td class="nw">${c === "key_fp" ? `<code>${esc(r[c])}</code>` : esc(r[c])}</td>`).join("")}<td class="num" translate="no">${int(r.requests)}</td><td class="num" translate="no">${int(r.cache_hits)}</td><td class="num" translate="no">${int(r.failed_attempts)}</td><td class="num" translate="no">${int(r.input_tokens + r.output_tokens)}</td><td class="num" translate="no">${usd(r.cost_usd)}</td><td class="num" translate="no">${usd(r.saved_usd)}</td><td class="num" translate="no">${usd(r.cost_per_1k_requests)}</td><td class="num" translate="no">${pct(r.share_of_cost)}</td></tr>`).join("")}
           </tbody></table></div>` : empty("No usage yet", "Showback fills in as requests are served.")}`;
         $$("[data-g]", el).forEach((b) => (b.onclick = () => { group = b.dataset.g; paintShowback(); }));
         $("#sbCsv").onclick = (e) => busy(e.currentTarget, async () => {
@@ -884,34 +884,34 @@ const evalsScreen = {
           acc[k] = acc[k] ? { ...acc[k], name: `${acc[k].name} · ${r.alias}` } : { name: r.alias, x: r.cost_per_1k_requests_usd, y: r.quality };
           return acc;
         }, {})), { compact: compactCharts() })}</div>
-        <div class="table-wrap"><table><thead><tr><th>Route</th><th class="num">Quality</th><th class="num">$/1K req</th><th class="num">p50</th><th class="num">p95</th><th class="num">Fallbacks</th></tr></thead><tbody>
-          ${rows.sort((a, b) => b.quality - a.quality).map((r) => `<tr><td><b>${esc(r.alias)}</b><span class="sub">${esc(r.targets.join(" → "))}</span></td><td class="num">${r.quality.toFixed(3)}</td><td class="num">${usd(r.cost_per_1k_requests_usd, 4)}</td><td class="num">${ms(r.latency_p50_s * 1000)}</td><td class="num">${ms(r.latency_p95_s * 1000)}</td><td class="num">${r.fallbacks}</td></tr>`).join("")}
+        <div class="table-wrap"><table><thead><tr><th>Route</th><th class="num" translate="no">Quality</th><th class="num" translate="no">$/1K req</th><th class="num" translate="no">p50</th><th class="num" translate="no">p95</th><th class="num" translate="no">Fallbacks</th></tr></thead><tbody>
+          ${rows.sort((a, b) => b.quality - a.quality).map((r) => `<tr><td><b>${esc(r.alias)}</b><span class="sub">${esc(r.targets.join(" → "))}</span></td><td class="num" translate="no">${r.quality.toFixed(3)}</td><td class="num" translate="no">${usd(r.cost_per_1k_requests_usd, 4)}</td><td class="num" translate="no">${ms(r.latency_p50_s * 1000)}</td><td class="num" translate="no">${ms(r.latency_p95_s * 1000)}</td><td class="num" translate="no">${r.fallbacks}</td></tr>`).join("")}
         </tbody></table></div></div>
         <p class="small muted" style="margin-top:8px">Simulated numbers describe the configured profiles in <code>evals/sim_profiles.json</code>, not real models. Run <code>scripts/eval_routes.py --provider real</code> with keys for a measured report.</p>
       </section>
       <div class="grid g2 stack-md" style="margin-top:16px">
         <section class="card"><div class="card-head"><div><h2>CI gate example</h2><p>${esc(gate.question)}</p></div>${simTag()}</div>
           <div class="row" style="margin-bottom:10px"><span class="pill ${gate.ok ? "ok" : "bad"}" id="gateResult">${gate.ok ? "PASS" : "FAIL"}</span><span class="small muted">limits: quality drop ≤ ${gate.limits.max_quality_drop}, cost increase ≤ ${pct(gate.limits.max_cost_increase, 0)}</span></div>
-          <div class="table-wrap"><table><thead><tr><th></th><th class="num">Quality</th><th class="num">Cost (${int(rows[0] ? rows[0].cases : 0)} cases)</th></tr></thead><tbody>
-            <tr><td>${esc(gate.baseline.alias)} (baseline)</td><td class="num">${gate.baseline.quality}</td><td class="num">${usd(gate.baseline.total_cost_usd, 6)}</td></tr>
-            <tr><td>${esc(gate.candidate.alias)} (candidate)</td><td class="num">${gate.candidate.quality}</td><td class="num">${usd(gate.candidate.total_cost_usd, 6)}</td></tr></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th></th><th class="num" translate="no">Quality</th><th class="num" translate="no">Cost (${int(rows[0] ? rows[0].cases : 0)} cases)</th></tr></thead><tbody>
+            <tr><td>${esc(gate.baseline.alias)} (baseline)</td><td class="num" translate="no">${gate.baseline.quality}</td><td class="num" translate="no">${usd(gate.baseline.total_cost_usd, 6)}</td></tr>
+            <tr><td>${esc(gate.candidate.alias)} (candidate)</td><td class="num" translate="no">${gate.candidate.quality}</td><td class="num" translate="no">${usd(gate.candidate.total_cost_usd, 6)}</td></tr></tbody></table></div>
           <ul class="small">${gate.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>
           <p class="small muted">${gate.cost_change_pct < 0 ? `Cheaper by ${pct(-gate.cost_change_pct, 0)}` : `Cost up ${pct(gate.cost_change_pct, 0)}`}${gate.ok ? ", and within both limits." : `, but ${gate.quality_delta < -gate.limits.max_quality_drop ? "the quality drop" : "the cost rise"} fails the gate.`} <code>scripts/eval_gate.py</code> exits ${gate.ok ? 0 : 1} on this in CI.</p>
         </section>
         <section class="card"><div class="card-head"><div><h2>Test suite</h2><p>${esc(tests.measured)}.</p></div>${measuredTag("counted")}</div>
-          <div class="row" style="margin-bottom:10px"><b class="num" style="font-size:22px">${int(tests.total)}</b><span class="muted">test functions in ${tests.files.length} files</span>${tests.last_run ? `<span class="pill ${tests.last_run.exit_code === 0 ? "ok" : "bad"}">${esc(tests.last_run.summary)}</span><span class="small faint">last recorded run ${esc(tests.last_run.date)}</span>` : ""}</div>
+          <div class="row" style="margin-bottom:10px"><b class="num" translate="no" style="font-size:22px">${int(tests.total)}</b><span class="muted">test functions in ${tests.files.length} files</span>${tests.last_run ? `<span class="pill ${tests.last_run.exit_code === 0 ? "ok" : "bad"}">${esc(tests.last_run.summary)}</span><span class="small faint">last recorded run ${esc(tests.last_run.date)}</span>` : ""}</div>
           <p class="small muted">${int(tests.total)} functions are counted from the source. pytest collects ${tests.last_run && tests.last_run.collected ? int(tests.last_run.collected) : "more"} tests because each case of a parametrized test runs, and is reported, separately.</p>
-          <div class="table-wrap scroll"><table><thead><tr><th>File</th><th class="num">Tests</th></tr></thead><tbody>${tests.files.map((f) => `<tr><td><code>${esc(f.file)}</code>${f.about ? `<span class="sub">${esc(f.about)}</span>` : ""}</td><td class="num">${f.tests}</td></tr>`).join("")}</tbody></table></div>
+          <div class="table-wrap scroll"><table><thead><tr><th>File</th><th class="num" translate="no">Tests</th></tr></thead><tbody>${tests.files.map((f) => `<tr><td><code>${esc(f.file)}</code>${f.about ? `<span class="sub">${esc(f.about)}</span>` : ""}</td><td class="num" translate="no">${f.tests}</td></tr>`).join("")}</tbody></table></div>
         </section>
       </div>
       <section class="card" style="margin-top:16px"><div class="card-head"><div><h2>Semantic cache calibration</h2><p>${esc(cal.pairs.total)} labelled pairs of member questions (fictional), threshold chosen on ${esc(cal.pairs.calibration)}, reported on ${esc(cal.pairs.holdout)} held out. Target false-hit rate ${pct(cal.target_false_hit_rate)}. <code>${esc(cal.command)}</code></p></div>${measuredTag("measured on bundled pairs")}</div>
         <div class="grid g2"><div>${curves(cal.calibration_grid, cal.chosen && cal.chosen.threshold, { compact: compactCharts() })}<div class="legend"><span><i style="background:#a78bfa"></i>hit rate</span><span><i style="background:#f87171"></i>false-hit rate</span><span><i style="background:#fbbf24"></i>chosen threshold</span></div></div>
         <div>
           <div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-            <div class="kpi"><div class="l">Chosen threshold</div><div class="v" id="calThr">${cal.chosen ? cal.chosen.threshold.toFixed(2) : "none"}</div><div class="s">${esc(cal.rule)}</div></div>
-            <div class="kpi"><div class="l">Holdout hit rate</div><div class="v">${pct(h.hit_rate)}</div><div class="s">${h.true_hits} of ${cal.positives.holdout} same-meaning pairs</div></div>
-            <div class="kpi ${h.false_hit_rate > cal.target_false_hit_rate ? "warn" : ""}"><div class="l">Holdout false-hit rate</div><div class="v" id="calHold">${pct(h.false_hit_rate)}</div><div class="s">${h.false_hits} of ${h.hits} hits · 95% upper ${pct(h.false_hit_rate_upper95)}</div></div>
-            <div class="kpi"><div class="l">Without guards</div><div class="v">${pct(g.false_hit_rate)}</div><div class="s">false-hit rate at the same threshold</div></div>
+            <div class="kpi"><div class="l">Chosen threshold</div><div class="v" translate="no" id="calThr">${cal.chosen ? cal.chosen.threshold.toFixed(2) : "none"}</div><div class="s" translate="no">${esc(cal.rule)}</div></div>
+            <div class="kpi"><div class="l">Holdout hit rate</div><div class="v" translate="no">${pct(h.hit_rate)}</div><div class="s" translate="no">${h.true_hits} of ${cal.positives.holdout} same-meaning pairs</div></div>
+            <div class="kpi ${h.false_hit_rate > cal.target_false_hit_rate ? "warn" : ""}"><div class="l">Holdout false-hit rate</div><div class="v" translate="no" id="calHold">${pct(h.false_hit_rate)}</div><div class="s" translate="no">${h.false_hits} of ${h.hits} hits · 95% upper ${pct(h.false_hit_rate_upper95)}</div></div>
+            <div class="kpi"><div class="l">Without guards</div><div class="v" translate="no">${pct(g.false_hit_rate)}</div><div class="s" translate="no">false-hit rate at the same threshold</div></div>
           </div>
           <p class="small muted">${h.false_hit_rate > cal.target_false_hit_rate ? "The held-out false-hit rate misses the 1% target, which is why the semantic cache ships off." : `No held-out hit was wrong, but ${int(h.hits)} hits cannot certify a 1% rate (95% upper bound ${pct(h.false_hit_rate_upper95)}), so the semantic cache still ships off.`} Calibrate on pairs labelled from your own traffic before turning it on.</p>
           ${A.caps.calibrate ? `<div class="row"><button id="calRun">Re-run calibration in your browser</button><span class="small muted" id="calMsg" aria-live="polite"></span></div>` : ""}

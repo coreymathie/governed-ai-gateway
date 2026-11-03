@@ -2,7 +2,7 @@
 // Renders the sample company's request log (demo/data/sample_requests.json, scripts/sample_requests.py) without
 // waiting for the Python engine. Requests sent in this tab are on Requests › This session (the Traces screen).
 import { fetchJson } from "./adapters.js";
-import { $, $$, download, empty, esc, int, ms } from "./ui.js";
+import { $, $$, download, empty, esc, figs, int, ms } from "./ui.js";
 
 export const TEAM_LABELS = {
   "member-services": "Member services", "digital-banking": "Digital banking", "risk-analytics": "Risk analytics",
@@ -51,7 +51,9 @@ const stamp = (iso) => when(iso, { month: "short", day: "numeric", hour: "numeri
 const longStamp = (iso) => when(iso, { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit" }) + " ET";
 const dayKey = (iso) => when(iso, { year: "numeric", month: "2-digit", day: "2-digit" });
 const dayLabel = (iso) => when(iso, { weekday: "short", month: "short", day: "numeric" });
-const money = (n) => (n === 0 ? "$0" : n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(n < 1 ? 3 : 2)}`);
+const money = (n) => (n === 0 ? "$0" : n < 0.01 ? `$${n.toFixed(4)}` : n < 1 ? `$${n.toFixed(3)}` : total(n));
+/** Unit prices: at least two decimals ($0.40, $3.00, $0.075), never rounded. */
+const price = (n) => `$${Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
 const total = (n) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const head = (title, sub, actions = "") =>
   `<div class="page-head"><div><h1>${esc(title)}</h1>${sub ? `<p>${sub}</p>` : ""}</div><div class="row">${actions}</div></div>`;
@@ -118,8 +120,8 @@ async function renderLog(view, ctx) {
     }
     const shown = rows.slice(0, f.shown);
     $("#rqBody", view).innerHTML = `<div class="table-wrap"><table class="dense rq-table"><thead><tr>
-      <th>Time</th><th>App</th><th class="hide-narrow">Caller</th><th>Model</th><th>Outcome</th><th class="num">Latency</th><th class="num">Cost</th>
-      <th class="tech-only">Key · alias</th><th class="tech-only num">Tokens</th><th class="tech-only">Request</th></tr></thead><tbody>
+      <th>Time</th><th>App</th><th class="hide-narrow">Caller</th><th>Model</th><th>Outcome</th><th class="num" translate="no">Latency</th><th class="num" translate="no">Cost</th>
+      <th class="tech-only">Key · alias</th><th class="tech-only num" translate="no">Tokens</th><th class="tech-only">Request</th></tr></thead><tbody>
       ${shown.map((r) => {
         const o = outcomeOf(r);
         return `<tr class="click" tabindex="0" data-id="${esc(r.id)}"><td class="nw">${esc(stamp(r.ts))}</td>
@@ -127,10 +129,10 @@ async function renderLog(view, ctx) {
           <td class="hide-narrow small">${esc(r.caller)}</td>
           <td>${r.served_by ? esc(modelName(r.served_by)) : '<span class="faint">–</span>'}<span class="sub">${esc(provider(r.served_by))}</span></td>
           <td><span class="pill ${o.cls}">${esc(o.label)}</span>${r.redacted ? '<span class="sub">personal data redacted</span>' : ""}</td>
-          <td class="num">${r.outcome === "rejected" ? '<span class="faint">–</span>' : ms(r.latency_ms)}</td>
-          <td class="num">${r.saved_usd ? `<span title="saved ${money(r.saved_usd)}">$0</span>` : money(r.cost_usd)}</td>
-          <td class="tech-only nw small"><code>${esc(r.key)}</code><span class="sub">${esc(r.alias)}</span></td>
-          <td class="tech-only num small">${int(r.prompt_tokens)} / ${int(r.completion_tokens)}</td>
+          <td class="num" translate="no">${r.outcome === "rejected" ? '<span class="faint">–</span>' : ms(r.latency_ms)}</td>
+          <td class="num" translate="no">${r.saved_usd ? `<span title="saved ${money(r.saved_usd)}">$0</span>` : money(r.cost_usd)}</td>
+          <td class="tech-only nw small" translate="no"><code>${esc(r.key)}</code><span class="sub">${esc(r.alias)}</span></td>
+          <td class="tech-only num small" translate="no">${int(r.prompt_tokens)} / ${int(r.completion_tokens)}</td>
           <td class="tech-only"><code class="small">${esc(r.id)}</code></td></tr>`;
       }).join("")}</tbody></table></div>
       <div class="row" style="margin-top:8px"><span class="small faint" id="rqCount">Showing ${int(shown.length)} of ${int(rows.length)}</span>${rows.length > shown.length ? '<button type="button" class="sm" id="rqMore">Show 50 more</button>' : ""}</div>`;
@@ -205,8 +207,8 @@ function timeline(r) {
     const attempts = s.detail?.attempts;
     const rest = s.detail ? Object.fromEntries(Object.entries(s.detail).filter(([k]) => k !== "attempts")) : {};
     return `<li><span class="ic ${esc(s.decision)}" aria-hidden="true">${DECISION_ICON[s.decision] || "·"}</span>
-      <div class="st"><b><span class="biz-only">${esc(STAGE_PLAIN[s.stage] || s.stage)}</span><span class="tech-only">${esc(STAGE_TECH[s.stage] || s.stage)}</span></b><span class="small faint num tech-only">${s.ms == null ? "" : ms(s.ms)}</span></div>
-      <div class="sm"><span class="biz-only">${esc(plain(r, s))}</span><span class="tech-only">${esc(s.summary)}</span></div>
+      <div class="st"><b><span class="biz-only">${esc(STAGE_PLAIN[s.stage] || s.stage)}</span><span class="tech-only">${esc(STAGE_TECH[s.stage] || s.stage)}</span></b><span class="small faint num tech-only" translate="no">${s.ms == null ? "" : ms(s.ms)}</span></div>
+      <div class="sm"><span class="biz-only">${figs(esc(plain(r, s)))}</span><span class="tech-only">${esc(s.summary)}</span></div>
       ${attempts ? `<div class="attempts">${attempts.map((a) => `<div class="attempt"><span class="pill ${a.outcome === "ok" ? "pass" : a.outcome === "skipped" ? "skip" : "deny"}" aria-hidden="true">${a.outcome === "ok" ? "✓" : a.outcome === "skipped" ? "–" : "✕"}</span><span>${esc(modelName(a.deployment))}</span><span class="small muted">${a.outcome === "ok" ? ms(a.seconds * 1000) : esc(a.error)}</span></div>`).join("")}</div>` : ""}
       ${Object.keys(rest).length ? `<details class="tech-only"><summary>details</summary><pre class="box">${esc(JSON.stringify(rest, null, 2))}</pre></details>` : ""}</li>`;
   }).join("")}</ol>`;
@@ -233,12 +235,12 @@ async function renderDetail(view, ctx, id) {
       <h1>${esc(r.app)} <span class="muted">·</span> ${r.served_by ? esc(modelName(r.served_by)) : esc(o.label)}</h1>
       <div class="row" style="margin-top:6px"><span class="pill ${o.cls}">${esc(o.label)}</span><span class="chip">${esc(TEAM_LABELS[r.team] || r.team)}</span><span class="chip">${esc(r.caller)}</span>${r.redacted ? '<span class="chip">personal data redacted</span>' : ""}${r.regulated ? '<span class="chip">on-prem only</span>' : ""}<span class="tag sample">sample</span></div></div></div>
     ${inIncident ? `<div class="note" role="note">Sent during the <a href="#/overview">October 6 Anthropic overload</a> (2:05 to 2:17 pm): Claude Haiku's circuit breaker opened after five failures, and requests skipped it until it recovered. <a href="#/requests?day=${encodeURIComponent(dayKey(r.ts))}&outcome=fallback">Other requests rescued by fallback that day</a>.</div>` : ""}
-    <section class="card rq-story"><h2>What happened</h2><p>${story(r)}</p>${r.reason ? `<p class="small muted">Gateway response: ${r.status} · ${esc(r.reason)}</p>` : ""}</section>
+    <section class="card rq-story"><h2>What happened</h2><p>${figs(story(r))}</p>${r.reason ? `<p class="small muted">Gateway response: ${r.status} · ${esc(r.reason)}</p>` : ""}</section>
     <div class="kpis rq-kpis">
-      <div class="kpi"><div class="l">Cost</div><div class="v">${r.saved_usd ? "$0" : money(r.cost_usd)}</div><div class="s">${r.saved_usd ? `saved ${money(r.saved_usd)} by the cache` : r.prompt_tokens && r.completion_tokens && settle ? `${int(r.prompt_tokens)} tokens in, ${int(r.completion_tokens)} out` : "not charged"}</div></div>
-      <div class="kpi"><div class="l">Response time</div><div class="v">${r.outcome === "rejected" ? "–" : ms(r.latency_ms)}</div><div class="s">${ms(r.overhead_ms)} of it in the gateway</div></div>
-      <div class="kpi"><div class="l">Model</div><div class="v sm">${esc(r.served_by ? modelName(r.served_by) : "none")}</div><div class="s">${r.fell_back ? `after ${esc(modelName(firstAttempt(r).deployment))} ${firstAttempt(r).outcome === "skipped" ? "was skipped" : "failed"}` : `route <code>${esc(r.alias)}</code>`}</div></div>
-      ${teamBudget ? `<div class="kpi"><div class="l">${esc(TEAM_LABELS[r.team] || r.team)} budget</div><div class="v sm">${total(teamBudget.team_month_usd)} <span class="muted small">of ${total(teamBudget.team_monthly_budget_usd)}</span></div><div class="s"><span class="meter ${used >= 0.9 ? "bad" : used >= 0.75 ? "warn" : "ok"}" role="img" aria-label="${Math.round(used * 100)}% of the month's budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i></span> October so far, before this day</div></div>` : ""}
+      <div class="kpi"><div class="l">Cost</div><div class="v" translate="no">${r.saved_usd ? "$0" : money(r.cost_usd)}</div><div class="s" translate="no">${r.saved_usd ? `saved ${money(r.saved_usd)} by the cache` : r.prompt_tokens && r.completion_tokens && settle ? `${int(r.prompt_tokens)} tokens in, ${int(r.completion_tokens)} out` : "not charged"}</div></div>
+      <div class="kpi"><div class="l">Response time</div><div class="v" translate="no">${r.outcome === "rejected" ? "–" : ms(r.latency_ms)}</div><div class="s" translate="no">${ms(r.overhead_ms)} of it in the gateway</div></div>
+      <div class="kpi"><div class="l">Model</div><div class="v sm" translate="no">${esc(r.served_by ? modelName(r.served_by) : "none")}</div><div class="s" translate="no">${r.fell_back ? `after ${esc(modelName(firstAttempt(r).deployment))} ${firstAttempt(r).outcome === "skipped" ? "was skipped" : "failed"}` : `route <code>${esc(r.alias)}</code>`}</div></div>
+      ${teamBudget ? `<div class="kpi"><div class="l">${esc(TEAM_LABELS[r.team] || r.team)} budget</div><div class="v sm" translate="no">${total(teamBudget.team_month_usd)} <span class="muted small">of ${total(teamBudget.team_monthly_budget_usd)}</span></div><div class="s" translate="no"><span translate="no" class="meter ${used >= 0.9 ? "bad" : used >= 0.75 ? "warn" : "ok"}" role="img" aria-label="${Math.round(used * 100)}% of the month's budget"><i style="width:${Math.min(100, used * 100).toFixed(1)}%"></i></span> October so far, before this day</div></div>` : ""}
     </div>
     <div class="grid g-main" style="margin-top:16px">
       <section class="card"><div class="card-head"><div><h2>Every control it passed</h2><p>In order, as the gateway recorded them.</p></div></div>${timeline(r)}</section>
@@ -247,12 +249,12 @@ async function renderDetail(view, ctx, id) {
           <dt>App</dt><dd>${esc(r.app)}</dd><dt>Team</dt><dd>${esc(TEAM_LABELS[r.team] || r.team)}</dd><dt>Caller</dt><dd>${esc(r.caller)}</dd>
           <dt>Route</dt><dd><code>${esc(r.alias)}</code></dd>
           <dt>Answered by</dt><dd>${r.served_by ? `${esc(modelName(r.served_by))} <span class="muted small">(${esc(provider(r.served_by))})</span>` : "–"}</dd>
-          ${settle ? `<dt>Price</dt><dd>$${settle.input_usd_per_1m} in / $${settle.output_usd_per_1m} out per 1M tokens</dd>` : ""}
+          ${settle ? `<dt>Price</dt><dd translate="no">${price(settle.input_usd_per_1m)} in / ${price(settle.output_usd_per_1m)} out per 1M tokens</dd>` : ""}
           <dt class="tech-only">Key</dt><dd class="tech-only"><code>${esc(r.key)}</code> · <code>${esc(r.key_fp)}</code>${r.profile ? ` · policy profile <code>${esc(r.profile)}</code>` : ""}</dd>
           <dt class="tech-only">Request ID</dt><dd class="tech-only"><code>${esc(r.id)}</code></dd>
           <dt class="tech-only">Status</dt><dd class="tech-only">${r.status} · ${esc(r.outcome)} · temperature ${r.temperature}</dd>
         </dl></section>
-        ${sameApp.length ? `<section class="card"><h2>Recent from ${esc(r.app)}</h2><ul class="rq-related">${sameApp.map((x) => `<li><a href="#/requests/${esc(x.id)}">${esc(stamp(x.ts))}</a><span class="pill ${outcomeOf(x).cls}">${esc(outcomeOf(x).label)}</span><span class="num small">${x.saved_usd ? "$0" : money(x.cost_usd)}</span></li>`).join("")}</ul>
+        ${sameApp.length ? `<section class="card"><h2>Recent from ${esc(r.app)}</h2><ul class="rq-related">${sameApp.map((x) => `<li><a href="#/requests/${esc(x.id)}">${esc(stamp(x.ts))}</a><span class="pill ${outcomeOf(x).cls}">${esc(outcomeOf(x).label)}</span><span class="num small" translate="no">${x.saved_usd ? "$0" : money(x.cost_usd)}</span></li>`).join("")}</ul>
           <a class="small" href="#/requests?q=${encodeURIComponent(r.app)}">All requests from ${esc(r.app)} →</a></section>` : ""}
         <details class="card tech-only"><summary>Raw record</summary><pre class="box">${esc(JSON.stringify({ ...r, stages: undefined }, null, 2))}</pre></details>
       </div>
