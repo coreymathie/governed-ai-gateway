@@ -211,3 +211,98 @@ def first_choice_shares(alias: str, targets: list) -> list[float]:
     if mix:
         return list(mix)
     return [1.0] + [0.0] * (len(targets) - 1)
+
+
+# How the sample numbers were set: each headline figure on Spend, the value the sample uses, and either the
+# published source it is checked against (only pages that were fetched and read, with the figure quoted from
+# them) or the assumption it rests on. The Spend screen's sources panel and docs/console.md show this table;
+# tests/test_sample_consistency.py checks that every cited figure has a URL and a quote, that cited prices equal
+# PRICES above, and that docs/console.md lists every row.
+NOT_CITED = (
+    "assumption (no public benchmark cited): the benchmark pages for this figure could not be fetched when the "
+    "table was built, so none is quoted"
+)
+BENCHMARKS = [
+    {
+        "figure": "Claude Haiku 4.5 list price",
+        "value": "$1.00 in, $5.00 out per 1M tokens",
+        "basis": "cited",
+        "source": {
+            "title": "Pricing - Claude Platform Docs",
+            "publisher": "Anthropic",
+            "year": 2026,
+            "url": "https://docs.claude.com/en/docs/about-claude/pricing",
+            "quote": "Claude Haiku 4.5 $1 / MTok $5 / MTok",
+            "context": "Model pricing table, columns Base tokens: Input, Output",
+            "accessed": "2026-11-03",
+        },
+        "deployment": "anthropic/claude-haiku-4-5",
+        "price": (1.00, 5.00),
+    },
+    {
+        "figure": "Claude Sonnet 4.5 list price",
+        "value": "$3.00 in, $15.00 out per 1M tokens",
+        "basis": "cited",
+        "source": {
+            "title": "Pricing - Claude Platform Docs",
+            "publisher": "Anthropic",
+            "year": 2026,
+            "url": "https://docs.claude.com/en/docs/about-claude/pricing",
+            "quote": "Claude Sonnet 4.5 $3 / MTok $15 / MTok",
+            "context": "Model pricing table, columns Base tokens: Input, Output",
+            "accessed": "2026-11-03",
+        },
+        "deployment": "anthropic/claude-sonnet-4-5",
+        "price": (3.00, 15.00),
+    },
+    {
+        "figure": "OpenAI GPT-4.1, GPT-4.1 mini and GPT-4.1 nano list prices",
+        "value": "$2.00/$8.00, $0.40/$1.60 and $0.10/$0.40 in/out per 1M tokens",
+        "basis": "assumption",
+        "note": NOT_CITED + " (OpenAI's pricing page).",
+    },
+    {
+        "figure": "Gemini 2.5 Flash list price",
+        "value": "$0.30 in, $2.50 out per 1M tokens",
+        "basis": "assumption",
+        "note": NOT_CITED + " (Google's Gemini API pricing page).",
+    },
+    {
+        "figure": "On-prem Llama 3.1 8B chargeback",
+        "value": "$0.05 in, $0.05 out per 1M tokens",
+        "basis": "assumption",
+        "note": "assumption (no public benchmark): an internal GPU chargeback rate, which no provider publishes.",
+    },
+    {
+        "figure": "Credit union size",
+        "value": "92,400 members, $1.4B in assets, 340 employees, 11 branches",
+        "basis": "assumption",
+        "note": NOT_CITED + " (NCUA call-report and system performance data).",
+    },
+    {
+        "figure": "AI requests through the gateway",
+        "value": "about 12,000 a day (373,000 in 30 days) across 11 apps",
+        "basis": "assumption",
+        "note": NOT_CITED + " (member-contact and AI-usage volumes).",
+    },
+    {
+        "figure": "AI spend and team budgets",
+        "value": "$943 in 30 days against $1,099 in team budgets; $2.53 per 1,000 requests",
+        "basis": "assumption",
+        "note": "derived: requests times token sizes times the list prices above; "
+        + NOT_CITED
+        + " (enterprise AI-spend reports from Menlo Ventures, a16z, Ramp or Gartner).",
+    },
+    {
+        "figure": "Exact-match cache hit rate",
+        "value": "17% to 21% for the member-facing apps, 0% to 9% for back-office apps",
+        "basis": "assumption",
+        "note": NOT_CITED + " (published repeat-query rates for LLM applications).",
+    },
+    {
+        "figure": "Provider incidents and success rate",
+        "value": "three incidents in 90 days (12 to 47 minutes); 4 failed requests in 30 days",
+        "basis": "assumption",
+        "note": NOT_CITED + " (provider status-page history).",
+    },
+]

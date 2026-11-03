@@ -32,6 +32,84 @@
  "assumptions": {
   "note": "Request volumes, token sizes, cache hit rates and hours of use per app are illustrative assumptions (demo/cypress_harbor.py); budgets and per-key caps are the credit union's config/routes.yaml. Spend is tokens times list prices (on-prem Llama at an assumed GPU chargeback rate). Spend prevented by the anomaly pause is the runaway's rate until the next business morning, within the key, team and org caps (estimated, not measured)."
  },
+ "benchmarks": [
+  {
+   "figure": "Claude Haiku 4.5 list price",
+   "value": "$1.00 in, $5.00 out per 1M tokens",
+   "basis": "cited",
+   "source": {
+    "title": "Pricing - Claude Platform Docs",
+    "publisher": "Anthropic",
+    "year": 2026,
+    "url": "https://docs.claude.com/en/docs/about-claude/pricing",
+    "quote": "Claude Haiku 4.5 $1 / MTok $5 / MTok",
+    "context": "Model pricing table, columns Base tokens: Input, Output",
+    "accessed": "2026-11-03"
+   }
+  },
+  {
+   "figure": "Claude Sonnet 4.5 list price",
+   "value": "$3.00 in, $15.00 out per 1M tokens",
+   "basis": "cited",
+   "source": {
+    "title": "Pricing - Claude Platform Docs",
+    "publisher": "Anthropic",
+    "year": 2026,
+    "url": "https://docs.claude.com/en/docs/about-claude/pricing",
+    "quote": "Claude Sonnet 4.5 $3 / MTok $15 / MTok",
+    "context": "Model pricing table, columns Base tokens: Input, Output",
+    "accessed": "2026-11-03"
+   }
+  },
+  {
+   "figure": "OpenAI GPT-4.1, GPT-4.1 mini and GPT-4.1 nano list prices",
+   "value": "$2.00/$8.00, $0.40/$1.60 and $0.10/$0.40 in/out per 1M tokens",
+   "basis": "assumption",
+   "note": "assumption (no public benchmark cited): the benchmark pages for this figure could not be fetched when the table was built, so none is quoted (OpenAI's pricing page)."
+  },
+  {
+   "figure": "Gemini 2.5 Flash list price",
+   "value": "$0.30 in, $2.50 out per 1M tokens",
+   "basis": "assumption",
+   "note": "assumption (no public benchmark cited): the benchmark pages for this figure could not be fetched when the table was built, so none is quoted (Google's Gemini API pricing page)."
+  },
+  {
+   "figure": "On-prem Llama 3.1 8B chargeback",
+   "value": "$0.05 in, $0.05 out per 1M tokens",
+   "basis": "assumption",
+   "note": "assumption (no public benchmark): an internal GPU chargeback rate, which no provider publishes."
+  },
+  {
+   "figure": "Credit union size",
+   "value": "92,400 members, $1.4B in assets, 340 employees, 11 branches",
+   "basis": "assumption",
+   "note": "assumption (no public benchmark cited): the benchmark pages for this figure could not be fetched when the table was built, so none is quoted (NCUA call-report and system performance data)."
+  },
+  {
+   "figure": "AI requests through the gateway",
+   "value": "about 12,000 a day (373,000 in 30 days) across 11 apps",
+   "basis": "assumption",
+   "note": "assumption (no public benchmark cited): the benchmark pages for this figure could not be fetched when the table was built, so none is quoted (member-contact and AI-usage volumes)."
+  },
+  {
+   "figure": "AI spend and team budgets",
+   "value": "$943 in 30 days against $1,099 in team budgets; $2.53 per 1,000 requests",
+   "basis": "assumption",
+   "note": "derived: requests times token sizes times the list prices above; assumption (no public benchmark cited): the benchmark pages for this figure could not be fetched when the table was built, so none is quoted (enterprise AI-spend reports from Menlo Ventures, a16z, Ramp or Gartner)."
+  },
+  {
+   "figure": "Exact-match cache hit rate",
+   "value": "17% to 21% for the member-facing apps, 0% to 9% for back-office apps",
+   "basis": "assumption",
+   "note": "assumption (no public benchmark cited): the benchmark pages for this figure could not be fetched when the table was built, so none is quoted (published repeat-query rates for LLM applications)."
+  },
+  {
+   "figure": "Provider incidents and success rate",
+   "value": "three incidents in 90 days (12 to 47 minutes); 4 failed requests in 30 days",
+   "basis": "assumption",
+   "note": "assumption (no public benchmark cited): the benchmark pages for this figure could not be fetched when the table was built, so none is quoted (provider status-page history)."
+  }
+ ],
  "teams": [
   {
    "team": "member-services",

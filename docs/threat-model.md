@@ -105,7 +105,7 @@ Residual risk:
 
 | Category | Status |
 |---|---|
-| LLM09 Misinformation (cache) | A semantic-cache false hit returns a confident answer to a different question. Mitigations: off by default, per-team opt-in, number/negation guards, published held-out false-hit rate (0 of 10 hits at 0.90 on the bundled set, 95% upper bound 27.8%, so a 1% rate is not certified; **residual risk**). `test_bundled_pairs_calibration_numbers` |
+| LLM09 Misinformation (cache) | A semantic-cache false hit returns a confident answer to a different question. Mitigations: off by default, per-team opt-in, number/negation guards, published held-out false-hit rate (2 of 80 hits, 2.5%, at the calibrated 0.97 on the 1,324 bundled pairs; 95% upper bound 8.7%, above the 1% target; the wrong hits are long lookalike messages such as "turn on" vs "turn off"; **residual risk**). `test_bundled_pairs_calibration_numbers` |
 | LLM01 Prompt Injection | Not addressed: the gateway does not classify content. A custom content hook (`register_hook`) is the extension point; none ships. |
 | LLM05 Improper Output Handling | Not addressed: outputs are relayed unchanged. The dashboard HTML-escapes everything it renders. |
 | LLM06 Excessive Agency | MCP tool gateway: default-deny per-team tool allow-lists, per-key/per-team velocity, identical-call loop guard, daily count and spend caps, redacted argument audit, fail-closed upstream handling (`tests/test_mcp_gateway.py`, ADR 0006). Residual: request/response tools only; no per-user upstream identity; velocity windows are per process. |

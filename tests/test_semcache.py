@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 from router import config_loader, main, metrics, semcache
 from router.config_loader import settings
 from router.models import RouterConfig
-from scripts import calibrate_semcache
+from scripts import build_semcache_pairs, calibrate_semcache
 
 ROOT = Path(__file__).resolve().parent.parent
 PAIRS = ROOT / "evals" / "semcache_pairs.jsonl"
@@ -98,23 +98,27 @@ def test_wilson_bound_and_pick_rules():
 
 def test_bundled_pairs_calibration_numbers():
     """The figures quoted in the README: bundled fictional credit-union pairs, hashing-v1 embedder, target 1%."""
+    assert build_semcache_pairs.main(["--check"]) == 0
     pairs = semcache.load_pairs(PAIRS.read_text().splitlines())
-    assert len(pairs) == 160 and sum(p.same for p in pairs) == 80
+    assert len(pairs) == 1324 and sum(p.same for p in pairs) == 680
+    assert sum(1 for p in pairs if not p.id.startswith("g")) == 160  # the hand-written pairs, unchanged
     rep = calibrate_semcache.run(str(PAIRS), 0.01, 0.50, 0.99, 0.01)
-    assert rep["pairs"] == {"total": 160, "calibration": 80, "holdout": 80}
-    assert rep["chosen"]["threshold"] == 0.90
-    assert (rep["chosen"]["hits"], rep["chosen"]["false_hits"], rep["chosen"]["hit_rate"]) == (12, 0, 0.2857)
+    assert rep["pairs"] == {"total": 1324, "calibration": 678, "holdout": 646}
+    assert rep["chosen"]["threshold"] == 0.97  # picked on the calibration half only
+    assert (rep["chosen"]["hits"], rep["chosen"]["false_hits"], rep["chosen"]["hit_rate"]) == (90, 0, 0.2507)
     h, g = rep["holdout_at_chosen"], rep["holdout_without_guards_at_chosen"]
-    assert (h["true_hits"], h["hits"], h["hit_rate"], h["false_hit_rate"]) == (10, 10, 0.2632, 0.0)
-    assert h["false_hit_rate_upper95"] == 0.2775  # ten hits cannot certify a 1% false-hit rate
-    assert (g["false_hits"], g["hits"], g["false_hit_rate"]) == (0, 10, 0.0)
+    assert (h["true_hits"], h["hits"], h["hit_rate"], h["false_hit_rate"]) == (78, 80, 0.243, 0.025)
+    assert h["false_hit_rate_upper95"] == 0.0866  # above the 1% target: the cache stays off by default
+    assert (g["false_hits"], g["hits"], g["false_hit_rate"]) == (2, 80, 0.025)
+    old = semcache.calibrate(semcache.split(pairs)[1], semcache.HashingEmbedder(), [0.90])[0]
+    assert (old["false_hits"], old["hits"], old["false_hit_rate"]) == (19, 140, 0.1357)  # the previous default
     assert calibrate_semcache.run(str(PAIRS), 0.01, 0.5, 0.99, 0.01, conservative=True)["chosen"] is None
 
 
 def test_calibration_script_outputs(tmp_path, capsys):
     assert calibrate_semcache.main(["--out", str(tmp_path / "cal")]) == 0
     md = (tmp_path / "cal.md").read_text()
-    assert "0.90 **(chosen)**" in md and "Holdout at 0.90" in md and "not a prediction for production" in md
+    assert "0.97 **(chosen)**" in md and "Holdout at 0.97" in md and "not a prediction for production" in md
     assert json.loads((tmp_path / "cal.json").read_text())["embedder"] == "hashing-v1"
     assert calibrate_semcache.main(["--conservative"]) == 1
     with pytest.raises(ValueError):
@@ -203,7 +207,7 @@ def test_semantic_hit_serves_cached_answer_for_free(client, provider, router_env
 
 
 def test_number_guard_and_threshold_misses_call_the_provider(client, provider, router_env):
-    _config(router_env)
+    _config(router_env, semantic="{ enabled: true, threshold: 0.90 }")  # low enough for the guard to decide
     h = _key(client)
     _ask(client, h, "How many days do I have to report a 60 day old charge?")
     r = _ask(client, h, "How many days do I have to report a 90 day old charge?")
@@ -265,7 +269,8 @@ def test_provider_embedder_and_failure_falls_through(client, provider, router_en
 def test_per_team_opt_in_and_threshold(client, provider, router_env):
     _config(
         router_env,
-        "{ enabled: true, teams: [member-services, risk-analytics], team_thresholds: { risk-analytics: 0.99 } }",
+        "{ enabled: true, threshold: 0.90, teams: [member-services, risk-analytics],"
+        " team_thresholds: { risk-analytics: 0.99 } }",
     )
     q, q2 = "How do I download my statements as PDF?", "Please, how do I download my statements as PDF"
     for team in ("digital-banking", "member-services", "risk-analytics"):

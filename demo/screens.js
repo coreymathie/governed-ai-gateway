@@ -141,7 +141,8 @@ async function renderBusiness(view, app) {
     <section class="card"><div class="card-head"><div><h2>Recent activity</h2></div><span class="tag sample">sample</span></div>
       <ol class="events">${data.notable.map((n) => `<li class="ev-${esc(n.kind)}"><span class="ev-dot" aria-hidden="true"></span><div><div class="ev-meta">${esc(shortDate(n.date))} · ${esc({ policy: "Policy", reliability: "Reliability", finops: "FinOps", risk: "Risk" }[n.kind] || n.kind)}</div><h3>${figs(esc(n.title))}</h3><p>${figs(esc(n.detail))}</p>${EVENT_LINKS[n.date] ? `<a class="ev-link" href="${EVENT_LINKS[n.date][0]}">${esc(EVENT_LINKS[n.date][1])} →</a>` : ""}</div></li>`).join("")}</ol></section>
   </div>
-  <p class="small faint" style="margin-top:12px">Assumptions: ${figs(esc(data.assumptions.note))}</p>`;
+  <p class="small faint" style="margin-top:12px">Assumptions: ${figs(esc(data.assumptions.note))}</p>
+  ${sourcesCard(data.benchmarks || [])}`;
   $$("[data-range]", view).forEach((b) => b.addEventListener("click", () => { app.cache.range = Number(b.dataset.range); renderBusiness(view, app); }));
   if ($("#hideNote", view)) $("#hideNote", view).onclick = () => { app.cache.bannerHidden = true; $("#sampleNote", view).remove(); };
 }
@@ -152,6 +153,17 @@ const EVENT_LINKS = {
 };
 
 // October so far: each team's month-to-date spend, the month-end forecast at the current daily rate, and its budget.
+/** How the sample numbers were set: each headline figure, the value used, and its published source or assumption. */
+function sourcesCard(rows) {
+  if (!rows.length) return "";
+  const cited = rows.filter((r) => r.basis === "cited").length;
+  const cell = (r) => r.basis === "cited"
+    ? `<a href="${esc(r.source.url)}" target="_blank" rel="noopener noreferrer">${esc(r.source.title)}</a>, ${esc(r.source.publisher)}, ${esc(r.source.year)}: <q translate="no">${esc(r.source.quote)}</q> <span class="faint">(${esc(r.source.context)}; read ${esc(r.source.accessed)})</span>`
+    : `<span class="muted">${esc(r.note)}</span>`;
+  return `<section class="card" id="sources" style="margin-top:16px"><div class="card-head"><div><h2>How these sample numbers were set</h2><p>${cited} of ${rows.length} figures are checked against a published source quoted below; the rest are stated assumptions. The numbers on this screen are generated sample data, not measurements.</p></div><span class="tag sample">sample</span></div>
+    <div class="table-wrap"><table class="sources"><thead><tr><th>Figure</th><th>Value used</th><th>Source or assumption</th></tr></thead><tbody>${rows.map((r) => `<tr data-basis="${esc(r.basis)}"><td>${esc(r.figure)}</td><td translate="no">${esc(r.value)}</td><td>${cell(r)}</td></tr>`).join("")}</tbody></table></div></section>`;
+}
+
 function monthCard(data) {
   const month = data.days.filter((d) => d.date >= "2026-10-01");
   const elapsed = month.length, inMonth = 31;

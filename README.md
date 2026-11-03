@@ -14,7 +14,7 @@
 | **Architecture** | One enforcement and accounting point: auth → policy → budgets → anomaly → content hooks → cache → TPM → fallback chain with circuit breakers → settle. An MCP tool gateway applies the same governance to agent tool calls. |
 | **Key decisions** | LiteLLM for wire formats, control plane in dependency-free modules; ordered fallback with per-deployment breakers; anomalies judged against each key's own baseline; semantic cache off until calibrated; MCP default deny. Recorded in [6 ADRs](#key-decisions-and-trade-offs). |
 | **Controls** | Org → team → key budgets, TPM/RPM limits, spend-anomaly pause, policy-as-code (YAML, optional OPA) with data residency, PII redaction hooks, hash-chained audit trail, showback. [Mapped to](docs/controls.md) NIST AI RMF / AI 600-1 and FinOps capabilities. |
-| **Evidence** | 308 tests, a 167-check headless-browser smoke test of the console, 6 ADRs, a [threat model](docs/threat-model.md). Route evals use a deterministic simulation, not real-model measurements. |
+| **Evidence** | 309 tests, a 168-check headless-browser smoke test of the console, 6 ADRs, a [threat model](docs/threat-model.md). Route evals use a deterministic simulation, not real-model measurements. |
 | **Out of scope** | Content-level guardrails (prompt-injection classification, output filtering), SSO for administrators, state shared across gateway instances, TLS termination, and any evaluation against real models. |
 | **Try it** | [Live console](https://coreymathie.github.io/governed-ai-gateway/demo/): this repo's `router/*.py` modules running in the browser against simulated providers. Or `docker compose up`. |
 
@@ -50,7 +50,7 @@ The console models the operating model for the fictional Cypress Harbor Credit U
 | IT and engineering | `code-assistant` on `local-first` and `heavy-reasoning` | $60 |
 | Marketing | `content-drafts` on `smart-fast` | $24 |
 
-The budgets are the team monthly caps in `config/routes.yaml`, which also sets a daily cap on every application key. Over the 30 days to October 7 the sample spends $943 (86% of $1,099 in team budgets) on 373,000 requests, $2.53 per 1,000 requests. The sample also contains a runaway scenario: on September 24 an engineer's coding agent loops on `heavy-reasoning` with the `code-assistant` key. The generator replays the loop call by call through the gateway's own `anomaly.classify()` thresholds against the key's sample 7-day baseline, and the key is paused 69 seconds after the loop starts (23 calls at 1,200 an hour), at 10.2x its 7-day hourly baseline. These are generated sample figures, not a measured detection time: the live gateway caches each key's verdict for up to 30 seconds, so it can pause up to 30 seconds later than the replay. The spend the pause prevented ($12.72) is also an estimate, limited by the key's $7.50 daily cap. The Spend screen shows each team's month-to-date spend, its month-end forecast at the current daily rate, and its budget; showback by team, key and model is the chargeback basis.
+The budgets are the team monthly caps in `config/routes.yaml`, which also sets a daily cap on every application key. Over the 30 days to October 7 the sample spends $943 (86% of $1,099 in team budgets) on 373,000 requests, $2.53 per 1,000 requests. The sample also contains a runaway scenario: on September 24 an engineer's coding agent loops on `heavy-reasoning` with the `code-assistant` key. The generator replays the loop call by call through the gateway's own `anomaly.classify()` thresholds against the key's sample 7-day baseline, and the key is paused 69 seconds after the loop starts (23 calls at 1,200 an hour), at 10.2x its 7-day hourly baseline. These are generated sample figures, not a measured detection time: the live gateway caches each key's verdict for up to 30 seconds, so it can pause up to 30 seconds later than the replay. The spend the pause prevented ($12.72) is also an estimate, limited by the key's $7.50 daily cap. The Spend screen shows each team's month-to-date spend, its month-end forecast at the current daily rate, and its budget; showback by team, key and model is the chargeback basis. A sources panel at the end of Spend lists each headline figure with the published source it is checked against or the assumption it rests on; only the Claude Haiku 4.5 and Sonnet 4.5 list prices are cited so far ([docs/console.md](docs/console.md#how-the-sample-numbers-were-set)).
 
 ## Reference architecture
 
@@ -109,7 +109,7 @@ flowchart LR
 | [0002](docs/adr/0002-ordered-fallback-and-circuit-breakers.md) | Ordered fallback by default, per-deployment circuit breakers, latency ordering opt-in | Outages stop costing every request a timeout; breaker state is per process, so N workers allow N × `failure_threshold` failures |
 | [0003](docs/adr/0003-per-key-baseline-anomaly-model.md) | Judge spend against each key's own baseline (fraud velocity checks), not fixed thresholds | One rule fits keys of any scale and is explainable; slow drift is invisible, and verdicts are cached for 30 s |
 | [0004](docs/adr/0004-exact-match-cache-now-semantic-later.md) | Exact-match cache now; semantic cache only with a measured false-hit rate | No false hits, at the cost of missing paraphrases; cached completions are plaintext at rest |
-| [0005](docs/adr/0005-semantic-cache-off-by-default-calibrated.md) | Semantic cache ships off; threshold calibrated on half the pairs, reported on the other half | The held-out sample (10 hits) cannot certify the 1% target, so enabling it is a per-team decision after local calibration |
+| [0005](docs/adr/0005-semantic-cache-off-by-default-calibrated.md) | Semantic cache ships off; threshold calibrated on half the pairs, reported on the other half | On 1,324 bundled pairs the calibrated threshold misses the 1% target held out (2.5%, 2 of 80 hits), so enabling it is a per-team decision after local calibration |
 | [0006](docs/adr/0006-mcp-tool-gateway-scope.md) | MCP tool gateway: request/response tool calls only, default deny, fraud-style velocity | A small, fully tested surface; no stdio servers, server-initiated streams or upstream OAuth |
 
 ## Controls and risk mapping
@@ -138,15 +138,22 @@ The audit trail records policy decisions, content-hook actions, MCP tool-call de
 
 | Result | Value | Label | How measured, and limits |
 |---|---|---|---|
-| Test suite | 308 tests: 307 passed, 1 skipped | **measured** | `python -m pytest -q`, offline with LiteLLM's completion call stubbed. The skipped test needs tiktoken's `cl100k_base` encoding. |
-| Console smoke | 167 checks passed (118 demo, 44 live, 5 with the browser locale set to fr-FR) | **measured** | `python scripts/demo_smoke.py --both` in headless Chromium, Pyodide served from a local copy: every screen's key interaction, no console errors, no failed or third-party requests, no horizontal scroll at 390 px or 1366 px; under the fr-FR locale, money still reads `$…` and figures carry `translate="no"`. |
-| Semantic cache, held-out false-hit rate | 0.0% (0 of 10 hits; 95% upper bound 27.8%) at threshold 0.90, hit rate 26.3%; also 0.0% with guards off | **measured** | `python scripts/calibrate_semcache.py` on 160 bundled fictional credit-union question pairs with the hashing embedder; not production traffic. |
-| Route evaluation | `smart-fast` 0.850 quality, $0.110550 for 40 cases ($2.76 per 1,000 requests); `heavy-reasoning` 1.000; `cheap-batch` 0.625 | **simulated** | 40 credit-union tasks with prompts the size the apps send; invented provider profiles. Tests the harness, fallback and pricing, not model quality. No real-model evaluation has been run. |
-| Route-eval gate | Fails moving the member assistant from `smart-fast` to `cheap-batch` on quality (0.850 → 0.625); fails a Sonnet-first `smart-fast` on cost (+203%) | **simulated** | `scripts/eval_gate.py`; an example pull-request job, not wired into this repository's CI. |
+| Test suite | 309 tests: 308 passed, 1 skipped | **measured** | `python -m pytest -q`, offline with LiteLLM's completion call stubbed. The skipped test needs tiktoken's `cl100k_base` encoding. |
+| Console smoke | 168 checks passed (119 demo, 44 live, 5 with the browser locale set to fr-FR) | **measured** | `python scripts/demo_smoke.py --both` in headless Chromium, Pyodide served from a local copy: every screen's key interaction, no console errors, no failed or third-party requests, no horizontal scroll at 390 px or 1366 px; under the fr-FR locale, money still reads `$…` and figures carry `translate="no"`. |
+| Semantic cache, held-out false-hit rate | 2.5% (2 of 80 hits; 95% upper bound 8.7%) at the calibrated threshold 0.97, hit rate 24.3%; also 2.5% with guards off. Misses the 1% target | **measured** | `python scripts/calibrate_semcache.py` on 1,324 bundled fictional credit-union question pairs (160 hand-written, 1,164 written by `scripts/build_semcache_pairs.py`) with the hashing embedder; not production traffic. |
+| Route evaluation | `smart-fast` 0.878 quality, $0.695661 for 271 cases ($2.57 per 1,000 requests); `heavy-reasoning` 0.974; `cheap-batch` 0.705 | **simulated** | 271 credit-union tasks across all eleven apps (54 tagged hard) with prompts the size the apps send; invented provider profiles, which do not model case difficulty. Tests the harness, fallback and pricing, not model quality. No real-model evaluation has been run. |
+| Route-eval gate | Fails moving the member assistant from `smart-fast` to `cheap-batch` on quality (0.878 → 0.705); fails a Sonnet-first `smart-fast` on cost (+200.5%) | **simulated** | `scripts/eval_gate.py`; an example pull-request job, not wired into this repository's CI. |
 | OPA policy tests | 8/8 passed on OPA 1.4.2 | **measured** | Run locally; CI does not run OPA. |
 | Sample data consistency | Spend by model within 1 point of what the request mix implies; one route per app across config, engine, log and Spend; incident counts and thresholds from the data and `routes.yaml`; every day inside every cap | **sample** | `tests/test_sample_consistency.py`, `tests/test_sample_requests.py`. |
 
-**Why the semantic cache ships disabled.** The threshold chosen on the calibration half (0.90, 0 of 12 hits wrong) had no wrong hits on the held-out half either, but 10 hits cannot certify a 1% false-hit rate: the 95% upper bound is 27.8%, and requiring the bound to meet 1% selects no threshold. Just below the chosen threshold the lexical embedder confuses lookalikes ("turn on" and "turn off" two-step verification scores 0.894; at 0.85 the calibration half has 4 wrong hits in 25). A team enabling it calibrates first on pairs labelled from its own traffic, preferably with a provider embedding model. Full calibration table, route results, gate, shadow-mode guarantees and test inventory: [docs/evaluation.md](docs/evaluation.md).
+**Larger evaluation sets, before and after.** Both sets are seeded, checked in, and checked in CI with each generator's `--check`; the first 40 route cases and the 160 hand-written pairs are unchanged inside the larger sets.
+
+| Set | Before | After | Command |
+|---|---|---|---|
+| Route evaluation (**simulated**) | 40 cases, 10 apps: `smart-fast` 0.850 ($2.76 per 1,000), `heavy-reasoning` 1.000, `cheap-batch` 0.625, `local-first` 0.600 | 271 cases, 11 apps, 54 hard: `smart-fast` 0.878 ($2.57 per 1,000), `heavy-reasoning` 0.974, `cheap-batch` 0.705, `local-first` 0.668 | `python scripts/build_eval_cases.py --check && python scripts/eval_routes.py` |
+| Semantic cache (**measured**) | 160 pairs: threshold 0.90; held out 0.0% wrong (0 of 10 hits, 95% upper bound 27.8%), hit rate 26.3% | 1,324 pairs: threshold 0.97; held out 2.5% wrong (2 of 80 hits, 95% upper bound 8.7%), hit rate 24.3%; at the old 0.90, 13.6% wrong (19 of 140) | `python scripts/build_semcache_pairs.py --check && python scripts/calibrate_semcache.py` |
+
+**Why the semantic cache ships disabled.** On the larger pair set the threshold chosen on the calibration half (0.97, 0 of 90 hits wrong there) has 2 wrong hits in 80 on the held-out half, a 2.5% false-hit rate with a 95% upper bound of 8.7%, above the 1% target; requiring the bound to meet 1% selects no threshold. Both wrong hits are long chat messages that differ in one word ("turn on" and "turn off" biometric sign-in; "add" and "remove" a beneficiary), which a lexical embedder cannot tell apart and the negation guard does not cover. The shipped default threshold is now 0.97, the calibration-half pick; the cache stays off. A team enabling it calibrates first on pairs labelled from its own traffic, preferably with a provider embedding model. Full calibration table, route results, gate, shadow-mode guarantees and test inventory: [docs/evaluation.md](docs/evaluation.md).
 
 ## Operations
 
@@ -168,7 +175,8 @@ The audit trail records policy decisions, content-hook actions, MCP tool-call de
 - Spend caps compare against recorded spend, so in-flight requests can overshoot a cap by their own cost.
 - Every request that reaches policy evaluation writes one audit row (plus the usage row); with SQLite that is an extra serialized write per request.
 - Cached completions are stored in plaintext SQLite when the cache is on. Application keys are not: only a salted HMAC is stored.
-- The semantic cache is in memory per worker; provider embedding calls are not priced or recorded. Its bundled calibration (10 held-out hits) cannot certify a 1% false-hit target.
+- The semantic cache is in memory per worker; provider embedding calls are not priced or recorded. On its bundled calibration the held-out false-hit rate (2.5%, 2 of 80 hits) misses the 1% target.
+- Route evals are simulated: the profiles give each deployment one success probability, so the 54 hard cases score like the others (`smart-fast` 0.926 on them) and measure difficulty only with `--provider real`, which has not been run.
 - PII detection is pattern-based (no names or addresses). Streams cannot be combined with `post_response` hooks.
 - The audit chain makes tampering evident, not impossible: anyone who can write the SQLite file can rebuild the chain.
 - SQLite serializes writes; heavy concurrent traffic needs a server database. "Today" and "this month" are UTC.
@@ -232,6 +240,7 @@ With Docker and simulated providers: `docker compose up`, then open http://local
 pip install -r requirements.txt ruff
 ruff check . && ruff format --check .
 python -m pytest -q
+python scripts/build_eval_cases.py --check && python scripts/build_semcache_pairs.py --check
 python scripts/demo_smoke.py --both     # optional: every console screen in headless Chromium (needs playwright)
 python scripts/build_console_data.py    # regenerate demo/data/*.json after changing evals, routes or tests
 ```
@@ -245,8 +254,8 @@ python scripts/build_console_data.py    # regenerate demo/data/*.json after chan
 | `policies/` | Example OPA policy and its tests |
 | `demo/` | The console (static app, demo and live adapters), the sample company's app table (`cypress_harbor.py`) and its committed sample data |
 | `dashboard/` | The classic server-rendered dashboard |
-| `evals/` | Route-eval cases (credit-union tasks), simulated provider profiles, semantic-cache pairs |
-| `scripts/` | Eval, gate, calibration, eval-case and sample-data generators, console smoke test |
+| `evals/` | Route-eval cases (271 credit-union tasks), simulated provider profiles, semantic-cache pairs (160 hand-written plus 1,164 generated) |
+| `scripts/` | Eval, gate, calibration, eval-case, cache-pair and sample-data generators, console smoke test |
 | `tests/` | The offline test suite |
 | `docs/` | [Architecture](docs/architecture.md), [configuration](docs/configuration.md), [operations](docs/operations.md), [evaluation](docs/evaluation.md), [console](docs/console.md), [controls](docs/controls.md), [threat model](docs/threat-model.md), [ADRs](docs/adr/) |
 

@@ -242,8 +242,9 @@ def test_eval_cases_are_credit_union_tasks_with_realistic_prompt_sizes():
     assert build_eval_cases.main(["--check"]) == 0
     sizes = defaultdict(list)
     for c in build_eval_cases.build():
-        assert len(c["tags"]) == 1 and c["tags"][0] in ch.APPS
+        assert c["tags"][0] in ch.APPS and c["tags"][1:] in ([], ["hard"])  # the app, and "hard" for hard cases
         sizes[c["tags"][0]].append(sum(len(m["content"]) for m in c["messages"]) // 4)  # the simulator's estimate
+    assert set(sizes) == set(ch.APPS) and min(len(v) for v in sizes.values()) >= 24  # every app, 24+ cases each
     for app, values in sizes.items():
         app_tokens = min(t[0] for t in ch.APPS[app]["tokens"].values())
         assert 0.6 <= sum(values) / len(values) / app_tokens <= 1.4, app
@@ -277,3 +278,23 @@ def test_no_generic_strings_in_demo_facing_data():
         text = f.read_text().lower()
         for word in DENYLIST:
             assert not re.search(re.escape(word), text), f"{f.relative_to(ROOT)} mentions {word!r}"
+
+
+def test_every_cited_benchmark_has_a_url_and_quote_and_matches_the_prices():
+    """The sources panel on Spend and docs/console.md: one table, cited figures quoted with their URL."""
+    usage = json.loads((DATA / "sample_company.json").read_text())
+    assert usage["benchmarks"] == [
+        {k: v for k, v in b.items() if k not in ("deployment", "price")} for b in ch.BENCHMARKS
+    ]
+    console = (ROOT / "docs" / "console.md").read_text()
+    for b in ch.BENCHMARKS:
+        assert b["basis"] in ("cited", "assumption") and b["figure"] in console and b["value"] in console, b["figure"]
+        if b["basis"] == "cited":
+            src = b["source"]
+            assert src["url"].startswith("https://") and src["url"] in console
+            assert all(src[k] for k in ("title", "publisher", "year", "quote", "accessed")) and src["quote"] in console
+            assert ch.PRICES[b["deployment"]] == b["price"]  # the price the sample uses is the quoted one
+            pin, pout = re.findall(r"\$([\d.]+) / MTok", src["quote"])
+            assert (float(pin), float(pout)) == b["price"]
+        else:
+            assert b["note"].startswith(("assumption", "derived")) and "source" not in b

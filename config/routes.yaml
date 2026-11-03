@@ -141,16 +141,16 @@ shadow: {}
 #  smart-fast: { candidate: cheap-batch, percent: 10, billing: ledger, max_daily_usd: 5 }
 
 # Semantic cache (router/semcache.py): serve a cached answer when a new prompt's last
-# user turn is similar enough to a cached one. OFF by default. On the bundled
-# fictional credit-union pairs the offline hashing embedder at 0.90 had no wrong hits among
-# 10 held-out hits (0.0%), but 10 hits cannot certify 1% (95% upper bound 27.8%), so
-# calibrate on your own labelled traffic first:
+# user turn is similar enough to a cached one. OFF by default. On the 1,324 bundled
+# fictional credit-union pairs the offline hashing embedder's calibrated threshold (0.97,
+# picked on the calibration half) has 2 wrong hits among 80 held-out hits (2.5%; 95% upper
+# bound 8.7%), above the 1% target, so calibrate on your own labelled traffic first:
 #   python scripts/calibrate_semcache.py --pairs your_pairs.jsonl --target 0.01
 # Entries are partitioned by team, alias, policy decision, content hooks, earlier
 # turns and generation parameters, and live in this worker's memory only.
 semantic_cache:
   enabled: false
-  threshold: 0.90
+  threshold: 0.97
   ttl_seconds: 3600
   max_entries_per_partition: 1000
   max_temperature: 0.0

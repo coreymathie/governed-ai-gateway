@@ -265,8 +265,8 @@ def test_semantic_panel_hit_guard_isolation_and_known_false_hit():
     run_sync(e.semantic_ask("digital-banking", ex[4]))
     wrong = run_sync(e.semantic_ask("digital-banking", ex[5], 0.85))  # turn on vs. turn off: a looser threshold errs
     assert wrong["result"] == "hit" and wrong["nearest"] == ex[4]
-    right = run_sync(e.semantic_ask("digital-banking", ex[5]))  # the calibrated threshold (0.90) does not
-    assert right["result"] == "miss" and right["reason"] == "below_threshold" and e.semantic.threshold == 0.90
+    right = run_sync(e.semantic_ask("digital-banking", ex[5]))  # the calibrated threshold (0.97) does not
+    assert right["result"] == "miss" and right["reason"] == "below_threshold" and e.semantic.threshold == 0.97
     assert e.semantic_view()["counts"] == {"hit": 2, "miss": 5, "guard": 1}
 
 

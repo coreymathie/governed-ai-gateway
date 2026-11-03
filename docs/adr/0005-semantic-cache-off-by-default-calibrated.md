@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (0.6.0); measured result revised with the credit-union pair set (Unreleased). Builds on [ADR 0004](0004-exact-match-cache-now-semantic-later.md). Date: 2026-10.
+Accepted (0.6.0); measured result revised with the credit-union pair set and again with the larger generated set (Unreleased). Builds on [ADR 0004](0004-exact-match-cache-now-semantic-later.md). Date: 2026-10.
 
 ## Context
 
@@ -18,23 +18,25 @@ ADR 0004 allowed a semantic cache only with a labelled replay set, a calibrated 
 
 ### Measured result (bundled pairs, hashing embedder)
 
-160 fictional, hand-written pairs of credit-union member questions (80 same-meaning, 80 different, many of them deliberately near-identical: a 12-month vs an 18-month certificate, "lock" vs "unlock" a debit card, loan 5521 vs loan 5512). Target: at most 1% of hits wrong.
+1,324 fictional pairs of credit-union member questions (680 same-meaning, 644 different): the 160 hand-written pairs of the earlier set and 1,164 written by `scripts/build_semcache_pairs.py` from question frames, many of them deliberately near-identical (an incoming vs an outgoing wire, the APY vs the dividend rate, "turn on" vs "turn off", including in long chat messages). Target: at most 1% of hits wrong.
 
-| | Threshold | Hit rate | False-hit rate |
-|---|---|---|---|
-| Calibration half (80 pairs) | 0.90 (chosen) | 28.6% (12 of 42) | 0.0% (0 of 12 hits) |
-| Held-out half (80 pairs) | 0.90 | 26.3% (10 of 38) | 0.0% (0 of 10 hits; 95% upper bound 27.8%) |
-| Held-out, guards off | 0.90 | 26.3% | 0.0% (0 of 10 hits) |
+| | Before: 160 pairs | After: 1,324 pairs |
+|---|---|---|
+| Calibration half: chosen threshold | 0.90 (0 of 12 hits wrong; hit rate 28.6%) | 0.97 (0 of 90 hits wrong; hit rate 25.1%) |
+| Held-out half: hit rate | 26.3% (10 of 38) | 24.3% (78 of 321) |
+| Held-out half: false-hit rate | 0.0% (0 of 10 hits; 95% upper bound 27.8%) | 2.5% (2 of 80 hits; 95% upper bound 8.7%) |
+| Held-out, guards off | 0.0% (0 of 10 hits) | 2.5% (2 of 80 hits) |
+| Held-out at 0.90 | 0.0% (0 of 10 hits) | 13.6% (19 of 140 hits) |
 
-No held-out hit is wrong, but the margin is thin and the sample is small. One step looser, at 0.85, the calibration half has 4 wrong hits in 25 (16%); "How do I turn on two-step verification for online banking?" vs. "...turn off..." scores 0.894, one word from a confident wrong answer that the lexical embedder cannot see and the negation guard does not cover. At 0.90 the number and negation guards remove no additional wrong hits on the held-out half. Requiring the 95% upper bound to meet 1% selects no threshold at all: 10 hits cannot certify a 1% rate. These figures come from `test_bundled_pairs_calibration_numbers` and describe this embedder on this set, not production traffic.
+On the larger set the threshold picked on the calibration half misses the target on the held-out half: 2 of 80 hits are wrong, both long messages that differ in one word ("turn on" vs "turn off" biometric sign-in; "add" vs "remove" a payable-on-death beneficiary), at similarity 0.972. The lexical embedder cannot see that one word reverses the request, and the negation guard does not cover antonyms. At 0.97 no number-change pair in the set reaches the threshold, so the guards remove no wrong hits there. Requiring the 95% upper bound to meet 1% selects no threshold on either set. These figures come from `test_bundled_pairs_calibration_numbers` and describe this embedder on this set, not production traffic. The default threshold in `config/routes.yaml` and `router/models.py` moved from 0.90 to 0.97, the calibration-half pick; the held-out half played no part in that choice.
 
-The bundled set replaced an earlier generic one (shopping and SaaS questions) in the sample-data revision; on that set the same method chose 0.88 and measured 9.1% (1 of 11) held out. The decision below did not depend on that particular miss.
+The 160-pair set replaced an earlier generic one (shopping and SaaS questions) in the sample-data revision; on that set the same method chose 0.88 and measured 9.1% (1 of 11) held out. The decision below did not depend on that particular miss.
 
 ## Consequences
 
 ### Positive
 
-- The published result shows the control working as designed: a held-out sample too small to certify the target is the reason the cache is off, not a hidden risk.
+- The published result shows the control working as designed: the held-out false-hit rate (2.5%) misses the target, and that is why the cache is off, not a hidden risk.
 - An embedder failure skips the cache and routes normally (the cache is an optimisation), so the cache cannot cause an outage.
 
 ### Negative
@@ -45,5 +47,5 @@ The bundled set replaced an earlier generic one (shopping and SaaS questions) in
 
 ## Alternatives considered
 
-- **Enable by default at the calibrated threshold.** Rejected: the held-out point estimate (0.0%) meets the 1% target, but its 95% upper bound (27.8%) does not, and a looser threshold is wrong 16% of the time on the calibration half. A default has to hold for traffic nobody has labelled.
+- **Enable by default at the calibrated threshold.** Rejected: the held-out false-hit rate at the calibrated threshold (2.5%, 95% upper bound 8.7%) misses the 1% target, and the previous default (0.90) is wrong 13.6% of the time on the held-out half. A default has to hold for traffic nobody has labelled.
 - **A fixed, uncalibrated threshold.** Rejected in ADR 0004: the right number differs by embedding model and workload.

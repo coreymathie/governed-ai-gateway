@@ -289,6 +289,9 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         check("fictional" in page.inner_text(".note.sample"), "spend: sample company labelled fictional")
         check(page.locator(".kpi.sample").count() == 8, "spend: eight KPI tiles")
         figure_checks(check, page, "spend")
+        cited = page.locator('#sources tr[data-basis="cited"] a[href^="https://"]').count()
+        rows = page.locator("#sources tbody tr").count()
+        check(rows >= 8 and cited >= 1, f"spend: sources panel lists {rows} figures, {cited} with a published source")
         check(page.locator("#view svg.chart rect").count() >= 150, "spend: daily spend chart by team")
         check(page.locator(".month-card table.budgets tbody tr").count() == 7, "spend: October budgets for seven teams")
         check("Forecast for October" in page.inner_text(".month-card"), "spend: month-end forecast against budget")
@@ -574,7 +577,7 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
 
         # --- evals ---
         goto(page, base, "#/evals")
-        check(page.inner_text("#calThr") == "0.90" and page.inner_text("#calHold") == "0.0%", "evals: calibration")
+        check(page.inner_text("#calThr") == "0.97" and page.inner_text("#calHold") == "2.5%", "evals: calibration")
         check(page.inner_text("#gateResult") == "FAIL", "evals: CI gate example fails on quality")
         page.click("#calRun")
         wait_idle(page)
@@ -737,7 +740,7 @@ def run_live(p, shots: Path | None, headed: bool) -> Checks:
         check("[REDACTED:EMAIL]" in page.inner_text("#mcLog"), "mcp: audit row shows redacted arguments")
 
         goto(page, base, "#/evals")
-        check(page.inner_text("#calThr") == "0.90", "evals: committed reports load")
+        check(page.inner_text("#calThr") == "0.97", "evals: committed reports load")
 
         layout_checks(check, b, base, shots, "live")
         check(not b.errors, f"no page or console errors {b.errors[:3]}")

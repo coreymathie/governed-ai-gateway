@@ -1,5 +1,6 @@
 # Labelled pairs for semantic-cache calibration (scripts/calibrate_semcache.py). Fictional credit-union questions.
 # same=true: one cached answer serves both. same=false: reusing the answer would be wrong.
+# Written by scripts/build_semcache_pairs.py: 160 hand-written pairs (s*, d*), then generated near-duplicates (gs*) and lookalikes (gd*).
 {"id": "s001", "a": "What is Cypress Harbor's routing number?", "b": "what is cypress harbor's routing number", "same": true}
 {"id": "s002", "a": "What are the branch hours on Saturday?", "b": "What are the branch hours on Saturday", "same": true}
 {"id": "s003", "a": "Can I change the mailing address on my account?", "b": "Can I change the mailing address for my account?", "same": true}
@@ -160,3 +161,1167 @@
 {"id": "d078", "a": "Draft a courteous note asking a member to bring a late loan payment current.", "b": "Draft a courteous note inviting members to the annual meeting.", "same": false}
 {"id": "d079", "a": "Which ABA number do I use for direct deposit?", "b": "Which branch hosts the shred day?", "same": false}
 {"id": "d080", "a": "My new card hasn't arrived yet, can you check?", "b": "My new card arrived damaged, what now?", "same": false}
+{"id": "gs0001", "a": "What do you charge for skip-a-pay?", "b": "What is the fee for skip-ap-ay?", "same": true}
+{"id": "gs0002", "a": "What are the steps to cancel a recurring transfer?", "b": "What're the steps to cancel a recurring transfer?", "same": true}
+{"id": "gs0003", "a": "Before I open one this week, can you confirm the dividend rate on the Money Market account? I saw it on the rate sheet on your website.", "b": "I was looking at the rate sheet on your website and wanted to confirm the dividend rate on the Money Market account before I open one this week.", "same": true}
+{"id": "gs0004", "a": "What's the current dividend rate for the 6-month certificate?", "b": "What's the current dividend rate for the 6-month cetrificate?", "same": true}
+{"id": "gs0005", "a": "What time does the Davie branch close on a weekday?", "b": "  What time does the Davie branch close on a weekday?  ", "same": true}
+{"id": "gs0006", "a": "What is the fee for a safe deposit box?", "b": "  What is the fee for a safe deposit box?  ", "same": true}
+{"id": "gs0007", "a": "Could you explain how I turn off paperless statements from my phone? I looked in the app settings and did not see it.", "b": "  Could you explain how I turn off paperless statements from my phone? I looked in the app settings and did not see it.  ", "same": true}
+{"id": "gs0008", "a": "How much is the fee for paper statements?", "b": "How much is the fee for paper sattements?", "same": true}
+{"id": "gs0009", "a": "What are the steps to turn on overdraft coverage?", "b": "What's the way to turn on overdraft coverage?", "same": true}
+{"id": "gs0010", "a": "What rate do you offer on a used RV loan?", "b": "What's the APR for a used RV loan?", "same": true}
+{"id": "gs0011", "a": "Can I withdraw cash at a CO-OP shared branch?", "b": "Am I able to withdraw cash at a CO-OP shared branch", "same": true}
+{"id": "gs0012", "a": "What's the way to remove an authorized user?", "b": "How do I remove an auhtorized user?", "same": true}
+{"id": "gs0013", "a": "What time does the Coral Springs branch close on Saturday?", "b": "What time does the Coral Springs branch close on Saturday? Thanks", "same": true}
+{"id": "gs0014", "a": "How many days does a new box of checks take?", "b": "How many days does a new box of checks take? Thanks", "same": true}
+{"id": "gs0015", "a": "What is the monthly limit for Zelle?", "b": "What is the monhtly limit for Zelle?", "same": true}
+{"id": "gs0016", "a": "What is the fee for an out-of-network ATM withdrawal?", "b": "How much is the fee for an out-of-network ATM withdrawal?", "same": true}
+{"id": "gs0017", "a": "When does the Miramar branch close on Sunday?", "b": "How late is the Miarmar branch open on Sunday?", "same": true}
+{"id": "gs0018", "a": "What time does the Boca Raton branch close on Saturday?", "b": "When does the Boca Raton branch close on Saturday?", "same": true}
+{"id": "gs0019", "a": "What are the steps to close a Holiday Club account?", "b": "How do I close a Holiday Club account?", "same": true}
+{"id": "gs0020", "a": "When does the Sunrise branch close on Sunday?", "b": "How late is the Sunrise branch open on Sunday?", "same": true}
+{"id": "gs0021", "a": "Can you tell me how to set up automatic loan payments?", "b": "Could you tell me how to set up automatic loan payments?", "same": true}
+{"id": "gs0022", "a": "How do I report identity theft?", "b": "How do i report identity theft?", "same": true}
+{"id": "gs0023", "a": "How much is the fee for a replacement debit card?", "b": "Quick question: how much is the fee for a replacement debit card?", "same": true}
+{"id": "gs0024", "a": "What's the way to turn on biometric sign-in?", "b": "What's the way to turn on biomteric sign-in?", "same": true}
+{"id": "gs0025", "a": "How do I turn off quick balance?", "b": "Good morning. how do I turn off quick balance?", "same": true}
+{"id": "gs0026", "a": "What's the current dividend rate for the 12-month certificate?", "b": "What is the current dividend rate for the 12-month certificate?", "same": true}
+{"id": "gs0027", "a": "How late is the Boca Raton branch open on Sunday?", "b": "How late is the Boca Raton branch open on Sunday? Thank you.", "same": true}
+{"id": "gs0028", "a": "What dividend rate do you pay on the 18-month certificate?", "b": "What dividend rate do you pay on the 18-month certificate? Thanks!", "same": true}
+{"id": "gs0029", "a": "I'm going on a trip next month and need to know the daily limit for external transfers so my transactions don't get declined while I'm away.", "b": "I'm going on a trip next month and need to know the daily limit for external transfers so my tarnsactions don't get declined while I'm away.", "same": true}
+{"id": "gs0030", "a": "What are the steps to turn on paperless statements?", "b": "What're the steps to turn on paperless statements?", "same": true}
+{"id": "gs0031", "a": "When does the Plantation branch close on a weekday?", "b": "When does the Plantation branch close on a weekday", "same": true}
+{"id": "gs0032", "a": "How can I set up direct deposit?", "b": "Can you tell me how to set up direct deposit?", "same": true}
+{"id": "gs0033", "a": "How can I open a Money Market account?", "b": "What are the steps to open a Money Market account?", "same": true}
+{"id": "gs0034", "a": "When does the Plantation branch close on Saturday?", "b": "Hello, what time does the Plantation branch close on Saturday?", "same": true}
+{"id": "gs0035", "a": "What's the way to close a checking account?", "b": "What is the way to close a checking account?", "same": true}
+{"id": "gs0036", "a": "How do I remove a beneficiary?", "b": "What are the steps to remove a beneficiary?", "same": true}
+{"id": "gs0037", "a": "How can I turn off overdraft coverage?", "b": "Can you tell me how to turn off overdraft coverage?", "same": true}
+{"id": "gs0038", "a": "What APY do you pay on the 12-month certificate?", "b": "What APY do you pay on the 12-month certifictae?", "same": true}
+{"id": "gs0039", "a": "How much does a returned deposited check cost?", "b": "What is the fee for a returned deposited check?", "same": true}
+{"id": "gs0040", "a": "What is the rate on a used boat loan?", "b": "What rate do you offer on a used boat loan?", "same": true}
+{"id": "gs0041", "a": "Where do I get my direct deposit form?", "b": "Where can I find my direct deposit form? Thanks!", "same": true}
+{"id": "gs0042", "a": "How much does an outgoing domestic wire cost?", "b": "  How much does an outgoing domestic wire cost?  ", "same": true}
+{"id": "gs0043", "a": "How much does an outgoing international wire cost?", "b": "What do you charge for an outgoing international wire?", "same": true}
+{"id": "gs0044", "a": "What are the steps to set up a travel notice?", "b": "Can you tell me how to set up a travel notice?", "same": true}
+{"id": "gs0045", "a": "How do I download my account agreement?", "b": "How do I download my account agreement? thx", "same": true}
+{"id": "gs0046", "a": "Am I able to withdraw cash at a CO-OP network ATM?", "b": "Am I able to withdraw cash at a CO-OP network ATM ?", "same": true}
+{"id": "gs0047", "a": "Hi, I have a question about my account. I would like to turn on text alerts, can you walk me through how to do that in the mobile app?", "b": "hi, i have a question about my account. i would like to turn on text alerts, can you walk me through how to do that in the mobile app", "same": true}
+{"id": "gs0048", "a": "How many days does a loan payoff letter take?", "b": "how many days does a loan payoff letter take", "same": true}
+{"id": "gs0049", "a": "What do you charge for expedited card delivery?", "b": "What do you charge for expedited card delivery", "same": true}
+{"id": "gs0050", "a": "What do you charge for a returned deposited check?", "b": "What do you charge for a returned deposited check? Thanks", "same": true}
+{"id": "gs0051", "a": "What rate do you offer on a new RV loan?", "b": "what rate do you offer on a new rv loan", "same": true}
+{"id": "gs0052", "a": "How much does a returned deposited check cost?", "b": "  How much does a returned deposited check cost?  ", "same": true}
+{"id": "gs0053", "a": "What time does the Plantation branch close on Saturday?", "b": "what time does the plantation branch close on saturday", "same": true}
+{"id": "gs0054", "a": "Hi, I have a question about my account. I would like to turn off biometric sign-in, can you walk me through how to do that in the mobile app?", "b": "hi, i have a question about my account. i would like to turn off biometric sign-in, can you walk me through how to do that in the mobile app", "same": true}
+{"id": "gs0055", "a": "Is it possible to withdraw cash at a CO-OP shared branch?", "b": "Can I withdraw cash at a CO-OP shared branch?", "same": true}
+{"id": "gs0056", "a": "How much does an overdraft cost?", "b": "What is the fee for an overdraft?", "same": true}
+{"id": "gs0057", "a": "I'm trying to unlock my credit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm triyng to unlock my credit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0058", "a": "What's the APR for a new motorcycle loan?", "b": "What is the rate on a new motoryccle loan?", "same": true}
+{"id": "gs0059", "a": "What do you charge for a stop payment?", "b": "Quick question: what do you charge for a stop payment?", "same": true}
+{"id": "gs0060", "a": "I need to remove my daughter as an authorized signer on my checking account now that she is in college. What do I have to bring with me to a branch?", "b": "My daughter is starting college in the fall and I want to remove her as an authorized signer on my checking account. What do I need to bring to the branch? Thank you.", "same": true}
+{"id": "gs0061", "a": "How do I unlock my credit card?", "b": "Can you tell me how to unlock my credit card?", "same": true}
+{"id": "gs0062", "a": "When does the Miramar branch close on a weekday?", "b": "Hello, when does the Miramar branch close on a weekday?", "same": true}
+{"id": "gs0063", "a": "How late is the Weston branch open on Sunday?", "b": "How late is the Weston branch open on Sunday? Thanks!", "same": true}
+{"id": "gs0064", "a": "What's the way to remove a joint owner?", "b": "What's the way to remove a joint owner ?", "same": true}
+{"id": "gs0065", "a": "What are the steps to cancel a travel notice?", "b": "What are the steps to cacnel a travel notice?", "same": true}
+{"id": "gs0066", "a": "What's the way to unlock my credit card?", "b": "Can you tell me how to unlock my credit card?", "same": true}
+{"id": "gs0067", "a": "Can you tell me how to open a checking account?", "b": "Could you tell me how to open a checking account?", "same": true}
+{"id": "gs0068", "a": "How do I download my direct deposit form?", "b": "Where do I get my direct depsoit form?", "same": true}
+{"id": "gs0069", "a": "Can you tell me how to add an authorized user?", "b": "Quick question: can you tell me how to add an authorized user?", "same": true}
+{"id": "gs0070", "a": "How do I report a change of address?", "b": "Who do I contact to report a change of address", "same": true}
+{"id": "gs0071", "a": "What are the steps to turn off biometric sign-in?", "b": "How can I turn off biometric sign-in?", "same": true}
+{"id": "gs0072", "a": "What is the rate on a new boat loan?", "b": "what is the rate on a new boat loan", "same": true}
+{"id": "gs0073", "a": "How do I add an authorized user?", "b": "how do i add an authorized user", "same": true}
+{"id": "gs0074", "a": "What is the dividend rate on the 18-month certificate?", "b": "What is the dividend rate on the 18-month certificate ?", "same": true}
+{"id": "gs0075", "a": "I'm trying to turn off two-step verification in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Could you explain how I turn off two-step verification from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0076", "a": "How long does expedited card delivery take?", "b": "how long does expedited card delivery take", "same": true}
+{"id": "gs0077", "a": "How late is the Weston branch open on Saturday?", "b": "What time does the Weston branch close on Saturday?", "same": true}
+{"id": "gs0078", "a": "What do you charge for an incoming international wire?", "b": "How much is the fee for an incoming international wire?", "same": true}
+{"id": "gs0079", "a": "What do you charge for a notary stamp?", "b": "What do you charge for a notary stamp", "same": true}
+{"id": "gs0080", "a": "Can I open a new account at a Cypress Harbor branch?", "b": "can i open a new account at a cypress harbor branch", "same": true}
+{"id": "gs0081", "a": "Tell me the monthly limit for debit card purchases.", "b": "Tell me the monthly limit for debit card purchases", "same": true}
+{"id": "gs0082", "a": "Who do I contact to report identity theft?", "b": "Who do I contact to report identity theft ?", "same": true}
+{"id": "gs0083", "a": "I need to send money to my landlord before the end of the day. What is the fee for a Zelle payment, and how long does it take to arrive?", "b": "What does a Zelle payment cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "same": true}
+{"id": "gs0084", "a": "Tell me the dividend rate on the 36-month certificate.", "b": "Hey, what is the dividend rate on the 36-month certificate?", "same": true}
+{"id": "gs0085", "a": "What's the APR for a used motorcycle loan?", "b": "Hi there, what's the APR for a used motorcycle loan?", "same": true}
+{"id": "gs0086", "a": "I was looking at the rate sheet on your website and wanted to confirm the dividend rate on the 12-month certificate before I open one this week.", "b": "Before I open one this week, can you confirm the dividend rate on the 12-month certificate? I saw it on the rate sheet on your website.", "same": true}
+{"id": "gs0087", "a": "How late is the Miramar branch open on Sunday?", "b": "What time does the Miramar branch close on Sunday? Thanks!", "same": true}
+{"id": "gs0088", "a": "When does the Weston branch close on a weekday?", "b": "Hey, when does the Weston branch close on a weekday?", "same": true}
+{"id": "gs0089", "a": "How long does an outgoing domestic wire take?", "b": "How long does an outgoing domestic wire take", "same": true}
+{"id": "gs0090", "a": "Hi, I have a question about my account. I would like to unlock my credit card, can you walk me through how to do that in the mobile app?", "b": "Hey, hi, I have a question about my account. I would like to unlock my credit card, can you walk me through how to do that in the mobile app?", "same": true}
+{"id": "gs0091", "a": "Where can I find my monthly statement?", "b": "Where do I get my monthly statement?", "same": true}
+{"id": "gs0092", "a": "Is it possible to open a new account at a Cypress Harbor branch?", "b": "Quick question: is it possible to open a new account at a Cypress Harbor branch?", "same": true}
+{"id": "gs0093", "a": "How late is the Coral Springs branch open on a weekday?", "b": "How late is the Coral Sprigns branch open on a weekday?", "same": true}
+{"id": "gs0094", "a": "Hi, I have a question about my account. I would like to set up a recurring transfer to savings, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account . I would like to set up a recurring transfer to savings, can you walk me through how to do that in the mobile app ?", "same": true}
+{"id": "gs0095", "a": "How late is the Boca Raton branch open on a weekday?", "b": "How late is the Boca Raton branch open on a weekday ?", "same": true}
+{"id": "gs0096", "a": "I'm going on a trip next month and need to know the daily limit for external transfers so my transactions don't get declined while I'm away.", "b": "So nothing gets declined while I'm traveling next month, what is the daily limit for external transfers?", "same": true}
+{"id": "gs0097", "a": "Hi, I have a question about my account. I would like to turn off two-step verification, can you walk me through how to do that in the mobile app?", "b": "  Hi, I have a question about my account. I would like to turn off two-step verification, can you walk me through how to do that in the mobile app?  ", "same": true}
+{"id": "gs0098", "a": "Tell me the APY on the Money Market account.", "b": "tell me the apy on the money market account", "same": true}
+{"id": "gs0099", "a": "What is the fee for a replacement debit card?", "b": "what is the fee for a replacement debit card", "same": true}
+{"id": "gs0100", "a": "How much does an incoming domestic wire cost?", "b": "What is the fee for an incoming domestic wire?", "same": true}
+{"id": "gs0101", "a": "Is it possible to withdraw cash at a CO-OP shared branch?", "b": "  Is it possible to withdraw cash at a CO-OP shared branch?  ", "same": true}
+{"id": "gs0102", "a": "I'm trying to turn off text alerts in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Hi, I have a question about my account. I would like to turn off text alerts, can you walk me through how to do that in the mobile app?", "same": true}
+{"id": "gs0103", "a": "Am I able to withdraw cash at a CO-OP shared branch?", "b": "Is it possible to withdraw cash at a CO-OP shared branch", "same": true}
+{"id": "gs0104", "a": "Who do I contact to report an unauthorized ACH debit?", "b": "What should I do to report an unauthorized ACH debit?", "same": true}
+{"id": "gs0105", "a": "How do I close a checking account?", "b": "Hi, how can I close a checking account?", "same": true}
+{"id": "gs0106", "a": "When should I expect a new box of checks?", "b": "How long does a new box of checks take?", "same": true}
+{"id": "gs0107", "a": "How can I turn on paperless statements?", "b": "What's the way to turn on paperless statements?", "same": true}
+{"id": "gs0108", "a": "How do I turn on paperless statements?", "b": "  How do I turn on paperless statements?  ", "same": true}
+{"id": "gs0109", "a": "What's my daily limit on external transfers?", "b": "  What is the daily limit for external transfers?  ", "same": true}
+{"id": "gs0110", "a": "What's the current APY for the 6-month certificate?", "b": "What APY do you pay on the 6-month certificate?", "same": true}
+{"id": "gs0111", "a": "How high is the daily limit for external transfers?", "b": "Hi there, how high is the daily limit for external transfers?", "same": true}
+{"id": "gs0112", "a": "What is the dividend rate on the 36-month certificate?", "b": "  What is the dividend rate on the 36-month certificate?  ", "same": true}
+{"id": "gs0113", "a": "How can I unlock my debit card?", "b": "how can i unlock my debit card", "same": true}
+{"id": "gs0114", "a": "Where do I get my year-end loan interest summary?", "b": "  Where do I get my year-end loan interest summary?  ", "same": true}
+{"id": "gs0115", "a": "Can I open a new account at a CO-OP shared branch?", "b": "am i able to open a new account at a co-op shared branch", "same": true}
+{"id": "gs0116", "a": "How do I download my dividend tax form?", "b": "Where can I find my dividned tax form?", "same": true}
+{"id": "gs0117", "a": "How much does an incoming international wire cost?", "b": "Hi there, what do you charge for an incoming international wire?", "same": true}
+{"id": "gs0118", "a": "What's the way to turn on two-step verification?", "b": "How can I turn on two-step verification?", "same": true}
+{"id": "gs0119", "a": "What's my monthly limit on debit card purchases?", "b": "What is the monthly limit for debit card purchases?", "same": true}
+{"id": "gs0120", "a": "How much is the fee for a money order?", "b": "Quick question: how much does a money order cost?", "same": true}
+{"id": "gs0121", "a": "How long does a mailed paper statement take?", "b": "How long does a mailed paper statement take? thx", "same": true}
+{"id": "gs0122", "a": "What are the steps to lock my debit card?", "b": "Hello, what are the steps to lock my debit card?", "same": true}
+{"id": "gs0123", "a": "What is the APY on the 6-month certificate?", "b": "What APY do you pay on the 6-month certificate?", "same": true}
+{"id": "gs0124", "a": "Before I open one this week, can you confirm the APY on the 12-month certificate? I saw it on the rate sheet on your website.", "b": "Before I open one this week, can you confirm the APY on the 12-month certificate? I saw it on the rate sheet on your website", "same": true}
+{"id": "gs0125", "a": "Can you tell me how to unlock my credit card?", "b": "Hi, can you tell me how to unlock my credit card?", "same": true}
+{"id": "gs0126", "a": "How do I report a Zelle payment sent to the wrong person?", "b": "How do I report a Zelle pyament sent to the wrong person?", "same": true}
+{"id": "gs0127", "a": "What are the steps to add a joint owner?", "b": "How do I add a joint owner?", "same": true}
+{"id": "gs0128", "a": "What is the dividend rate on the Money Market account?", "b": "What is the dividend rate on the Money Market account ?", "same": true}
+{"id": "gs0129", "a": "What is the fee for skip-a-pay?", "b": "What's the fee for skip-a-pay?", "same": true}
+{"id": "gs0130", "a": "Am I able to open a new account at a Cypress Harbor branch?", "b": "Am I able to open a new account at a Cypress Harbor branch", "same": true}
+{"id": "gs0131", "a": "When does the Coral Springs branch close on Saturday?", "b": "When does the Coral Springs branch close on Sautrday?", "same": true}
+{"id": "gs0132", "a": "What time does the Plantation branch close on Sunday?", "b": "what time does the plantation branch close on sunday", "same": true}
+{"id": "gs0133", "a": "How can I turn on biometric sign-in?", "b": "Good morning. what are the steps to turn on biometric sign-in?", "same": true}
+{"id": "gs0134", "a": "How late is the Plantation branch open on a weekday?", "b": "What time does the Plantation branch close on a weekday? Thanks", "same": true}
+{"id": "gs0135", "a": "What's the way to turn off quick balance?", "b": "How can I turn off quick balnace?", "same": true}
+{"id": "gs0136", "a": "Hi, I have a question about my account. I would like to turn off text alerts, can you walk me through how to do that in the mobile app?", "b": "Can you explain how I turn off text alerts from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0137", "a": "How can I turn on quick balance?", "b": "Hi there, can you tell me how to turn on quick balance?", "same": true}
+{"id": "gs0138", "a": "What are the steps to turn on overdraft coverage?", "b": "Hey, what are the steps to turn on overdraft coverage?", "same": true}
+{"id": "gs0139", "a": "What is the monthly limit for debit card purchases?", "b": "Tell me the monthly limit for debit card purchases.", "same": true}
+{"id": "gs0140", "a": "What is the fee for a stop payment?", "b": "What's the fee for a stop payment?", "same": true}
+{"id": "gs0141", "a": "What's the current APY for the 12-month certificate?", "b": "Hello, what's the current APY for the 12-month certificate?", "same": true}
+{"id": "gs0142", "a": "What is the monthly limit for debit card purchases?", "b": "  What is the monthly limit for debit card purchases?  ", "same": true}
+{"id": "gs0143", "a": "Is it possible to open a new account at a Cypress Harbor branch?", "b": "Can I open a new account at a Cypress Harbor branch?", "same": true}
+{"id": "gs0144", "a": "I'm trying to turn off biometric sign-in in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "  I'm trying to turn off biometric sign-in in the mobile app but I can't find where to do it. Can you tell me the steps?  ", "same": true}
+{"id": "gs0145", "a": "What's the way to set up a recurring transfer?", "b": "how do i set up a recurring transfer", "same": true}
+{"id": "gs0146", "a": "Where can I find my fee schedule?", "b": "How do I download my fee schedule?", "same": true}
+{"id": "gs0147", "a": "So nothing gets declined while I'm traveling next month, what is the daily limit for Zelle?", "b": "I'm going on a trip next month and need to know the daily limit for Zelle so my transactions don't get declined while I'm away.", "same": true}
+{"id": "gs0148", "a": "What do you charge for skip-a-pay?", "b": "What do you charge for skip-a-pay", "same": true}
+{"id": "gs0149", "a": "Can you tell me how to set up a travel notice?", "b": "How can I set up a travel notice?", "same": true}
+{"id": "gs0150", "a": "How do I remove a joint owner?", "b": "How do i remove a joint owner?", "same": true}
+{"id": "gs0151", "a": "I need to send money to my landlord before the end of the day. What is the fee for an outgoing international wire, and how long does it take to arrive?", "b": "Hey, i need to send money to my landlord before the end of the day. What is the fee for an outgoing international wire, and how long does it take to arrive?", "same": true}
+{"id": "gs0152", "a": "How much does a replacement debit card cost?", "b": "What do you charge for a replacement debit card", "same": true}
+{"id": "gs0153", "a": "How late is the Sunrise branch open on Saturday?", "b": "Hi, how late is the Sunrise branch open on Saturday?", "same": true}
+{"id": "gs0154", "a": "Where do I get my monthly statement?", "b": "where do i get my monthly statement", "same": true}
+{"id": "gs0155", "a": "What rate do you offer on a new auto loan?", "b": "What's the APR for a new auto loan?", "same": true}
+{"id": "gs0156", "a": "How much does skip-a-pay cost?", "b": "What is the fee for skip-a-pay ?", "same": true}
+{"id": "gs0157", "a": "What rate do you offer on a new motorcycle loan?", "b": "What's the APR for a new motorcycle loan?", "same": true}
+{"id": "gs0158", "a": "What's the APR for a used boat loan?", "b": "Hey, what's the APR for a used boat loan?", "same": true}
+{"id": "gs0159", "a": "Am I able to deposit cash at a CO-OP shared branch?", "b": "Am I able to deopsit cash at a CO-OP shared branch?", "same": true}
+{"id": "gs0160", "a": "What APY do you pay on the 36-month certificate?", "b": "What is the current APY for the 36-month certificate?", "same": true}
+{"id": "gs0161", "a": "What's my daily limit on ATM withdrawals?", "b": "how high is the daily limit for atm withdrawals", "same": true}
+{"id": "gs0162", "a": "My daughter is starting college in the fall and I want to remove her as the payable-on-death beneficiary on my checking account. What do I need to bring to the branch?", "b": "I need to remove my daughter as the payable-on-death beneficiary on my checking account now that she is in college . What do I have to bring with me to a branch ?", "same": true}
+{"id": "gs0163", "a": "When does the Boca Raton branch close on Saturday?", "b": "How late is the Boca Raton branch open on Saturday?", "same": true}
+{"id": "gs0164", "a": "Can you tell me how to lock my credit card?", "b": "Could you tell me how to lock my credit card?", "same": true}
+{"id": "gs0165", "a": "Who do I contact to report a deceased member?", "b": "What should I do to report a deceased member?", "same": true}
+{"id": "gs0166", "a": "Can you tell me how to turn on paperless statements?", "b": "How do I turn on paperless statements?", "same": true}
+{"id": "gs0167", "a": "What's the APR for a used RV loan?", "b": "Whta's the APR for a used RV loan?", "same": true}
+{"id": "gs0168", "a": "How can I lock my debit card?", "b": "How can I lock my debit card? Thank you.", "same": true}
+{"id": "gs0169", "a": "Is it possible to open a new account at a CO-OP shared branch?", "b": "is it possible to open a new account at a co-op shared branch", "same": true}
+{"id": "gs0170", "a": "How late is the Davie branch open on Saturday?", "b": "What time does the Davie branch close on Saturday?", "same": true}
+{"id": "gs0171", "a": "How many days does an outgoing international wire take?", "b": "How many days does an outgoing international wire take? thx", "same": true}
+{"id": "gs0172", "a": "What are the steps to unlock my debit card?", "b": "Hey, what are the steps to unlock my debit card?", "same": true}
+{"id": "gs0173", "a": "Hi, I have a question about my account. I would like to turn on two-step verification, can you walk me through how to do that in the mobile app?", "b": "I'm trying to turn on two-step verification in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0174", "a": "What are the steps to remove a joint owner?", "b": "What are the steps to remvoe a joint owner?", "same": true}
+{"id": "gs0175", "a": "I'm going on a trip next month and need to know the monthly limit for ATM withdrawals so my transactions don't get declined while I'm away.", "b": "Hello, i'm going on a trip next month and need to know the monthly limit for ATM withdrawals so my transactions don't get declined while I'm away.", "same": true}
+{"id": "gs0176", "a": "I'm trying to cancel automatic loan payments in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to cancel automatic loan payments in the mobile app but I can't find where to do it. Could you tell me the steps?", "same": true}
+{"id": "gs0177", "a": "I'm going on a trip next month and need to know the daily limit for debit card purchases so my transactions don't get declined while I'm away.", "b": "I'm going on a trip next month and need to know the daily limit for debit card purchases so my transactinos don't get declined while I'm away.", "same": true}
+{"id": "gs0178", "a": "Tell me the APY on the 12-month certificate.", "b": "Tell me the APY on the 12-month certificate", "same": true}
+{"id": "gs0179", "a": "How do I add a beneficiary?", "b": "How do I add a beneficairy?", "same": true}
+{"id": "gs0180", "a": "So nothing gets declined while I'm traveling next month, what is the monthly limit for ATM withdrawals?", "b": "So nothing gets declined while I'm traveling next month, what is the monthly limit for ATM withdrawals", "same": true}
+{"id": "gs0181", "a": "I need to remove my daughter as a joint owner on my checking account now that she is in college. What do I have to bring with me to a branch?", "b": "i need to remove my daughter as a joint owner on my checking account now that she is in college. what do i have to bring with me to a branch", "same": true}
+{"id": "gs0182", "a": "I was looking at the rate sheet on your website and wanted to confirm the APY on the Money Market account before I open one this week.", "b": "Hey, i was looking at the rate sheet on your website and wanted to confirm the APY on the Money Market account before I open one this week.", "same": true}
+{"id": "gs0183", "a": "What is the rate on a new auto loan?", "b": "what's the apr for a new auto loan", "same": true}
+{"id": "gs0184", "a": "What time does the Coral Springs branch close on a weekday?", "b": "How late is the Coral Springs branch open on a weekday?", "same": true}
+{"id": "gs0185", "a": "Tell me the monthly limit for Zelle.", "b": "Tell me the monthly limit for Zelle? Thank you.", "same": true}
+{"id": "gs0186", "a": "What is the daily limit for debit card purchases?", "b": "What is the daily limit for debit card purchsaes?", "same": true}
+{"id": "gs0187", "a": "Can you tell me how to lock my debit card?", "b": "Can you tell me how to lock my debit card? thx", "same": true}
+{"id": "gs0188", "a": "Can you tell me how to turn on two-step verification?", "b": "can you tell me how to turn on two-step verification", "same": true}
+{"id": "gs0189", "a": "What's the way to turn on text alerts?", "b": "What's the way to turn on text alerts ?", "same": true}
+{"id": "gs0190", "a": "I'm trying to set up a recurring transfer to savings in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Hi, I have a question about my account. I would like to set up a recurring transfer to savings, can you walk me through how to do that in the mobile app?", "same": true}
+{"id": "gs0191", "a": "Tell me the daily limit for ATM withdrawals.", "b": "Tell me the daily limit for ATM withdrawals? Thanks!", "same": true}
+{"id": "gs0192", "a": "What rate do you offer on a new auto loan?", "b": "What rate do you ofefr on a new auto loan?", "same": true}
+{"id": "gs0193", "a": "What should I do to report a Zelle payment sent to the wrong person?", "b": "How do I report a Zelle payment sent to the wrong person? thx", "same": true}
+{"id": "gs0194", "a": "What's the current dividend rate for the 36-month certificate?", "b": "What is the current dividend rate for the 36-month certificate?", "same": true}
+{"id": "gs0195", "a": "What is the monthly limit for external transfers?", "b": "what is the monthly limit for external transfers", "same": true}
+{"id": "gs0196", "a": "How do I set up a recurring transfer?", "b": "How can I set up a recurring transfer?", "same": true}
+{"id": "gs0197", "a": "What's the APR for a new RV loan?", "b": "What's the APR for a new RV loan? Thanks!", "same": true}
+{"id": "gs0198", "a": "Before I open one this week, can you confirm the minimum deposit on the 12-month certificate? I saw it on the rate sheet on your website.", "b": "Before I open one this week, can you confirm the minimum deposit on the 12-month certificate? I saw it on the rate sheet on your website", "same": true}
+{"id": "gs0199", "a": "How high is the daily limit for ATM withdrawals?", "b": "How high is the daily limit for ATM withdrawals? Thanks", "same": true}
+{"id": "gs0200", "a": "Could you explain how I turn off text alerts from my phone? I looked in the app settings and did not see it.", "b": "I'm trying to turn off text alerts in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0201", "a": "How much is the fee for expedited card delivery?", "b": "what is the fee for expedited card delivery", "same": true}
+{"id": "gs0202", "a": "How can I turn on overdraft coverage?", "b": "What's the way to turn on overdrfat coverage?", "same": true}
+{"id": "gs0203", "a": "How can I open a Holiday Club account?", "b": "What's the way to open a Holiday Club account?", "same": true}
+{"id": "gs0204", "a": "How do I set up a recurring transfer?", "b": "How do I set up a recurring transfer ?", "same": true}
+{"id": "gs0205", "a": "Who do I contact to report a change of address?", "b": "What should I do to report a change of address?", "same": true}
+{"id": "gs0206", "a": "How much is the fee for an overdraft?", "b": "Hi there, how much is the fee for an overdraft?", "same": true}
+{"id": "gs0207", "a": "What are the steps to cancel a travel notice?", "b": "How can I cancel a travel notice?", "same": true}
+{"id": "gs0208", "a": "How many days does a mailed paper statement take?", "b": "How many days does a mailed paper statement take", "same": true}
+{"id": "gs0209", "a": "How much is the fee for skip-a-pay?", "b": "How much is the fee for skip--apay?", "same": true}
+{"id": "gs0210", "a": "What's the way to open a Holiday Club account?", "b": "What are the steps to open a Holiday Club account?", "same": true}
+{"id": "gs0211", "a": "How high is the daily limit for external transfers?", "b": "What is the daily limit for external tarnsfers?", "same": true}
+{"id": "gs0212", "a": "What's the way to open a Holiday Club account?", "b": "What's the way to open a Holiday Club account ?", "same": true}
+{"id": "gs0213", "a": "How can I close a savings account?", "b": "How do I close a savings account?", "same": true}
+{"id": "gs0214", "a": "What are the steps to lock my credit card?", "b": "Hi there, what are the steps to lock my credit card?", "same": true}
+{"id": "gs0215", "a": "How can I cancel direct deposit?", "b": "How can I cancel direct deposit? Thanks!", "same": true}
+{"id": "gs0216", "a": "What is the fee for a cashier's check?", "b": "How much does a cashier's check cost?", "same": true}
+{"id": "gs0217", "a": "What do you charge for a money order?", "b": "What do you charge for a money order? Thanks!", "same": true}
+{"id": "gs0218", "a": "How can I close a checking account?", "b": "What are the steps to close a checking account?", "same": true}
+{"id": "gs0219", "a": "Tell me the monthly limit for ATM withdrawals.", "b": "What is the monthly limit for ATM withdrawals?", "same": true}
+{"id": "gs0220", "a": "How can I turn on biometric sign-in?", "b": "how can i turn on biometric sign-in", "same": true}
+{"id": "gs0221", "a": "What are the steps to open a Holiday Club account?", "b": "How can I open a Holiday Club account?", "same": true}
+{"id": "gs0222", "a": "What's my daily limit on debit card purchases?", "b": "Tell me the daily limit for debit card purchases.", "same": true}
+{"id": "gs0223", "a": "Can you tell me how to unlock my credit card?", "b": "How can I unlock my credit card?", "same": true}
+{"id": "gs0224", "a": "When should I expect a loan payoff letter?", "b": "how many days does a loan payoff letter take", "same": true}
+{"id": "gs0225", "a": "How can I open a savings account?", "b": "What are the steps to open a savings account?", "same": true}
+{"id": "gs0226", "a": "Can you tell me how to turn off biometric sign-in?", "b": "What's the way to turn off bimoetric sign-in?", "same": true}
+{"id": "gs0227", "a": "Could you explain how I unlock my debit card from my phone? I looked in the app settings and did not see it.", "b": "Hi, I have a question about my account. I would like to unlock my debit card, can you walk me through how to do that in the mobile app?", "same": true}
+{"id": "gs0228", "a": "What is the fee for an overdraft?", "b": "What do you charge for an overdraft?", "same": true}
+{"id": "gs0229", "a": "I'm trying to turn on biometric sign-in in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Could you explain how I turn on biometric sign-in from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0230", "a": "Can I make a loan payment at a CO-OP shared branch?", "b": "Am I able to make a loan payment at a CO-OP shared branch?", "same": true}
+{"id": "gs0231", "a": "Can you tell me how to close a checking account?", "b": "Could you tell me how to close a checking account?", "same": true}
+{"id": "gs0232", "a": "How do I add an authorized user?", "b": "What's the way to add an authorized user?", "same": true}
+{"id": "gs0233", "a": "I'm trying to cancel automatic loan payments in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Could you explain how I cancel automatic loan payments from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0234", "a": "What is the daily limit for mobile check deposit?", "b": "What is the daily limit for mobile check depoist?", "same": true}
+{"id": "gs0235", "a": "Hi, I have a question about my account. I would like to turn off paperless statements, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to turn off paperless statements, can you walk me through how to do that in the mobile app? Thanks!", "same": true}
+{"id": "gs0236", "a": "How much is the fee for a cashier's check?", "b": "  How much is the fee for a cashier's check?  ", "same": true}
+{"id": "gs0237", "a": "How do I cancel a recurring transfer?", "b": "What are the steps to cancel a recurring transfer?", "same": true}
+{"id": "gs0238", "a": "What is the daily limit for Zelle?", "b": "What is the dialy limit for Zelle?", "same": true}
+{"id": "gs0239", "a": "What time does the Sunrise branch close on a weekday?", "b": "How late is the Sunrise branch open on a weekday", "same": true}
+{"id": "gs0240", "a": "What time does the Sunrise branch close on Sunday?", "b": "Hey, what time does the Sunrise branch close on Sunday?", "same": true}
+{"id": "gs0241", "a": "How do I cancel direct deposit?", "b": "How do I cancel direct deposit ?", "same": true}
+{"id": "gs0242", "a": "Could you explain how I cancel a recurring transfer to savings from my phone? I looked in the app settings and did not see it.", "b": "I'm trying to cancel a recurring transfer to savings in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0243", "a": "What are the steps to open a savings account?", "b": "what's the way to open a savings account", "same": true}
+{"id": "gs0244", "a": "Who do I contact to report a lost debit card?", "b": "how do i report a lost debit card", "same": true}
+{"id": "gs0245", "a": "Where can I find my monthly statement?", "b": "Where can I find my monthly sttaement?", "same": true}
+{"id": "gs0246", "a": "I'm trying to lock my credit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Could you explain how I lock my credit card from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0247", "a": "Hi, I have a question about my account. I would like to lock my credit card, can you walk me through how to do that in the mobile app?", "b": "Could you explain how I lock my credit card from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0248", "a": "What are the steps to cancel automatic loan payments?", "b": "What're the steps to cancel automatic loan payments?", "same": true}
+{"id": "gs0249", "a": "Can you tell me how to set up a travel notice?", "b": "Could you tell me how to set up a travel notice?", "same": true}
+{"id": "gs0250", "a": "Can you tell me how to cancel automatic loan payments?", "b": "Hi, can you tell me how to cancel automatic loan payments?", "same": true}
+{"id": "gs0251", "a": "Where can I find my privacy notice?", "b": "Where do I get my privacy notice", "same": true}
+{"id": "gs0252", "a": "What's the way to cancel direct deposit?", "b": "What are the steps to cancel direct deposit?", "same": true}
+{"id": "gs0253", "a": "Can you tell me how to open a Holiday Club account?", "b": "Can you tell me how to open a Hoilday Club account?", "same": true}
+{"id": "gs0254", "a": "Am I able to make a loan payment at a Cypress Harbor branch?", "b": "Am I able to make a loan payment at a Cypress Harbor branch", "same": true}
+{"id": "gs0255", "a": "How can I unlock my debit card?", "b": "What are the steps to unlock my debit card?", "same": true}
+{"id": "gs0256", "a": "Can I open a new account at a CO-OP shared branch?", "b": "Can I open a new acconut at a CO-OP shared branch?", "same": true}
+{"id": "gs0257", "a": "What's my monthly limit on Zelle?", "b": "What is my monthly limit on Zelle?", "same": true}
+{"id": "gs0258", "a": "What's the way to set up direct deposit?", "b": "Hi there, what's the way to set up direct deposit?", "same": true}
+{"id": "gs0259", "a": "What is the dividend rate on the 18-month certificate?", "b": "Tell me the dividend rate on the 18-month certificate.", "same": true}
+{"id": "gs0260", "a": "Could you explain how I turn on two-step verification from my phone? I looked in the app settings and did not see it.", "b": "Can you explain how I turn on two-step verification from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0261", "a": "When does the Boca Raton branch close on Sunday?", "b": "What time does the Boca Raton branch close on Sunday? Thanks", "same": true}
+{"id": "gs0262", "a": "Could you explain how I cancel automatic loan payments from my phone? I looked in the app settings and did not see it.", "b": "Hi, I have a question about my account. I would like to cancel automatic loan payments, can you walk me through how to do that in the mobile app", "same": true}
+{"id": "gs0263", "a": "How much does a replacement debit card cost?", "b": "how much does a replacement debit card cost", "same": true}
+{"id": "gs0264", "a": "How high is the daily limit for debit card purchases?", "b": "Tell me the daily limit for debit card purchases.", "same": true}
+{"id": "gs0265", "a": "What do you charge for an outgoing international wire?", "b": "what do you charge for an outgoing international wire", "same": true}
+{"id": "gs0266", "a": "What rate do you offer on a used boat loan?", "b": "What rate do you offer on a used boat loan? thx", "same": true}
+{"id": "gs0267", "a": "What time does the Weston branch close on Saturday?", "b": "When does the Weston branch close on Satruday?", "same": true}
+{"id": "gs0268", "a": "Can you tell me how to remove a beneficiary?", "b": "Could you tell me how to remove a beneficiary?", "same": true}
+{"id": "gs0269", "a": "What's the way to turn on two-step verification?", "b": "What's the way to turn on two-step verification? thx", "same": true}
+{"id": "gs0270", "a": "How do I turn off biometric sign-in?", "b": "How can I turn off biometric sign-in?", "same": true}
+{"id": "gs0271", "a": "Can you tell me how to turn off overdraft coverage?", "b": "How do i turn off overdraft coverage?", "same": true}
+{"id": "gs0272", "a": "How do I close a savings account?", "b": "Hi there, how do I close a savings account?", "same": true}
+{"id": "gs0273", "a": "How do I unlock my debit card?", "b": "Can you tell me how to unlock my debit card?", "same": true}
+{"id": "gs0274", "a": "Hi, I have a question about my account. I would like to turn on paperless statements, can you walk me through how to do that in the mobile app?", "b": "I'm trying to turn on paperless statements in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0275", "a": "How high is the monthly limit for ATM withdrawals?", "b": "Hello, how high is the monthly limit for ATM withdrawals?", "same": true}
+{"id": "gs0276", "a": "Am I able to open a new account at a CO-OP shared branch?", "b": "Am I able to open a new account at a CO-OP shared branch", "same": true}
+{"id": "gs0277", "a": "Is it possible to withdraw cash at a CO-OP network ATM?", "b": "Can I withdraw cash at a CO-OP network ATM?", "same": true}
+{"id": "gs0278", "a": "Hi, I have a question about my account. I would like to set up automatic loan payments, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to set up automatic loan payments, can you walk me through how to do that in the mobile app", "same": true}
+{"id": "gs0279", "a": "What time does the Sunrise branch close on Saturday?", "b": "Hi, what time does the Sunrise branch close on Saturday?", "same": true}
+{"id": "gs0280", "a": "What is the dividend rate on the 36-month certificate?", "b": "What's the current dividend rate for the 36-month certificate?", "same": true}
+{"id": "gs0281", "a": "Where do I get my account agreement?", "b": "How do I download my account agreement?", "same": true}
+{"id": "gs0282", "a": "How do I close a Money Market account?", "b": "How can I close a Money Market account", "same": true}
+{"id": "gs0283", "a": "I was looking at the rate sheet on your website and wanted to confirm the dividend rate on the Money Market account before I open one this week.", "b": "i was looking at the rate sheet on your website and wanted to confirm the dividend rate on the money market account before i open one this week", "same": true}
+{"id": "gs0284", "a": "What's the way to open a Money Market account?", "b": "  What's the way to open a Money Market account?  ", "same": true}
+{"id": "gs0285", "a": "What's my daily limit on Zelle?", "b": "Tell me the dialy limit for Zelle.", "same": true}
+{"id": "gs0286", "a": "What's the way to set up a travel notice?", "b": "How can I set up a travel notice?", "same": true}
+{"id": "gs0287", "a": "How do I turn off biometric sign-in?", "b": "  How do I turn off biometric sign-in?  ", "same": true}
+{"id": "gs0288", "a": "What's my daily limit on mobile check deposit?", "b": "What's my daily limit on mobile check deposit? Thanks", "same": true}
+{"id": "gs0289", "a": "How can I remove a joint owner?", "b": "How can I remvoe a joint owner?", "same": true}
+{"id": "gs0290", "a": "What do you charge for a safe deposit box?", "b": "How much does a safe deposit box cost?", "same": true}
+{"id": "gs0291", "a": "What is the fee for an out-of-network ATM withdrawal?", "b": "what is the fee for an out-of-network atm withdrawal", "same": true}
+{"id": "gs0292", "a": "How do I remove a beneficiary?", "b": "  How do I remove a beneficiary?  ", "same": true}
+{"id": "gs0293", "a": "How long does a new box of checks take?", "b": "How many days does a new box of checks take?", "same": true}
+{"id": "gs0294", "a": "What's the way to turn off two-step verification?", "b": "How do I turn off two-step verifictaion?", "same": true}
+{"id": "gs0295", "a": "Could you explain how I turn off text alerts from my phone? I looked in the app settings and did not see it.", "b": "could you explain how i turn off text alerts from my phone? i looked in the app settings and did not see it", "same": true}
+{"id": "gs0296", "a": "What time does the Davie branch close on Sunday?", "b": "Hey, what time does the Davie branch close on Sunday?", "same": true}
+{"id": "gs0297", "a": "I'm going on a trip next month and need to know the monthly limit for debit card purchases so my transactions don't get declined while I'm away.", "b": "Hey, i'm going on a trip next month and need to know the monthly limit for debit card purchases so my transactions don't get declined while I'm away.", "same": true}
+{"id": "gs0298", "a": "How can I turn off text alerts?", "b": "What's the way to turn off text alerts? Thank you.", "same": true}
+{"id": "gs0299", "a": "I'm going on a trip next month and need to know the monthly limit for debit card purchases so my transactions don't get declined while I'm away.", "b": "So nothing gets declined while I'm traveling next month, what is the monthly limit for debit card purchases?", "same": true}
+{"id": "gs0300", "a": "What is the fee for expedited card delivery?", "b": "What's the fee for expedited card delivery?", "same": true}
+{"id": "gs0301", "a": "Can you tell me how to turn off two-step verification?", "b": "How do I turn off two-step verification?", "same": true}
+{"id": "gs0302", "a": "How much does a safe deposit box cost?", "b": "What is the fee for a safe deposit box?", "same": true}
+{"id": "gs0303", "a": "How much does a cashier's check cost?", "b": "How much is the fee for a casiher's check?", "same": true}
+{"id": "gs0304", "a": "How do I report a lost debit card?", "b": "Hi, what should I do to report a lost debit card?", "same": true}
+{"id": "gs0305", "a": "I'm trying to turn off text alerts in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Good morning. i'm trying to turn off text alerts in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0306", "a": "What are the steps to remove a joint owner?", "b": "How can I remove a joint owner", "same": true}
+{"id": "gs0307", "a": "Could you explain how I turn on biometric sign-in from my phone? I looked in the app settings and did not see it.", "b": "Can you explain how I turn on biometric sign-in from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0308", "a": "Where can I find my direct deposit form?", "b": "where can i find my direct deposit form", "same": true}
+{"id": "gs0309", "a": "Who do I contact to report a lost debit card?", "b": "Who do I contact to report a lost debit card", "same": true}
+{"id": "gs0310", "a": "What are the steps to cancel automatic loan payments?", "b": "What's the way to cancel automatic loan payments?", "same": true}
+{"id": "gs0311", "a": "What are the steps to remove a beneficiary?", "b": "What are the steps to remove a beneficiary? Thanks!", "same": true}
+{"id": "gs0312", "a": "How can I turn off paperless statements?", "b": "How can I turn off paperless statements? Thanks", "same": true}
+{"id": "gs0313", "a": "How long does a loan payoff letter take?", "b": "Hi there, how long does a loan payoff letter take?", "same": true}
+{"id": "gs0314", "a": "What time does the Davie branch close on a weekday?", "b": "When does the Davie branch close on a weekday ?", "same": true}
+{"id": "gs0315", "a": "Can you tell me how to turn on quick balance?", "b": "Can you tell me how to turn on quick balacne?", "same": true}
+{"id": "gs0316", "a": "How late is the Plantation branch open on Saturday?", "b": "  How late is the Plantation branch open on Saturday?  ", "same": true}
+{"id": "gs0317", "a": "I'm trying to unlock my debit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Hi, i'm trying to unlock my debit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0318", "a": "What's the APR for a used auto loan?", "b": "What rate do you offer on a used auto loan?", "same": true}
+{"id": "gs0319", "a": "Can you tell me how to turn on overdraft coverage?", "b": "Could you tell me how to turn on overdraft coverage?", "same": true}
+{"id": "gs0320", "a": "What APY do you pay on the 18-month certificate?", "b": "What APY do you pay on the 18-month certificate ?", "same": true}
+{"id": "gs0321", "a": "Can you tell me how to set up direct deposit?", "b": "How do I set up direct deposit?", "same": true}
+{"id": "gs0322", "a": "What do you charge for a stop payment?", "b": "How much does a stop payment cost?", "same": true}
+{"id": "gs0323", "a": "What's the way to turn on biometric sign-in?", "b": "What are the steps to turn on biometric sign-in?", "same": true}
+{"id": "gs0324", "a": "What's my monthly limit on external transfers?", "b": "Hello, what's my monthly limit on external transfers?", "same": true}
+{"id": "gs0325", "a": "What is the APY on the 12-month certificate?", "b": "Tell me the APY on the 12-month certificate.", "same": true}
+{"id": "gs0326", "a": "How late is the Sunrise branch open on a weekday?", "b": "How late is the Snurise branch open on a weekday?", "same": true}
+{"id": "gs0327", "a": "Hi, I have a question about my account. I would like to cancel automatic loan payments, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account . I would like to cancel automatic loan payments, can you walk me through how to do that in the mobile app ?", "same": true}
+{"id": "gs0328", "a": "Hi, I have a question about my account. I would like to turn on text alerts, can you walk me through how to do that in the mobile app?", "b": "Could you explain how I turn on text alerts from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0329", "a": "Hi, I have a question about my account. I would like to cancel automatic loan payments, can you walk me through how to do that in the mobile app?", "b": "i'm trying to cancel automatic loan payments in the mobile app but i can't find where to do it. can you tell me the steps", "same": true}
+{"id": "gs0330", "a": "What are the steps to add a joint owner?", "b": "What are the setps to add a joint owner?", "same": true}
+{"id": "gs0331", "a": "I'm trying to turn off paperless statements in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to turn off paperless statements in the mobile app but I can't find where to do it. Could you tell me the steps?", "same": true}
+{"id": "gs0332", "a": "I'm trying to unlock my debit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Could you explain how I unlock my debit card from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0333", "a": "Is it possible to make a loan payment at a CO-OP shared branch?", "b": "is it possible to make a loan payment at a co-op shared branch", "same": true}
+{"id": "gs0334", "a": "Could you explain how I set up a recurring transfer to savings from my phone? I looked in the app settings and did not see it.", "b": "I'm trying to set up a rceurring transfer to savings in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0335", "a": "When does the Coral Springs branch close on Sunday?", "b": "Hi there, when does the Coral Springs branch close on Sunday?", "same": true}
+{"id": "gs0336", "a": "How can I add a beneficiary?", "b": "How can I add a beneficiary? Thank you.", "same": true}
+{"id": "gs0337", "a": "What are the steps to cancel direct deposit?", "b": "Hi, what are the steps to cancel direct deposit?", "same": true}
+{"id": "gs0338", "a": "How do I report a lost debit card?", "b": "How do I report a lost debit card ?", "same": true}
+{"id": "gs0339", "a": "How much is the fee for a notary stamp?", "b": "  How much is the fee for a notary stamp?  ", "same": true}
+{"id": "gs0340", "a": "I'm trying to turn off biometric sign-in in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Hi, I have a question about my account. I would like to turn off biometric sign-in, can you walk me through how to do that in the mobile app? Thanks!", "same": true}
+{"id": "gs0341", "a": "Can you tell me how to open a Money Market account?", "b": "  Can you tell me how to open a Money Market account?  ", "same": true}
+{"id": "gs0342", "a": "How do I open a checking account?", "b": "Could you tell me how to open a checking account?", "same": true}
+{"id": "gs0343", "a": "What time does the Davie branch close on Sunday?", "b": "When does the Davie branch close on Sunday?", "same": true}
+{"id": "gs0344", "a": "What's my monthly limit on mobile check deposit?", "b": "what's my monthly limit on mobile check deposit", "same": true}
+{"id": "gs0345", "a": "How can I turn off two-step verification?", "b": "How can I turn off two-step verificatoin?", "same": true}
+{"id": "gs0346", "a": "What's my monthly limit on external transfers?", "b": "Tell me the monthly limit for external transfers.", "same": true}
+{"id": "gs0347", "a": "Tell me the daily limit for mobile check deposit.", "b": "  Tell me the daily limit for mobile check deposit.  ", "same": true}
+{"id": "gs0348", "a": "How much is the fee for an out-of-network ATM withdrawal?", "b": "What do you charge for an out-of-network ATM withdrawal?", "same": true}
+{"id": "gs0349", "a": "What's the way to turn off overdraft coverage?", "b": "Hello, what's the way to turn off overdraft coverage?", "same": true}
+{"id": "gs0350", "a": "Can I deposit cash at a CO-OP shared branch?", "b": "Is it possible to deposit cash at a CO-OP shared branch?", "same": true}
+{"id": "gs0351", "a": "Where can I find my direct deposit form?", "b": "Where do I get my direct deposit form?", "same": true}
+{"id": "gs0352", "a": "What are the steps to unlock my credit card?", "b": "Can you tell me how to unlock my credit card?", "same": true}
+{"id": "gs0353", "a": "I'm going on a trip next month and need to know the daily limit for Zelle so my transactions don't get declined while I'm away.", "b": "I'm going on a trip next month and need to know the daily limit for Zelle so my transactions don't get declined while I'm away? thx", "same": true}
+{"id": "gs0354", "a": "What are the steps to add a beneficiary?", "b": "Can you tell me how to add a beneficiary?", "same": true}
+{"id": "gs0355", "a": "How do I open a Holiday Club account?", "b": "How do I open a Hoilday Club account?", "same": true}
+{"id": "gs0356", "a": "How do I open a savings account?", "b": "How do I open a savings account ?", "same": true}
+{"id": "gs0357", "a": "Am I able to withdraw cash at a CO-OP network ATM?", "b": "Can I withdraw cash at a CO-OP network ATM?", "same": true}
+{"id": "gs0358", "a": "What is the fee for a notary stamp?", "b": "How much is the fee for a notary stamp?", "same": true}
+{"id": "gs0359", "a": "When does the Weston branch close on Sunday?", "b": "When does the Wetson branch close on Sunday?", "same": true}
+{"id": "gs0360", "a": "When does the Sunrise branch close on Sunday?", "b": "When does the Sunrise branch close on Sunday? Thanks", "same": true}
+{"id": "gs0361", "a": "What time does the Coral Springs branch close on Sunday?", "b": "How late is the Coral Springs branch open on Sunday?", "same": true}
+{"id": "gs0362", "a": "What time does the Miramar branch close on Saturday?", "b": "  What time does the Miramar branch close on Saturday?  ", "same": true}
+{"id": "gs0363", "a": "How do I turn off quick balance?", "b": "What are the steps to turn off quick balance? Thank you.", "same": true}
+{"id": "gs0364", "a": "What's the APR for a new boat loan?", "b": "What's the APR for a new boat loan? Thank you.", "same": true}
+{"id": "gs0365", "a": "How can I cancel a travel notice?", "b": "  How can I cancel a travel notice?  ", "same": true}
+{"id": "gs0366", "a": "How do I lock my credit card?", "b": "how do i lock my credit card", "same": true}
+{"id": "gs0367", "a": "Tell me the APY on the 6-month certificate.", "b": "Tell me the APY on the 6-month certificate? Thanks!", "same": true}
+{"id": "gs0368", "a": "What are the steps to turn on text alerts?", "b": "What are the steps to turn on text alerts ?", "same": true}
+{"id": "gs0369", "a": "Hi, I have a question about my account. I would like to turn on two-step verification, can you walk me through how to do that in the mobile app?", "b": "hi, i have a question about my account. i would like to turn on two-step verification, can you walk me through how to do that in the mobile app", "same": true}
+{"id": "gs0370", "a": "How late is the Weston branch open on a weekday?", "b": "how late is the weston branch open on a weekday", "same": true}
+{"id": "gs0371", "a": "How can I turn on paperless statements?", "b": "How can I turn on paperless sattements?", "same": true}
+{"id": "gs0372", "a": "What is the rate on a used motorcycle loan?", "b": "What is the rate on a used motorcycle loan ?", "same": true}
+{"id": "gs0373", "a": "How can I cancel direct deposit?", "b": "What's the way to cancel direct deposit?", "same": true}
+{"id": "gs0374", "a": "I was looking at the rate sheet on your website and wanted to confirm the early withdrawal penalty on the 12-month certificate before I open one this week.", "b": "I was looking at the rate sheet on your website and wanted to confirm the early withdrawal penalty on the 12-month cretificate before I open one this week.", "same": true}
+{"id": "gs0375", "a": "Hi, I have a question about my account. I would like to turn off biometric sign-in, can you walk me through how to do that in the mobile app?", "b": "I'm trying to turn off biometric sign-in in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0376", "a": "What is the dividend rate on the 6-month certificate?", "b": "What is the dividend rate on the 6-month certificate? Thanks!", "same": true}
+{"id": "gs0377", "a": "How can I close a savings account?", "b": "How can I close a savings account? thx", "same": true}
+{"id": "gs0378", "a": "Can you tell me how to turn off biometric sign-in?", "b": "Could you tell me how to turn off biometric sign-in?", "same": true}
+{"id": "gs0379", "a": "Hi, I have a question about my account. I would like to turn on paperless statements, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to turn on paperless statemnets, can you walk me through how to do that in the mobile app?", "same": true}
+{"id": "gs0380", "a": "When should I expect an outgoing international wire?", "b": "How long does an outgoing international wire take ?", "same": true}
+{"id": "gs0381", "a": "How long does an outgoing domestic wire take?", "b": "How many days does an outgoing domestic wire take?", "same": true}
+{"id": "gs0382", "a": "Can you tell me how to unlock my debit card?", "b": "  Can you tell me how to unlock my debit card?  ", "same": true}
+{"id": "gs0383", "a": "Hi, I have a question about my account. I would like to turn on biometric sign-in, can you walk me through how to do that in the mobile app?", "b": "I'm trying to turn on biometric sign-in in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0384", "a": "How late is the Weston branch open on Saturday?", "b": "How late is the Weston branch open on Saturady?", "same": true}
+{"id": "gs0385", "a": "What are the steps to turn on quick balance?", "b": "Can you tell me how to turn on quick balance?", "same": true}
+{"id": "gs0386", "a": "Hi, I have a question about my account. I would like to unlock my debit card, can you walk me through how to do that in the mobile app?", "b": "Hello, hi, I have a question about my account. I would like to unlock my debit card, can you walk me through how to do that in the mobile app?", "same": true}
+{"id": "gs0387", "a": "What is the monthly limit for ATM withdrawals?", "b": "How high is the monthly limit for ATM withdrawals?", "same": true}
+{"id": "gs0388", "a": "What's the way to add a beneficiary?", "b": "How can I add a beneficiary?", "same": true}
+{"id": "gs0389", "a": "What's the way to remove a beneficiary?", "b": "Can you tell me how to remove a beneficiary?", "same": true}
+{"id": "gs0390", "a": "How do I cancel direct deposit?", "b": "what are the steps to cancel direct deposit", "same": true}
+{"id": "gs0391", "a": "I was looking at the rate sheet on your website and wanted to confirm the early withdrawal penalty on the Money Market account before I open one this week.", "b": "Before I open one this week, can you confirm the early withdrawal penalty on the Money Market account? I saw it on the rate sheet on your website", "same": true}
+{"id": "gs0392", "a": "What's the way to turn off paperless statements?", "b": "How do I turn off paperless statements?", "same": true}
+{"id": "gs0393", "a": "How do I download my fee schedule?", "b": "How do I downolad my fee schedule?", "same": true}
+{"id": "gs0394", "a": "How late is the Coral Springs branch open on Saturday?", "b": "how late is the coral springs branch open on saturday", "same": true}
+{"id": "gs0395", "a": "How can I close a Money Market account?", "b": "What's the way to close a Money Market account?", "same": true}
+{"id": "gs0396", "a": "What are the steps to turn off quick balance?", "b": "What's the way to turn off quick balance?", "same": true}
+{"id": "gs0397", "a": "What is the fee for an outgoing international wire?", "b": "What is the fee for an outgoing interantional wire?", "same": true}
+{"id": "gs0398", "a": "What's the way to close a savings account?", "b": "Can you tell me how to close a savings account?", "same": true}
+{"id": "gs0399", "a": "How late is the Davie branch open on Sunday?", "b": "How late is the Davie barnch open on Sunday?", "same": true}
+{"id": "gs0400", "a": "Hi, I have a question about my account. I would like to cancel a recurring transfer to savings, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to cancel a reucrring transfer to savings, can you walk me through how to do that in the mobile app?", "same": true}
+{"id": "gs0401", "a": "How can I set up a recurring transfer?", "b": "What are the steps to set up a recurring transfer?", "same": true}
+{"id": "gs0402", "a": "Could you explain how I lock my credit card from my phone? I looked in the app settings and did not see it.", "b": "Hi, could you explain how I lock my credit card from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0403", "a": "What's the current APY for the 18-month certificate?", "b": "What is the current APY for the 18-month certificate?", "same": true}
+{"id": "gs0404", "a": "What time does the Weston branch close on a weekday?", "b": "What time does the Weston branch close on a weekday ?", "same": true}
+{"id": "gs0405", "a": "How do I set up automatic loan payments?", "b": "What's the way to set up automatic loan payments?", "same": true}
+{"id": "gs0406", "a": "How do I report an unauthorized ACH debit?", "b": "How do i report an unauthorized ACH debit?", "same": true}
+{"id": "gs0407", "a": "What are the steps to open a checking account?", "b": "What's the way to open a checking account?", "same": true}
+{"id": "gs0408", "a": "Tell me the dividend rate on the Money Market account.", "b": "Tell me the dividned rate on the Money Market account.", "same": true}
+{"id": "gs0409", "a": "I'm trying to turn off two-step verification in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to turn off two-step verification in the mobile app but I can't find where to do it. Can you tell me the steps? Thank you.", "same": true}
+{"id": "gs0410", "a": "I'm trying to turn on text alerts in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Can you explain how I turn on text alerts from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0411", "a": "What time does the Coral Springs branch close on Saturday?", "b": "When does the Coral Springs branch close on Saturday?", "same": true}
+{"id": "gs0412", "a": "When does the Plantation branch close on Sunday?", "b": "when does the plantation branch close on sunday", "same": true}
+{"id": "gs0413", "a": "When does the Davie branch close on Saturday?", "b": "How late is the Davie branch open on Saturday?", "same": true}
+{"id": "gs0414", "a": "How high is the daily limit for mobile check deposit?", "b": "how high is the daily limit for mobile check deposit", "same": true}
+{"id": "gs0415", "a": "What are the steps to turn off quick balance?", "b": "Quick question: what are the steps to turn off quick balance?", "same": true}
+{"id": "gs0416", "a": "Tell me the daily limit for external transfers.", "b": "tell me the daily limit for external transfers", "same": true}
+{"id": "gs0417", "a": "Am I able to withdraw cash at a CO-OP shared branch?", "b": "am i able to withdraw cash at a co-op shared branch", "same": true}
+{"id": "gs0418", "a": "What's the way to cancel a travel notice?", "b": "How can I cancel a travel notice?", "same": true}
+{"id": "gs0419", "a": "Tell me the daily limit for debit card purchases.", "b": "What is the daily limit for debit card purchases?", "same": true}
+{"id": "gs0420", "a": "What are the steps to turn on biometric sign-in?", "b": "What're the steps to turn on biometric sign-in?", "same": true}
+{"id": "gs0421", "a": "How do I report an unauthorized ACH debit?", "b": "what should i do to report an unauthorized ach debit", "same": true}
+{"id": "gs0422", "a": "How do I report a deceased member?", "b": "Hello, how do I report a deceased member?", "same": true}
+{"id": "gs0423", "a": "How do I unlock my credit card?", "b": "  How do I unlock my credit card?  ", "same": true}
+{"id": "gs0424", "a": "How do I set up direct deposit?", "b": "  How do I set up direct deposit?  ", "same": true}
+{"id": "gs0425", "a": "I'm trying to turn on paperless statements in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "i'm trying to turn on paperless statements in the mobile app but i can't find where to do it. can you tell me the steps", "same": true}
+{"id": "gs0426", "a": "How do I open a Holiday Club account?", "b": "How can I open a Holiday Club account?", "same": true}
+{"id": "gs0427", "a": "Before I open one this week, can you confirm the early withdrawal penalty on the Money Market account? I saw it on the rate sheet on your website.", "b": "Before I open one this week, can you confirm the early withdrawal penalty on the Money Market account? I saw it on the rate sheet on your website", "same": true}
+{"id": "gs0428", "a": "How do I cancel a recurring transfer?", "b": "How do I cancel a recurring transfer ?", "same": true}
+{"id": "gs0429", "a": "How do I turn off two-step verification?", "b": "How do I turn off two-step verifictaion?", "same": true}
+{"id": "gs0430", "a": "Can you tell me how to turn on paperless statements?", "b": "Hi there, can you tell me how to turn on paperless statements?", "same": true}
+{"id": "gs0431", "a": "When does the Weston branch close on Saturday?", "b": "When does the Weston branch close on Satudray?", "same": true}
+{"id": "gs0432", "a": "What do you charge for paper statements?", "b": "What do you charge for paper statements ?", "same": true}
+{"id": "gs0433", "a": "I'm going on a trip next month and need to know the daily limit for ATM withdrawals so my transactions don't get declined while I'm away.", "b": "So nothing gets declined while I'm traveling next month, what is the daily limit for ATM withdrawals?", "same": true}
+{"id": "gs0434", "a": "What time does the Plantation branch close on Saturday?", "b": "When does the Plantation branch close on Saturday?", "same": true}
+{"id": "gs0435", "a": "How can I close a checking account?", "b": "Hi there, how can I close a checking account?", "same": true}
+{"id": "gs0436", "a": "What are the steps to lock my debit card?", "b": "Can you tell me how to lock my debit card?", "same": true}
+{"id": "gs0437", "a": "I was looking at the rate sheet on your website and wanted to confirm the dividend rate on the Money Market account before I open one this week.", "b": "Before I open one this week, can you confirm the dividend rate on the Money Market account? I saw it on the rate sheet on your website? Thank you.", "same": true}
+{"id": "gs0438", "a": "When should I expect an outgoing international wire?", "b": "When should I expect an outgoing itnernational wire?", "same": true}
+{"id": "gs0439", "a": "Can you tell me how to remove an authorized user?", "b": "Quick question: what are the steps to remove an authorized user?", "same": true}
+{"id": "gs0440", "a": "Can you tell me how to cancel a travel notice?", "b": "Can you tell me how to cancel a travel notice ?", "same": true}
+{"id": "gs0441", "a": "How many days does an outgoing domestic wire take?", "b": "How many days does an outoging domestic wire take?", "same": true}
+{"id": "gs0442", "a": "How do I download my monthly statement?", "b": "how do i download my monthly statement", "same": true}
+{"id": "gs0443", "a": "How do I turn on paperless statements?", "b": "How can I turn on paperless statements?", "same": true}
+{"id": "gs0444", "a": "Could you explain how I lock my credit card from my phone? I looked in the app settings and did not see it.", "b": "Hey, hi, I have a question about my account. I would like to lock my credit card, can you walk me through how to do that in the mobile app?", "same": true}
+{"id": "gs0445", "a": "What is the monthly limit for mobile check deposit?", "b": "How high is the monthly limit for mobile check deposit?", "same": true}
+{"id": "gs0446", "a": "Is it possible to deposit cash at a CO-OP shared branch?", "b": "Hey, can I deposit cash at a CO-OP shared branch?", "same": true}
+{"id": "gs0447", "a": "When does the Coral Springs branch close on Saturday?", "b": "How late is the Coral Springs branch open on Saturday?", "same": true}
+{"id": "gs0448", "a": "What's the way to unlock my debit card?", "b": "How can I unlock my debit card?", "same": true}
+{"id": "gs0449", "a": "What's the current APY for the Money Market account?", "b": "What's the current APY for the Money Market account ?", "same": true}
+{"id": "gs0450", "a": "What APY do you pay on the 12-month certificate?", "b": "Tell me the APY on the 12-month certificate.", "same": true}
+{"id": "gs0451", "a": "What's the current APY for the 36-month certificate?", "b": "what's the current apy for the 36-month certificate", "same": true}
+{"id": "gs0452", "a": "How can I cancel automatic loan payments?", "b": "What're the steps to cancel automatic loan payments?", "same": true}
+{"id": "gs0453", "a": "What time does the Sunrise branch close on a weekday?", "b": "What time does the Sunrise branch close on a weekday", "same": true}
+{"id": "gs0454", "a": "What is the rate on a new boat loan?", "b": "What's the APR for a new boat loan?", "same": true}
+{"id": "gs0455", "a": "What rate do you offer on a new motorcycle loan?", "b": "Quick question: what rate do you offer on a new motorcycle loan?", "same": true}
+{"id": "gs0456", "a": "I was looking at the rate sheet on your website and wanted to confirm the minimum deposit on the 12-month certificate before I open one this week.", "b": "I was looking at the rate sheet on your website and wanted to confirm the minimum deposit on the 12-month certifictae before I open one this week.", "same": true}
+{"id": "gs0457", "a": "Can you tell me how to cancel a recurring transfer?", "b": "What are the steps to cancel a recurring transfer?", "same": true}
+{"id": "gs0458", "a": "When does the Boca Raton branch close on Saturday?", "b": "  When does the Boca Raton branch close on Saturday?  ", "same": true}
+{"id": "gs0459", "a": "What is the APY on the 18-month certificate?", "b": "What APY do you pay on the 18-month certificate?", "same": true}
+{"id": "gs0460", "a": "How much is the fee for a stop payment?", "b": "Hi there, how much does a stop payment cost?", "same": true}
+{"id": "gs0461", "a": "When does the Miramar branch close on Saturday?", "b": "How late is the Miramar branch open on Saturday?", "same": true}
+{"id": "gs0462", "a": "I was looking at the rate sheet on your website and wanted to confirm the minimum deposit on the 12-month certificate before I open one this week.", "b": "Before I open one this week, can you confirm the minimum deposit on the 12-month certificate? I saw it on the rate sheet on your website.", "same": true}
+{"id": "gs0463", "a": "Can you tell me how to open a Money Market account?", "b": "What are the steps to open a Money Market account?", "same": true}
+{"id": "gs0464", "a": "What is the fee for paper statements?", "b": "What do you charge for paper statements?", "same": true}
+{"id": "gs0465", "a": "What does a Zelle payment cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "b": "  What does a Zelle payment cost and how long does it take to arrive? I need to pay my landlord before the end of the day.  ", "same": true}
+{"id": "gs0466", "a": "What is the daily limit for external transfers?", "b": "Tell me the daily limit for external transfers.", "same": true}
+{"id": "gs0467", "a": "I'm going on a trip next month and need to know the monthly limit for Zelle so my transactions don't get declined while I'm away.", "b": "So nothing gets declined while I'm traveling next month, what is the monthly limit for Zelle?", "same": true}
+{"id": "gs0468", "a": "What's the way to turn off biometric sign-in?", "b": "Good morning. what's the way to turn off biometric sign-in?", "same": true}
+{"id": "gs0469", "a": "I'm going on a trip next month and need to know the monthly limit for external transfers so my transactions don't get declined while I'm away.", "b": "Good morning. i'm going on a trip next month and need to know the monthly limit for external transfers so my transactions don't get declined while I'm away.", "same": true}
+{"id": "gs0470", "a": "How high is the daily limit for Zelle?", "b": "What is the daily limit for Zelle? Thank you.", "same": true}
+{"id": "gs0471", "a": "What's the way to lock my debit card?", "b": "Good morning. what's the way to lock my debit card?", "same": true}
+{"id": "gs0472", "a": "What's the way to open a checking account?", "b": "Quick question: what's the way to open a checking account?", "same": true}
+{"id": "gs0473", "a": "How much is the fee for a safe deposit box?", "b": "How much does a safe deposit box cost?", "same": true}
+{"id": "gs0474", "a": "What's the way to unlock my credit card?", "b": "What is the way to unlock my credit card?", "same": true}
+{"id": "gs0475", "a": "What's the way to turn off biometric sign-in?", "b": "How do I turn off biometric sign-in?", "same": true}
+{"id": "gs0476", "a": "How do I lock my debit card?", "b": "What's the way to lock my debit card?", "same": true}
+{"id": "gs0477", "a": "How much does skip-a-pay cost?", "b": "How much does skip-a-pay cost", "same": true}
+{"id": "gs0478", "a": "How late is the Plantation branch open on a weekday?", "b": "Hi, how late is the Plantation branch open on a weekday?", "same": true}
+{"id": "gs0479", "a": "What is the rate on a used RV loan?", "b": "Waht is the rate on a used RV loan?", "same": true}
+{"id": "gs0480", "a": "What is the daily limit for Zelle?", "b": "Good morning. what's my daily limit on Zelle?", "same": true}
+{"id": "gs0481", "a": "How much does an out-of-network ATM withdrawal cost?", "b": "Hey, how much is the fee for an out-of-network ATM withdrawal?", "same": true}
+{"id": "gs0482", "a": "What do you charge for paper statements?", "b": "How much does paper statements cost?", "same": true}
+{"id": "gs0483", "a": "What time does the Davie branch close on Saturday?", "b": "what time does the davie branch close on saturday", "same": true}
+{"id": "gs0484", "a": "How much does a money order cost?", "b": "What is the fee for a money order?", "same": true}
+{"id": "gs0485", "a": "How do I turn off overdraft coverage?", "b": "What's the way to turn off overdraft coverage?", "same": true}
+{"id": "gs0486", "a": "What do you charge for a returned deposited check?", "b": "Hey, how much does a returned deposited check cost?", "same": true}
+{"id": "gs0487", "a": "When should I expect a mailed paper statement?", "b": "When should I expect a mailed paper statement? Thank you.", "same": true}
+{"id": "gs0488", "a": "How do I turn off text alerts?", "b": "can you tell me how to turn off text alerts", "same": true}
+{"id": "gs0489", "a": "When does the Plantation branch close on Saturday?", "b": "  When does the Plantation branch close on Saturday?  ", "same": true}
+{"id": "gs0490", "a": "Where do I get my fee schedule?", "b": "Where do I get my fee schedule ?", "same": true}
+{"id": "gs0491", "a": "Can you tell me how to turn off quick balance?", "b": "What are the steps to turn off quick balance?", "same": true}
+{"id": "gs0492", "a": "What are the steps to close a checking account?", "b": "what are the steps to close a checking account", "same": true}
+{"id": "gs0493", "a": "What dividend rate do you pay on the 36-month certificate?", "b": "What dividend rate do you pay on the 36-month certifiacte?", "same": true}
+{"id": "gs0494", "a": "How can I turn off two-step verification?", "b": "What're the steps to turn off two-step verification?", "same": true}
+{"id": "gs0495", "a": "I was looking at the rate sheet on your website and wanted to confirm the minimum deposit on the Money Market account before I open one this week.", "b": "Before I open one this week, can you confirm the minimum deposit on the Money Market account? I saw it on the rate sheet on your website.", "same": true}
+{"id": "gs0496", "a": "Can you tell me how to set up a recurring transfer?", "b": "Can you tell me how to set up a recurring transfer? Thanks", "same": true}
+{"id": "gs0497", "a": "What's the way to add a joint owner?", "b": "What's the way to add a joint owner ?", "same": true}
+{"id": "gs0498", "a": "How late is the Boca Raton branch open on Saturday?", "b": "How late is the Boca Raton branch open on Saturday? Thanks!", "same": true}
+{"id": "gs0499", "a": "What is the fee for a replacement debit card?", "b": "How much is the fee for a replacement debit card?", "same": true}
+{"id": "gs0500", "a": "How can I turn off quick balance?", "b": "Can you tell me how to turn off quick balance?", "same": true}
+{"id": "gs0501", "a": "What's the way to open a savings account?", "b": "what's the way to open a savings account", "same": true}
+{"id": "gs0502", "a": "Tell me the daily limit for ATM withdrawals.", "b": "How high is the daily limit for ATM withdrawals? Thank you.", "same": true}
+{"id": "gs0503", "a": "How can I close a Holiday Club account?", "b": "Hi, how can I close a Holiday Club account?", "same": true}
+{"id": "gs0504", "a": "What's my daily limit on debit card purchases?", "b": "What is my daily limit on debit card purchases?", "same": true}
+{"id": "gs0505", "a": "How late is the Miramar branch open on Sunday?", "b": "how late is the miramar branch open on sunday", "same": true}
+{"id": "gs0506", "a": "What's the way to turn on overdraft coverage?", "b": "  What's the way to turn on overdraft coverage?  ", "same": true}
+{"id": "gs0507", "a": "What is the fee for paper statements?", "b": "What's the fee for paper statements?", "same": true}
+{"id": "gs0508", "a": "My daughter is starting college in the fall and I want to remove her as an authorized signer on my checking account. What do I need to bring to the branch?", "b": "  My daughter is starting college in the fall and I want to remove her as an authorized signer on my checking account. What do I need to bring to the branch?  ", "same": true}
+{"id": "gs0509", "a": "What's the way to open a checking account?", "b": "Can you tell me how to open a checking account?", "same": true}
+{"id": "gs0510", "a": "Can you tell me how to set up a recurring transfer?", "b": "What are the steps to set up a reucrring transfer?", "same": true}
+{"id": "gs0511", "a": "How do I download my privacy notice?", "b": "Where can I find my privacy notice?", "same": true}
+{"id": "gs0512", "a": "What's my daily limit on mobile check deposit?", "b": "Tell me the daily limit for mobile check deposit", "same": true}
+{"id": "gs0513", "a": "How do I turn off text alerts?", "b": "How do i turn off text alerts?", "same": true}
+{"id": "gs0514", "a": "Tell me the APY on the 12-month certificate.", "b": "What's the current APY for the 12-month certificate ?", "same": true}
+{"id": "gs0515", "a": "What's the way to cancel automatic loan payments?", "b": "Hello, what's the way to cancel automatic loan payments?", "same": true}
+{"id": "gs0516", "a": "Hi, I have a question about my account. I would like to turn on biometric sign-in, can you walk me through how to do that in the mobile app?", "b": "hi, i have a question about my account. i would like to turn on biometric sign-in, can you walk me through how to do that in the mobile app", "same": true}
+{"id": "gs0517", "a": "How high is the monthly limit for external transfers?", "b": "  How high is the monthly limit for external transfers?  ", "same": true}
+{"id": "gs0518", "a": "What should I do to report a change of address?", "b": "Hey, how do I report a change of address?", "same": true}
+{"id": "gs0519", "a": "What dividend rate do you pay on the 36-month certificate?", "b": "What is the dividend rate on the 36-month certificate?", "same": true}
+{"id": "gs0520", "a": "How much does a stop payment cost?", "b": "Hi, what is the fee for a stop payment?", "same": true}
+{"id": "gs0521", "a": "Can you tell me how to turn on two-step verification?", "b": "How can I turn on two-step verification?", "same": true}
+{"id": "gs0522", "a": "How late is the Coral Springs branch open on a weekday?", "b": "when does the coral springs branch close on a weekday", "same": true}
+{"id": "gs0523", "a": "When does the Miramar branch close on a weekday?", "b": "How late is the Miramar branch open on a weekday?", "same": true}
+{"id": "gs0524", "a": "How many days does a new box of checks take?", "b": "How long does a new box of checks take? Thanks!", "same": true}
+{"id": "gs0525", "a": "What's the current dividend rate for the 6-month certificate?", "b": "What dividend rate do you pay on the 6-month certificate?", "same": true}
+{"id": "gs0526", "a": "Where do I get my year-end loan interest summary?", "b": "How do I download my year-end loan interest summary ?", "same": true}
+{"id": "gs0527", "a": "What's the APR for a new RV loan?", "b": "What rate do you offer on a new RV loan?", "same": true}
+{"id": "gs0528", "a": "What does an outgoing international wire cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "b": "I need to send money to my landlord before the end of the day. What is the fee for an outgoing international wire, and how long does it take to arrive?", "same": true}
+{"id": "gs0529", "a": "Is it possible to make a loan payment at a CO-OP shared branch?", "b": "Can I make a loan payment at a CO-OP shared branch?", "same": true}
+{"id": "gs0530", "a": "How do I cancel a travel notice?", "b": "how do i cancel a travel notice", "same": true}
+{"id": "gs0531", "a": "Hi, I have a question about my account. I would like to unlock my credit card, can you walk me through how to do that in the mobile app?", "b": "Could you explain how I unlock my credit card from my phone? I looked in the app settings and did not see it.", "same": true}
+{"id": "gs0532", "a": "How do I turn on quick balance?", "b": "What's the way to turn on quick balance?", "same": true}
+{"id": "gs0533", "a": "Can you tell me how to cancel a recurring transfer?", "b": "Hi, can you tell me how to cancel a recurring transfer?", "same": true}
+{"id": "gs0534", "a": "What's the way to turn off quick balance?", "b": "What's the way to turn off quick baalnce?", "same": true}
+{"id": "gs0535", "a": "How much does an outgoing domestic wire cost?", "b": "Hey, what do you charge for an outgoing domestic wire?", "same": true}
+{"id": "gs0536", "a": "What's the way to remove a beneficiary?", "b": "what's the way to remove a beneficiary", "same": true}
+{"id": "gs0537", "a": "What are the steps to add a beneficiary?", "b": "What are the steps to add a benfeiciary?", "same": true}
+{"id": "gs0538", "a": "Could you explain how I cancel a recurring transfer to savings from my phone? I looked in the app settings and did not see it.", "b": "could you explain how i cancel a recurring transfer to savings from my phone? i looked in the app settings and did not see it", "same": true}
+{"id": "gs0539", "a": "Where do I get my fee schedule?", "b": "How do I download my fee schedule?", "same": true}
+{"id": "gs0540", "a": "I'm trying to cancel a recurring transfer to savings in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to cancel a recurring transfer to savings in the mobile app but I can't find where to do it. Could you tell me the steps?", "same": true}
+{"id": "gs0541", "a": "What time does the Davie branch close on Saturday?", "b": "when does the davie branch close on saturday", "same": true}
+{"id": "gs0542", "a": "What is the APY on the Money Market account?", "b": "What APY do you pay on the Money Market account?", "same": true}
+{"id": "gs0543", "a": "What are the steps to set up direct deposit?", "b": "What's the way to set up direct deopsit?", "same": true}
+{"id": "gs0544", "a": "When does the Boca Raton branch close on Sunday?", "b": "  When does the Boca Raton branch close on Sunday?  ", "same": true}
+{"id": "gs0545", "a": "How much does a cashier's check cost?", "b": "How much does a cashier's check cost ?", "same": true}
+{"id": "gs0546", "a": "What do you charge for an outgoing domestic wire?", "b": "how much is the fee for an outgoing domestic wire", "same": true}
+{"id": "gs0547", "a": "How can I lock my credit card?", "b": "How can I lock my crdeit card?", "same": true}
+{"id": "gs0548", "a": "How can I set up automatic loan payments?", "b": "Good morning. what's the way to set up automatic loan payments?", "same": true}
+{"id": "gs0549", "a": "What is the fee for expedited card delivery?", "b": "What do you charge for expedited card delivery?", "same": true}
+{"id": "gs0550", "a": "How much does paper statements cost?", "b": "how much does paper statements cost", "same": true}
+{"id": "gs0551", "a": "I need to send money to my landlord before the end of the day. What is the fee for an outgoing domestic wire, and how long does it take to arrive?", "b": "I need to send money to my landlord before the end of the day. What is the fee for an outgoing domestic wire, and how long does it take to arrive? Thank you.", "same": true}
+{"id": "gs0552", "a": "How do I download my year-end loan interest summary?", "b": "How do I download my year-end loan interest summary ?", "same": true}
+{"id": "gs0553", "a": "I need to add my daughter as a joint owner on my checking account now that she is in college. What do I have to bring with me to a branch?", "b": "I need to add my daugther as a joint owner on my checking account now that she is in college. What do I have to bring with me to a branch?", "same": true}
+{"id": "gs0554", "a": "My daughter is starting college in the fall and I want to remove her as a joint owner on my checking account. What do I need to bring to the branch?", "b": "i need to remove my daughter as a joint owner on my checking account now that she is in college. what do i have to bring with me to a branch", "same": true}
+{"id": "gs0555", "a": "How do I turn on overdraft coverage?", "b": "How do I turn on overdraft coverage? Thank you.", "same": true}
+{"id": "gs0556", "a": "Before I open one this week, can you confirm the early withdrawal penalty on the 12-month certificate? I saw it on the rate sheet on your website.", "b": "Quick question: before I open one this week, can you confirm the early withdrawal penalty on the 12-month certificate? I saw it on the rate sheet on your website.", "same": true}
+{"id": "gs0557", "a": "How can I set up a travel notice?", "b": "How can I set up a travel notice ?", "same": true}
+{"id": "gs0558", "a": "I was looking at the rate sheet on your website and wanted to confirm the APY on the 12-month certificate before I open one this week.", "b": "I was looking at the rate sheet on your website and wanted to confirm the APY on the 12-month cetrificate before I open one this week.", "same": true}
+{"id": "gs0559", "a": "How late is the Coral Springs branch open on Sunday?", "b": "Hey, how late is the Coral Springs branch open on Sunday?", "same": true}
+{"id": "gs0560", "a": "What is the rate on a new auto loan?", "b": "What is the rate on a new auto loan? Thank you.", "same": true}
+{"id": "gs0561", "a": "Tell me the APY on the 18-month certificate.", "b": "What is the APY on the 18-month certificate?", "same": true}
+{"id": "gs0562", "a": "What is the fee for a safe deposit box?", "b": "How much is the fee for a safe deposit box ?", "same": true}
+{"id": "gs0563", "a": "What does an external transfer cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "b": "Quick question: what does an external transfer cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "same": true}
+{"id": "gs0564", "a": "What's the APR for a new auto loan?", "b": "What's the APR for a new auto loan ?", "same": true}
+{"id": "gs0565", "a": "Hi, I have a question about my account. I would like to turn off two-step verification, can you walk me through how to do that in the mobile app?", "b": "I'm trying to turn off two-step verification in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0566", "a": "What is the dividend rate on the 12-month certificate?", "b": "Hi there, what is the dividend rate on the 12-month certificate?", "same": true}
+{"id": "gs0567", "a": "Before I open one this week, can you confirm the dividend rate on the 12-month certificate? I saw it on the rate sheet on your website.", "b": "Before I open one this week, can you confirm the dividend rate on the 12-month cetrificate? I saw it on the rate sheet on your website.", "same": true}
+{"id": "gs0568", "a": "How can I cancel a travel notice?", "b": "Can you tell me how to canecl a travel notice?", "same": true}
+{"id": "gs0569", "a": "How many days does expedited card delivery take?", "b": "How many days does expedited card delivery take ?", "same": true}
+{"id": "gs0570", "a": "What's the way to remove a joint owner?", "b": "Hello, how can I remove a joint owner?", "same": true}
+{"id": "gs0571", "a": "How do I open a checking account?", "b": "  How do I open a checking account?  ", "same": true}
+{"id": "gs0572", "a": "How can I close a Holiday Club account?", "b": "What are the steps to close a Holiday Club account?", "same": true}
+{"id": "gs0573", "a": "I'm trying to lock my credit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Hey, i'm trying to lock my credit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gs0574", "a": "How can I turn off paperless statements?", "b": "What are the steps to turn off paperless statements?", "same": true}
+{"id": "gs0575", "a": "Tell me the monthly limit for external transfers.", "b": "  Tell me the monthly limit for external transfers.  ", "same": true}
+{"id": "gs0576", "a": "What time does the Coral Springs branch close on Sunday?", "b": "What time does the Coral Springs branch close on Sunday", "same": true}
+{"id": "gs0577", "a": "I need to remove my daughter as an authorized signer on my checking account now that she is in college. What do I have to bring with me to a branch?", "b": "  I need to remove my daughter as an authorized signer on my checking account now that she is in college. What do I have to bring with me to a branch?  ", "same": true}
+{"id": "gs0578", "a": "What are the steps to remove a beneficiary?", "b": "Hi there, how can I remove a beneficiary?", "same": true}
+{"id": "gs0579", "a": "Can you tell me how to open a Holiday Club account?", "b": "How do I open a Holiday Club account?", "same": true}
+{"id": "gs0580", "a": "What APY do you pay on the 6-month certificate?", "b": "Good morning. what APY do you pay on the 6-month certificate?", "same": true}
+{"id": "gs0581", "a": "Where can I find my year-end loan interest summary?", "b": "Where do I get my year-end loan interest summary", "same": true}
+{"id": "gs0582", "a": "Tell me the APY on the 36-month certificate.", "b": "What APY do you pay on the 36-month certificate?", "same": true}
+{"id": "gs0583", "a": "How do I turn on two-step verification?", "b": "how do i turn on two-step verification", "same": true}
+{"id": "gs0584", "a": "Where can I find my account agreement?", "b": "Where do I get my account agreement?", "same": true}
+{"id": "gs0585", "a": "Tell me the monthly limit for external transfers.", "b": "How high is the monthly limit for external transfers?", "same": true}
+{"id": "gs0586", "a": "So nothing gets declined while I'm traveling next month, what is the monthly limit for debit card purchases?", "b": "Good morning. i'm going on a trip next month and need to know the monthly limit for debit card purchases so my transactions don't get declined while I'm away.", "same": true}
+{"id": "gs0587", "a": "What rate do you offer on a used motorcycle loan?", "b": "What's the APR for a used motorcycle loan?", "same": true}
+{"id": "gs0588", "a": "How do I close a Holiday Club account?", "b": "How can I close a Holiday Club account?", "same": true}
+{"id": "gs0589", "a": "I need to send money to my landlord before the end of the day. What is the fee for an outgoing international wire, and how long does it take to arrive?", "b": "What does an outgoing international wire cost and how long does it take to arrive? I need to pay my landlord before the end of the day? Thank you.", "same": true}
+{"id": "gs0590", "a": "What's the way to close a savings account?", "b": "what's the way to close a savings account", "same": true}
+{"id": "gs0591", "a": "Can you tell me how to turn off paperless statements?", "b": "Can you tell me how to turn off paperless sattements?", "same": true}
+{"id": "gs0592", "a": "How high is the daily limit for debit card purchases?", "b": "How high is the daily limit for debit card purchases", "same": true}
+{"id": "gs0593", "a": "Tell me the monthly limit for ATM withdrawals.", "b": "Tell me the monthly limit for ATM withdrawals", "same": true}
+{"id": "gs0594", "a": "What time does the Coral Springs branch close on a weekday?", "b": "Hello, what time does the Coral Springs branch close on a weekday?", "same": true}
+{"id": "gs0595", "a": "How long does a new box of checks take?", "b": "How long does a new box of checks take ?", "same": true}
+{"id": "gs0596", "a": "What's the way to set up automatic loan payments?", "b": "What is the way to set up automatic loan payments?", "same": true}
+{"id": "gs0597", "a": "How much does an incoming international wire cost?", "b": "How much does an incoming international wire cost? Thank you.", "same": true}
+{"id": "gs0598", "a": "When does the Davie branch close on a weekday?", "b": "Hi, when does the Davie branch close on a weekday?", "same": true}
+{"id": "gs0599", "a": "So nothing gets declined while I'm traveling next month, what is the daily limit for external transfers?", "b": "So nothing gets declined while I'm traveling next month, what is the daily limit for external transfers? Thanks!", "same": true}
+{"id": "gs0600", "a": "Could you explain how I turn on paperless statements from my phone? I looked in the app settings and did not see it.", "b": "I'm trying to turn on paperless statements in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": true}
+{"id": "gd0001", "a": "How do I open a checking account?", "b": "Can you tell me how to close a checking account?", "same": false}
+{"id": "gd0002", "a": "Who do I contact to report a lost debit card?", "b": "Who do I contact to report an unauthorized ACH debit?", "same": false}
+{"id": "gd0003", "a": "I was looking at the rate sheet on your website and wanted to confirm the minimum deposit on the 12-month certificate before I open one this week.", "b": "I was looking at the rate sheet on your website and wanted to confirm the early withdrawal penalty on the 12-month certificate before I open one this week.", "same": false}
+{"id": "gd0004", "a": "I'm trying to turn on paperless statements in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to turn off paperless statements in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0005", "a": "What is the monthly limit for mobile check deposit?", "b": "What is the monthly limit for Zelle?", "same": false}
+{"id": "gd0006", "a": "What dividend rate do you pay on the 12-month certificate?", "b": "What APY do you pay on the 12-month certificate?", "same": false}
+{"id": "gd0007", "a": "What's the way to close a checking account?", "b": "Quick question: what's the way to open a checking account?", "same": false}
+{"id": "gd0008", "a": "How do I remove a joint owner?", "b": "How do I remove an authorized user?", "same": false}
+{"id": "gd0009", "a": "How do I turn on two-step verification?", "b": "How do I turn off two-step verification?", "same": false}
+{"id": "gd0010", "a": "What is the dividend rate on the 12-month certificate?", "b": "What is the dividend rate on the 18-month certificate?", "same": false}
+{"id": "gd0011", "a": "What's the way to turn off quick balance?", "b": "How can I turn off two-step verification?", "same": false}
+{"id": "gd0012", "a": "What do you charge for an out-of-network ATM withdrawal?", "b": "What do you charge for a cashier's check?", "same": false}
+{"id": "gd0013", "a": "Can you tell me how to open a checking account?", "b": "Could you tell me how to open a Holiday Club account?", "same": false}
+{"id": "gd0014", "a": "How much is the fee for an outgoing international wire?", "b": "How much is the fee for expedited card delivery?", "same": false}
+{"id": "gd0015", "a": "What's the way to unlock my credit card?", "b": "Whta's the way to lock my credit card?", "same": false}
+{"id": "gd0016", "a": "Where do I get my account agreement?", "b": "How do I download my monthly statement? Thank you.", "same": false}
+{"id": "gd0017", "a": "How do I remove an authorized user?", "b": "How do I add an authorized user?", "same": false}
+{"id": "gd0018", "a": "How much is the fee for a replacement debit card?", "b": "  What do you charge for skip-a-pay?  ", "same": false}
+{"id": "gd0019", "a": "What do you charge for a stop payment?", "b": "What do you charge for a money order?", "same": false}
+{"id": "gd0020", "a": "So nothing gets declined while I'm traveling next month, what is the daily limit for Zelle?", "b": "I'm going on a trip next month and need to know the monthly limit for Zelle so my transactions don't get declined while I'm away.", "same": false}
+{"id": "gd0021", "a": "How late is the Weston branch open on Saturday?", "b": "How late is the Weston branch open on a weekday?", "same": false}
+{"id": "gd0022", "a": "I'm going on a trip next month and need to know the daily limit for ATM withdrawals so my transactions don't get declined while I'm away.", "b": "So nothing gets declined while I'm traveling next month, what is the daily limit for debit card purchases?", "same": false}
+{"id": "gd0023", "a": "How can I cancel automatic loan payments?", "b": "How can I cancel a travel notice?", "same": false}
+{"id": "gd0024", "a": "What rate do you offer on a new boat loan?", "b": "What rate do you offer on a used boat loan?", "same": false}
+{"id": "gd0025", "a": "How do I unlock my debit card?", "b": "How do I lock my debit card?", "same": false}
+{"id": "gd0026", "a": "I'm going on a trip next month and need to know the monthly limit for external transfers so my transactions don't get declined while I'm away.", "b": "So nothing gets declined while I'm traveling next month, what is the monthly limit for debit card purchases", "same": false}
+{"id": "gd0027", "a": "Can I deposit cash at a CO-OP shared branch?", "b": "can i deposit cash at a co-op network atm", "same": false}
+{"id": "gd0028", "a": "What are the steps to close a savings account?", "b": "Could you tell me how to open a savings account?", "same": false}
+{"id": "gd0029", "a": "How long does a loan payoff letter take?", "b": "How long does expedited card delivery take?", "same": false}
+{"id": "gd0030", "a": "How high is the daily limit for mobile check deposit?", "b": "How high is the monthly limit for mobile check deposit?", "same": false}
+{"id": "gd0031", "a": "I'm going on a trip next month and need to know the daily limit for Zelle so my transactions don't get declined while I'm away.", "b": "i'm going on a trip next month and need to know the daily limit for external transfers so my transactions don't get declined while i'm away", "same": false}
+{"id": "gd0032", "a": "How do I open a savings account?", "b": "What are the steps to close a savings account?", "same": false}
+{"id": "gd0033", "a": "Can you tell me how to turn on quick balance?", "b": "Can you tell me how to turn off quick balance? Thanks!", "same": false}
+{"id": "gd0034", "a": "Before I open one this week, can you confirm the dividend rate on the Money Market account? I saw it on the rate sheet on your website.", "b": "Before I open one this week, can you confirm the early withdrawal penalty on the Money Market account? I saw it on the rate sheet on your website.", "same": false}
+{"id": "gd0035", "a": "Is it possible to withdraw cash at a CO-OP shared branch?", "b": "Can I withrdaw cash at a CO-OP network ATM?", "same": false}
+{"id": "gd0036", "a": "I'm trying to turn on biometric sign-in in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to turn off biometric sign-in in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0037", "a": "How much does an overdraft cost?", "b": "How much does a safe deposit box cost?", "same": false}
+{"id": "gd0038", "a": "How do I close a Holiday Club account?", "b": "How do I close a checking account?", "same": false}
+{"id": "gd0039", "a": "How do I download my year-end loan interest summary?", "b": "How do I download my monthly statement?", "same": false}
+{"id": "gd0040", "a": "Can you tell me how to cancel a recurring transfer?", "b": "Can you tell me how to cancel a travel notice?", "same": false}
+{"id": "gd0041", "a": "What time does the Boca Raton branch close on a weekday?", "b": "Hey, what time does the Boca Raton branch close on Sunday?", "same": false}
+{"id": "gd0042", "a": "When does the Coral Springs branch close on Sunday?", "b": "When does the Coral Spirngs branch close on a weekday?", "same": false}
+{"id": "gd0043", "a": "What do you charge for a money order?", "b": "What do you charge for expedited card delivery? Thanks", "same": false}
+{"id": "gd0044", "a": "When does the Boca Raton branch close on a weekday?", "b": "When does the Boca Raton branch close on Sunday?", "same": false}
+{"id": "gd0045", "a": "What are the steps to open a savings account?", "b": "What are the steps to open a checking account?", "same": false}
+{"id": "gd0046", "a": "I'm trying to set up a recurring transfer to savings in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Good morning. i'm trying to cancel a recurring transfer to savings in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0047", "a": "What is the rate on a used boat loan?", "b": "What is the rate on a used motorcycle loan?", "same": false}
+{"id": "gd0048", "a": "What is the daily limit for debit card purchases?", "b": "What's the monthly limit for debit card purchases?", "same": false}
+{"id": "gd0049", "a": "Tell me the daily limit for external transfers.", "b": "tell me the daily limit for debit card purchases", "same": false}
+{"id": "gd0050", "a": "What does a Zelle payment cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "b": "What does an external transfer cost and how long does it take to arrive? I need to pay my landlord before the end of the day? Thanks", "same": false}
+{"id": "gd0051", "a": "How many days does an outgoing domestic wire take?", "b": "How many days does a mailed paper statemnet take?", "same": false}
+{"id": "gd0052", "a": "I'm trying to lock my credit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to unlock my credit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0053", "a": "How late is the Plantation branch open on a weekday?", "b": "How late is the Plantation branch open on Sunday?", "same": false}
+{"id": "gd0054", "a": "What's the APR for a new motorcycle loan?", "b": "What's the APR for a used motorcycle loan?", "same": false}
+{"id": "gd0055", "a": "How much does an out-of-network ATM withdrawal cost?", "b": "How much is the fee for an overdraft?", "same": false}
+{"id": "gd0056", "a": "What's the way to set up a recurring transfer?", "b": "What's the way to set up automatic loan payments?", "same": false}
+{"id": "gd0057", "a": "What is the fee for skip-a-pay?", "b": "What is the fee for paper statements?", "same": false}
+{"id": "gd0058", "a": "What is the dividend rate on the 36-month certificate?", "b": "What is the dividend rate on the 12-month certificate?", "same": false}
+{"id": "gd0059", "a": "What should I do to report a deceased member?", "b": "What should I do to report a lost debit card ?", "same": false}
+{"id": "gd0060", "a": "How much does skip-a-pay cost?", "b": "How much does a cashier's check cost?", "same": false}
+{"id": "gd0061", "a": "How late is the Miramar branch open on a weekday?", "b": "how late is the miramar branch open on sunday", "same": false}
+{"id": "gd0062", "a": "What is the APY on the 6-month certificate?", "b": "What is the dividend rate on the 6-month certificate?", "same": false}
+{"id": "gd0063", "a": "What's my daily limit on debit card purchases?", "b": "Tell me the monthly limit for debit card purchases.", "same": false}
+{"id": "gd0064", "a": "How much does a money order cost?", "b": "How much does a replacement debit card cost?", "same": false}
+{"id": "gd0065", "a": "When does the Weston branch close on a weekday?", "b": "When does the Weston branch close on Sunday?", "same": false}
+{"id": "gd0066", "a": "How much is the fee for paper statements?", "b": "How much does an out-of-network ATM withdrawal cost?", "same": false}
+{"id": "gd0067", "a": "Can you tell me how to open a Holiday Club account?", "b": "Can you tell me how to open a checking account?", "same": false}
+{"id": "gd0068", "a": "I'm trying to unlock my credit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Could you explain how I lock my credit card from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0069", "a": "How do I close a savings account?", "b": "How do I open a savings account?", "same": false}
+{"id": "gd0070", "a": "Where can I find my monthly statement?", "b": "Where do I get my dividend tax form?", "same": false}
+{"id": "gd0071", "a": "Who do I contact to report an unauthorized ACH debit?", "b": "What should I do to report a Zelle payment sent to the wrong person?", "same": false}
+{"id": "gd0072", "a": "Is it possible to make a loan payment at a Cypress Harbor branch?", "b": "Is it possible to make a loan payment at a CO-OP shared branch?", "same": false}
+{"id": "gd0073", "a": "What are the steps to cancel a recurring transfer?", "b": "What are the steps to cancel direct deopsit?", "same": false}
+{"id": "gd0074", "a": "I was looking at the rate sheet on your website and wanted to confirm the dividend rate on the Money Market account before I open one this week.", "b": "I was looking at the rate sheet on your website and wanted to confirm the minimum deposit on the Money Market account before I open one this week.", "same": false}
+{"id": "gd0075", "a": "How can I turn off two-step verification?", "b": "What are the steps to turn off overdraft coverage?", "same": false}
+{"id": "gd0076", "a": "I need to send money to my landlord before the end of the day. What is the fee for an external transfer, and how long does it take to arrive?", "b": "I need to send money to my landlord before the end of the day. What is the fee for a Zelle payment, and how long does it take to arrive?", "same": false}
+{"id": "gd0077", "a": "What's my monthly limit on mobile check deposit?", "b": "What's my monthly limit on ATM withdrawals?", "same": false}
+{"id": "gd0078", "a": "My daughter is starting college in the fall and I want to remove her as the payable-on-death beneficiary on my checking account. What do I need to bring to the branch?", "b": "I need to add my daughter as the payable-on-death beneficiary on my checking account now that she is in college. What do I have to bring with me to a branch?", "same": false}
+{"id": "gd0079", "a": "What is the fee for a notary stamp?", "b": "Good morning. what is the fee for a returned deposited check?", "same": false}
+{"id": "gd0080", "a": "What are the steps to turn on text alerts?", "b": "What are the steps to turn off text alerts?", "same": false}
+{"id": "gd0081", "a": "How can I close a checking account?", "b": "How can I open a checking account?", "same": false}
+{"id": "gd0082", "a": "Hi, I have a question about my account. I would like to turn on paperless statements, can you walk me through how to do that in the mobile app?", "b": "I'm trying to turn off paperless statements in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0083", "a": "How do I remove a beneficiary?", "b": "How do I add a beneficiary? thx", "same": false}
+{"id": "gd0084", "a": "What is the rate on a new motorcycle loan?", "b": "What rate do you offer on a new RV loan?", "same": false}
+{"id": "gd0085", "a": "How do I turn off overdraft coverage?", "b": "How do I turn off quick balance?", "same": false}
+{"id": "gd0086", "a": "Could you explain how I unlock my debit card from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I unlock my credit card from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0087", "a": "How can I turn on quick balance?", "b": "How can I turn on two-step verification?", "same": false}
+{"id": "gd0088", "a": "How high is the monthly limit for Zelle?", "b": "How high is the monthly limit for debit card purchases?", "same": false}
+{"id": "gd0089", "a": "What's the way to remove an authorized user?", "b": "What's the way to remove a beneficiary?", "same": false}
+{"id": "gd0090", "a": "Where do I get my direct deposit form?", "b": "Where do I get my dividend tax form?", "same": false}
+{"id": "gd0091", "a": "Could you explain how I unlock my credit card from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I lock my credit card from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0092", "a": "What's the way to cancel a recurring transfer?", "b": "Can you tell me how to set up a recurring transfer?", "same": false}
+{"id": "gd0093", "a": "Could you explain how I turn on two-step verification from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I turn on paperless statements from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0094", "a": "What's the APR for a new auto loan?", "b": "What's the APR for a used auto loan?", "same": false}
+{"id": "gd0095", "a": "What do you charge for a notary stamp?", "b": "What do you charge for an outgoing international wire?", "same": false}
+{"id": "gd0096", "a": "So nothing gets declined while I'm traveling next month, what is the monthly limit for Zelle?", "b": "So nothing gets declined while I'm traveling next month, what is the daily limit for Zelle?", "same": false}
+{"id": "gd0097", "a": "Hi, I have a question about my account. I would like to set up a recurring transfer to savings, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to set up automatic loan payments, can you walk me through how to do that in the mobile app?", "same": false}
+{"id": "gd0098", "a": "How can I cancel a recurring transfer?", "b": "Hey, how can I cancel a travel notice?", "same": false}
+{"id": "gd0099", "a": "Can you tell me how to remove a beneficiary?", "b": "What's the way to remove an authorized user?", "same": false}
+{"id": "gd0100", "a": "What dividend rate do you pay on the 6-month certificate?", "b": "What dividend rate do you pay on the 18-month certificate?", "same": false}
+{"id": "gd0101", "a": "Where do I get my dividend tax form?", "b": "Where do I get my privacy notice?", "same": false}
+{"id": "gd0102", "a": "Am I able to deposit cash at a CO-OP network ATM?", "b": "Am I able to deposit cash at a CO-OP shared branch?", "same": false}
+{"id": "gd0103", "a": "What's the way to cancel a travel notice?", "b": "What's the way to set up a travel notice?", "same": false}
+{"id": "gd0104", "a": "How many days does expedited card delivery take?", "b": "How many days does an outgoing international wire take?", "same": false}
+{"id": "gd0105", "a": "How do I close a Money Market account?", "b": "Good morning. how can I close a savings account?", "same": false}
+{"id": "gd0106", "a": "What's the way to open a savings account?", "b": "Hi there, what's the way to open a Money Market account?", "same": false}
+{"id": "gd0107", "a": "I'm trying to lock my debit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to lock my credit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0108", "a": "Could you explain how I turn off two-step verification from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I turn on two-step verification from my phone ? I looked in the app settings and did not see it .", "same": false}
+{"id": "gd0109", "a": "What time does the Sunrise branch close on Saturday?", "b": "What time does the Sunrise branch close on Sunday?", "same": false}
+{"id": "gd0110", "a": "Where can I find my account agreement?", "b": "Where can I find my year-end loan interest summary?", "same": false}
+{"id": "gd0111", "a": "What's the way to close a Money Market account?", "b": "  How can I open a Money Market account?  ", "same": false}
+{"id": "gd0112", "a": "Where do I get my privacy notice?", "b": "How do I download my account agreement?", "same": false}
+{"id": "gd0113", "a": "When does the Davie branch close on Saturday?", "b": "Good morning. how late is the Davie branch open on Sunday?", "same": false}
+{"id": "gd0114", "a": "What's my monthly limit on ATM withdrawals?", "b": "Tell me the daily limit for ATM withdrawals", "same": false}
+{"id": "gd0115", "a": "How can I turn on text alerts?", "b": "how can i turn off text alerts", "same": false}
+{"id": "gd0116", "a": "What's the APR for a new RV loan?", "b": "What rate do you offer on a used RV loan?", "same": false}
+{"id": "gd0117", "a": "My daughter is starting college in the fall and I want to remove her as a joint owner on my checking account. What do I need to bring to the branch?", "b": "My daughter is starting college in the fall and I want to remove her as an authorized signer on my checking account. What do I need to bring to the branch?", "same": false}
+{"id": "gd0118", "a": "What are the steps to turn off paperless statements?", "b": "What are the steps to turn on paperless statements?", "same": false}
+{"id": "gd0119", "a": "Can you tell me how to add a joint owner?", "b": "Can you tell me how to add a beneficiary?", "same": false}
+{"id": "gd0120", "a": "Is it possible to open a new account at a CO-OP shared branch?", "b": "Can I open a new account at a Cypress Harbor branch?", "same": false}
+{"id": "gd0121", "a": "What are the steps to turn on two-step verification?", "b": "What are the steps to turn on quick balance?", "same": false}
+{"id": "gd0122", "a": "My daughter is starting college in the fall and I want to add her as a joint owner on my checking account. What do I need to bring to the branch?", "b": "  My daughter is starting college in the fall and I want to remove her as a joint owner on my checking account. What do I need to bring to the branch?  ", "same": false}
+{"id": "gd0123", "a": "Tell me the APY on the 12-month certificate.", "b": "Tell me the APY on the Money Market account", "same": false}
+{"id": "gd0124", "a": "What is the monthly limit for ATM withdrawals?", "b": "What is the monthly limit for Zelle? Thanks!", "same": false}
+{"id": "gd0125", "a": "How do I add a beneficiary?", "b": "How do I remove a beneficiary?", "same": false}
+{"id": "gd0126", "a": "What's the way to turn on two-step verification?", "b": "What's the way to turn on paperless statements?", "same": false}
+{"id": "gd0127", "a": "What's the way to turn off overdraft coverage?", "b": "What's the way to turn off text alerts? thx", "same": false}
+{"id": "gd0128", "a": "Can I deposit cash at a CO-OP network ATM?", "b": "Can I withdraw cash at a CO-OP network ATM?", "same": false}
+{"id": "gd0129", "a": "I was looking at the rate sheet on your website and wanted to confirm the early withdrawal penalty on the Money Market account before I open one this week.", "b": "I was looking at the rate sheet on your website and wanted to confirm the APY on the Money Market account before I open one this week.", "same": false}
+{"id": "gd0130", "a": "Can you tell me how to turn on overdraft coverage?", "b": "Can you tell me how to turn off overdraft coverage?", "same": false}
+{"id": "gd0131", "a": "Can you tell me how to add an authorized user?", "b": "What's the way to add a beneficiray?", "same": false}
+{"id": "gd0132", "a": "How much does expedited card delivery cost?", "b": "How much does an outgoing international wire cost", "same": false}
+{"id": "gd0133", "a": "What rate do you offer on a used auto loan?", "b": "What rate do you offer on a new auto loan?", "same": false}
+{"id": "gd0134", "a": "How high is the daily limit for external transfers?", "b": "What is the monthly limit for external tarnsfers?", "same": false}
+{"id": "gd0135", "a": "I need to add my daughter as a joint owner on my checking account now that she is in college. What do I have to bring with me to a branch?", "b": "My daughter is starting college in the fall and I want to add her as the payable-on-death beneficiary on my checking account . What do I need to bring to the branch ?", "same": false}
+{"id": "gd0136", "a": "What's the way to close a Holiday Club account?", "b": "What's the way to close a svaings account?", "same": false}
+{"id": "gd0137", "a": "Where can I find my dividend tax form?", "b": "Where can I find my year-end loan interest summary?", "same": false}
+{"id": "gd0138", "a": "What time does the Davie branch close on a weekday?", "b": "What time does the Davie branch close on Sunday?", "same": false}
+{"id": "gd0139", "a": "When does the Weston branch close on Sunday?", "b": "how late is the weston branch open on saturday", "same": false}
+{"id": "gd0140", "a": "How do I turn off text alerts?", "b": "How do I turn off biometric sign-in?", "same": false}
+{"id": "gd0141", "a": "What's the way to turn off two-step verification?", "b": "how do i turn off biometric sign-in", "same": false}
+{"id": "gd0142", "a": "What APY do you pay on the 12-month certificate?", "b": "What APY do you pay on the 18-month certificate?", "same": false}
+{"id": "gd0143", "a": "What time does the Davie branch close on Saturday?", "b": "What time does the Davie branch close on Sunday?", "same": false}
+{"id": "gd0144", "a": "What's the APR for a used RV loan?", "b": "What's the APR for a used auto loan?", "same": false}
+{"id": "gd0145", "a": "What dividend rate do you pay on the 18-month certificate?", "b": "What APY do you pay on the 18-month certificate ?", "same": false}
+{"id": "gd0146", "a": "Before I open one this week, can you confirm the APY on the 12-month certificate? I saw it on the rate sheet on your website.", "b": "I was looking at the rate sheet on your website and wanted to confirm the APY on the Money Market account before I open one this week.", "same": false}
+{"id": "gd0147", "a": "What's my daily limit on ATM withdrawals?", "b": "What's my daily limit on external transfers?", "same": false}
+{"id": "gd0148", "a": "Tell me the APY on the 36-month certificate.", "b": "Tell me the APY on the 12-month certificate .", "same": false}
+{"id": "gd0149", "a": "I'm trying to set up automatic loan payments in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Hi there, i'm trying to set up a recurring transfer to savings in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0150", "a": "What's the way to remove a beneficiary?", "b": "What's the way to remove a joint owner?", "same": false}
+{"id": "gd0151", "a": "What is the rate on a used RV loan?", "b": "What's the APR for a used boat loan?", "same": false}
+{"id": "gd0152", "a": "How high is the daily limit for debit card purchases?", "b": "How high is the monthly limit for debit card purchases?", "same": false}
+{"id": "gd0153", "a": "What is the monthly limit for Zelle?", "b": "Tell me the monthly limit for ATM withdrawals.", "same": false}
+{"id": "gd0154", "a": "How late is the Coral Springs branch open on a weekday?", "b": "How late is the Coral Springs branch open on Sunday", "same": false}
+{"id": "gd0155", "a": "What is the APY on the 36-month certificate?", "b": "Hi, what APY do you pay on the 18-month certificate?", "same": false}
+{"id": "gd0156", "a": "What's the way to unlock my debit card?", "b": "What is the way to unlock my credit card?", "same": false}
+{"id": "gd0157", "a": "How much is the fee for an outgoing domestic wire?", "b": "How much is the fee for skip-a-pay?", "same": false}
+{"id": "gd0158", "a": "What is the monthly limit for debit card purchases?", "b": "  Tell me the daily limit for debit card purchases.  ", "same": false}
+{"id": "gd0159", "a": "What is the fee for a money order?", "b": "What is the fee for skip-a-pay?", "same": false}
+{"id": "gd0160", "a": "How do I set up a travel notice?", "b": "What are the steps to set up direct deposit? Thanks", "same": false}
+{"id": "gd0161", "a": "What are the steps to add a beneficiary?", "b": "What are the steps to remove a beneficiary? thx", "same": false}
+{"id": "gd0162", "a": "Where do I get my fee schedule?", "b": "where do i get my year-end loan interest summary", "same": false}
+{"id": "gd0163", "a": "Can you tell me how to turn off overdraft coverage?", "b": "Hi, can you tell me how to turn on overdraft coverage?", "same": false}
+{"id": "gd0164", "a": "I'm trying to turn off text alerts in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to turn off two-step verfiication in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0165", "a": "What is the fee for an outgoing domestic wire?", "b": "What is the fee for an outgoing international wire?", "same": false}
+{"id": "gd0166", "a": "How much does a stop payment cost?", "b": "How much does an outgoing domestic wire cost?", "same": false}
+{"id": "gd0167", "a": "What do you charge for a safe deposit box?", "b": "What do you charge for an out-of-network ATM withdrawal? Thanks!", "same": false}
+{"id": "gd0168", "a": "Where can I find my direct deposit form?", "b": "Where can I find my fee schedule? Thank you.", "same": false}
+{"id": "gd0169", "a": "How can I add a joint owner?", "b": "How can I add a beneficiary?", "same": false}
+{"id": "gd0170", "a": "Can you tell me how to turn off biometric sign-in?", "b": "can you tell me how to turn off paperless statements", "same": false}
+{"id": "gd0171", "a": "Tell me the dividend rate on the 36-month certificate.", "b": "Tell me the dividend rate on the Money Market account.", "same": false}
+{"id": "gd0172", "a": "What's the APR for a used boat loan?", "b": "What's the APR for a used motorcycle loan?", "same": false}
+{"id": "gd0173", "a": "How can I close a savings account?", "b": "How do I open a savings account?", "same": false}
+{"id": "gd0174", "a": "Who do I contact to report identity theft?", "b": "What should I do to report a lost debit card?", "same": false}
+{"id": "gd0175", "a": "What are the steps to open a Holiday Club account?", "b": "What are the steps to close a Holiday Club account?", "same": false}
+{"id": "gd0176", "a": "Who do I contact to report a change of address?", "b": "Who do I contact to report an unauthorized ACH debit?", "same": false}
+{"id": "gd0177", "a": "Tell me the APY on the 6-month certificate.", "b": "Tell me the APY on the Money Market account.", "same": false}
+{"id": "gd0178", "a": "When does the Sunrise branch close on a weekday?", "b": "What time does the Sunrise branch close on Sunday?", "same": false}
+{"id": "gd0179", "a": "How do I download my account agreement?", "b": "How do I download my direct deposit form?", "same": false}
+{"id": "gd0180", "a": "How late is the Sunrise branch open on Sunday?", "b": "How late is the Sunrise branch open on Saturday?", "same": false}
+{"id": "gd0181", "a": "What time does the Coral Springs branch close on Sunday?", "b": "What time does the Coral Springs branch close on a weekday?", "same": false}
+{"id": "gd0182", "a": "What's the current APY for the 12-month certificate?", "b": "What dividend rate do you pay on the 12-month certificate?", "same": false}
+{"id": "gd0183", "a": "How much does a safe deposit box cost?", "b": "What is the fee for a stop payment?", "same": false}
+{"id": "gd0184", "a": "What is the rate on a new RV loan?", "b": "What is the rate on a new motorcycle loan?", "same": false}
+{"id": "gd0185", "a": "What is the fee for an overdraft?", "b": "What is the fee for a replacement debit card?", "same": false}
+{"id": "gd0186", "a": "How do I download my direct deposit form?", "b": "How do I download my dividend tax form?", "same": false}
+{"id": "gd0187", "a": "How much does an outgoing international wire cost?", "b": "Good morning. how much does an incoming international wire cost?", "same": false}
+{"id": "gd0188", "a": "What do you charge for an outgoing domestic wire?", "b": "What do you charge for an incoming domestic wire?", "same": false}
+{"id": "gd0189", "a": "Can you tell me how to remove an authorized user?", "b": "What are the steps to add an authorized user?", "same": false}
+{"id": "gd0190", "a": "When does the Sunrise branch close on Saturday?", "b": "When does the Sunrise branch close on Sunday ?", "same": false}
+{"id": "gd0191", "a": "What is the daily limit for external transfers?", "b": "What is the daily limit for ATM withdrawals?", "same": false}
+{"id": "gd0192", "a": "How do I turn off quick balance?", "b": "What are the steps to turn off paperless statements?", "same": false}
+{"id": "gd0193", "a": "What time does the Miramar branch close on Sunday?", "b": "Hi, what time does the Miramar branch close on Saturday?", "same": false}
+{"id": "gd0194", "a": "Tell me the monthly limit for debit card purchases.", "b": "Tell me the daily limit for debit card purchases.", "same": false}
+{"id": "gd0195", "a": "What should I do to report a lost debit card?", "b": "What should I do to report an unauthorized ACH debit?", "same": false}
+{"id": "gd0196", "a": "How much is the fee for a stop payment?", "b": "How much is the fee for a replacement debit card?", "same": false}
+{"id": "gd0197", "a": "My daughter is starting college in the fall and I want to add her as an authorized signer on my checking account. What do I need to bring to the branch?", "b": "My daughter is starting college in the fall and I want to add her as the payable-on-death beneficiary on my checking account. What do I need to bring to the branch?", "same": false}
+{"id": "gd0198", "a": "Tell me the monthly limit for mobile check deposit.", "b": "Tell me the daily limit for mobile check deposit", "same": false}
+{"id": "gd0199", "a": "What is the rate on a new boat loan?", "b": "What's the APR for a new auto loan?", "same": false}
+{"id": "gd0200", "a": "When does the Plantation branch close on Saturday?", "b": "When does the Plantation branch close on a weekday?", "same": false}
+{"id": "gd0201", "a": "Can you tell me how to open a Money Market account?", "b": "Can you tell me how to open a savings account?", "same": false}
+{"id": "gd0202", "a": "How do I lock my debit card?", "b": "How do I lock my credit card?", "same": false}
+{"id": "gd0203", "a": "How long does an outgoing domestic wire take?", "b": "How long does a replacement debit card take?", "same": false}
+{"id": "gd0204", "a": "Can you tell me how to unlock my debit card?", "b": "Can you tell me how to unlock my credit card?", "same": false}
+{"id": "gd0205", "a": "What's the APR for a new boat loan?", "b": "What's the APR for a used boat loan?", "same": false}
+{"id": "gd0206", "a": "What is the fee for an incoming domestic wire?", "b": "What do you charge for a cashier's check?", "same": false}
+{"id": "gd0207", "a": "What's my monthly limit on debit card purchases?", "b": "what's my daily limit on debit card purchases", "same": false}
+{"id": "gd0208", "a": "Could you explain how I turn on biometric sign-in from my phone? I looked in the app settings and did not see it.", "b": "I'm trying to turn off biometric sign-in in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0209", "a": "How much does a notary stamp cost?", "b": "How much does skip-a-pay cost?", "same": false}
+{"id": "gd0210", "a": "How can I open a Holiday Club account?", "b": "How can I close a Holiday Club account?", "same": false}
+{"id": "gd0211", "a": "Am I able to open a new account at a CO-OP shared branch?", "b": "Is it possible to open a new account at a Cypress Harbor branch? Thanks!", "same": false}
+{"id": "gd0212", "a": "What time does the Weston branch close on Saturday?", "b": "What time does the Weston branch close on Sunday", "same": false}
+{"id": "gd0213", "a": "What's the way to add an authorized user?", "b": "what's the way to remove an authorized user", "same": false}
+{"id": "gd0214", "a": "I'm trying to unlock my debit card in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Could you explain how I unlock my credit card from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0215", "a": "Where can I find my privacy notice?", "b": "Where do I get my year-end loan interest summary?", "same": false}
+{"id": "gd0216", "a": "What rate do you offer on a used boat loan?", "b": "What rate do you offer on a used RV loan?", "same": false}
+{"id": "gd0217", "a": "How can I turn off paperless statements?", "b": "How can I turn off overdraft coverage?", "same": false}
+{"id": "gd0218", "a": "When does the Coral Springs branch close on a weekday?", "b": "When does the Coral Springs branch close on Saturday?", "same": false}
+{"id": "gd0219", "a": "What should I do to report a Zelle payment sent to the wrong person?", "b": "What should I do to report a change of address? Thank you.", "same": false}
+{"id": "gd0220", "a": "How late is the Boca Raton branch open on Saturday?", "b": "When does the Boca Raton branch close on a weedkay?", "same": false}
+{"id": "gd0221", "a": "What are the steps to turn on biometric sign-in?", "b": "  What are the steps to turn on text alerts?  ", "same": false}
+{"id": "gd0222", "a": "How much is the fee for a returned deposited check?", "b": "How much is the fee for an outgoing domestic wire", "same": false}
+{"id": "gd0223", "a": "What do you charge for expedited card delivery?", "b": "What do you cahrge for a money order?", "same": false}
+{"id": "gd0224", "a": "Can you tell me how to open a savings account?", "b": "What's the way to open a Money Market account?", "same": false}
+{"id": "gd0225", "a": "Can you tell me how to close a checking account?", "b": "Can you tell me how to close a Money Market account?", "same": false}
+{"id": "gd0226", "a": "I need to send money to my landlord before the end of the day. What is the fee for an outgoing domestic wire, and how long does it take to arrive?", "b": "what does a cashier's check cost and how long does it take to arrive? i need to pay my landlord before the end of the day", "same": false}
+{"id": "gd0227", "a": "I need to send money to my landlord before the end of the day. What is the fee for a Zelle payment, and how long does it take to arrive?", "b": "I need to send money to my landlord before the end of the day. What is the fee for an external transfer, and how long does it take to arrive? Thanks!", "same": false}
+{"id": "gd0228", "a": "Hi, I have a question about my account. I would like to unlock my debit card, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to lock my debit card, can you walk me through how to do that in the mobile app", "same": false}
+{"id": "gd0229", "a": "How can I open a savings account?", "b": "  How can I close a savings account?  ", "same": false}
+{"id": "gd0230", "a": "When does the Davie branch close on Sunday?", "b": "When does the Davie branch close on a weekday?", "same": false}
+{"id": "gd0231", "a": "How can I turn off quick balance?", "b": "Can you tell me how to turn off two-step verification?", "same": false}
+{"id": "gd0232", "a": "What's my monthly limit on external transfers?", "b": "Hello, tell me the daily limit for external transfers.", "same": false}
+{"id": "gd0233", "a": "Who do I contact to report a deceased member?", "b": "Who do I cnotact to report a lost debit card?", "same": false}
+{"id": "gd0234", "a": "I'm trying to turn on two-step verification in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to turn off two-step verification in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0235", "a": "What's the way to open a Money Market account?", "b": "What's the way to close a Money Market account?", "same": false}
+{"id": "gd0236", "a": "How much is the fee for an incoming international wire?", "b": "How much is the fee for a stop payment?", "same": false}
+{"id": "gd0237", "a": "Where do I get my monthly statement?", "b": "Where do I get my year-end loan interest summary?", "same": false}
+{"id": "gd0238", "a": "What rate do you offer on a used motorcycle loan?", "b": "What rate do you offer on a new motorcycle loan? Thank you.", "same": false}
+{"id": "gd0239", "a": "How can I turn off biometric sign-in?", "b": "how can i turn off two-step verification", "same": false}
+{"id": "gd0240", "a": "How much is the fee for a notary stamp?", "b": "What do you charge for expedited card delivery", "same": false}
+{"id": "gd0241", "a": "What do you charge for an incoming international wire?", "b": "What do you charge for an incoming domestic wire?", "same": false}
+{"id": "gd0242", "a": "What rate do you offer on a used RV loan?", "b": "What rate do you offer on a used auto loan? Thank you.", "same": false}
+{"id": "gd0243", "a": "What are the steps to lock my credit card?", "b": "what are the steps to unlock my credit card", "same": false}
+{"id": "gd0244", "a": "What are the steps to cancel direct deposit?", "b": "  What are the steps to cancel a travel notice?  ", "same": false}
+{"id": "gd0245", "a": "Hi, I have a question about my account. I would like to turn off two-step verification, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to turn off text alerts, can you walk me through how to do that in the mobile app?", "same": false}
+{"id": "gd0246", "a": "So nothing gets declined while I'm traveling next month, what is the daily limit for debit card purchases?", "b": "So nothing gets declined while I'm traveling next month, what is the daily limit for Zelle?", "same": false}
+{"id": "gd0247", "a": "When should I expect expedited card delivery?", "b": "When should I expect a mailed paper statement?", "same": false}
+{"id": "gd0248", "a": "Hi, I have a question about my account. I would like to turn off biometric sign-in, can you walk me through how to do that in the mobile app?", "b": "I'm trying to turn off two-step verification in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0249", "a": "How late is the Plantation branch open on Saturday?", "b": "How late is the Plantation branch open on a weekday?", "same": false}
+{"id": "gd0250", "a": "What are the steps to remove an authorized user?", "b": "What are the steps to add an authorized user?", "same": false}
+{"id": "gd0251", "a": "I need to send money to my landlord before the end of the day. What is the fee for an outgoing international wire, and how long does it take to arrive?", "b": "What does an outgoing domestic wire cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "same": false}
+{"id": "gd0252", "a": "Can you tell me how to turn on text alerts?", "b": "Can you tell me how to turn off text aletrs?", "same": false}
+{"id": "gd0253", "a": "What time does the Weston branch close on a weekday?", "b": "What time does the Weston branch close on Saturday?", "same": false}
+{"id": "gd0254", "a": "Can you tell me how to set up a recurring transfer?", "b": "Can you tell me how to set up a travel notice?", "same": false}
+{"id": "gd0255", "a": "When does the Plantation branch close on Sunday?", "b": "When does the Plantation branch close on Saturday?", "same": false}
+{"id": "gd0256", "a": "Could you explain how I set up a recurring transfer to savings from my phone? I looked in the app settings and did not see it.", "b": "I'm trying to set up automatic loan payments in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0257", "a": "What are the steps to close a checking account?", "b": "What are the steps to close a Hloiday Club account?", "same": false}
+{"id": "gd0258", "a": "Am I able to make a loan payment at a CO-OP shared branch?", "b": "Am I able to make a loan payment at a Cypress Harbor branch?", "same": false}
+{"id": "gd0259", "a": "How late is the Coral Springs branch open on Saturday?", "b": "How late is the Coral Springs branch open on a weekday?", "same": false}
+{"id": "gd0260", "a": "What's the way to set up automatic loan payments?", "b": "Good morning. what are the steps to cancel automatic loan payments?", "same": false}
+{"id": "gd0261", "a": "What is the daily limit for mobile check deposit?", "b": "What is the monthly limit for mobile check deposit?", "same": false}
+{"id": "gd0262", "a": "How do I turn on biometric sign-in?", "b": "how do i turn off biometric sign-in", "same": false}
+{"id": "gd0263", "a": "How do I report a Zelle payment sent to the wrong person?", "b": "How do I report a change of address?", "same": false}
+{"id": "gd0264", "a": "Tell me the daily limit for ATM withdrawals.", "b": "Tell me the monthly limit for ATM withdrawals.", "same": false}
+{"id": "gd0265", "a": "What APY do you pay on the 36-month certificate?", "b": "What dividend rate do you pay on the 36-month certificate?", "same": false}
+{"id": "gd0266", "a": "What are the steps to open a Money Market account?", "b": "What are the steps to close a Money Market account?", "same": false}
+{"id": "gd0267", "a": "How much is the fee for expedited card delivery?", "b": "How much is the fee for a cashier's check?", "same": false}
+{"id": "gd0268", "a": "Hi, I have a question about my account. I would like to unlock my credit card, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to lock my credit card, can you walk me through how to do that in the mobile app?", "same": false}
+{"id": "gd0269", "a": "How can I remove a beneficiary?", "b": "How can I add a beneficiary? Thanks!", "same": false}
+{"id": "gd0270", "a": "What do you charge for an overdraft?", "b": "What do you charge for a returned deposited check?", "same": false}
+{"id": "gd0271", "a": "What should I do to report a change of address?", "b": "What should I do to report an unauthorized ACH debit?", "same": false}
+{"id": "gd0272", "a": "When does the Plantation branch close on a weekday?", "b": "  When does the Plantation branch close on Sunday?  ", "same": false}
+{"id": "gd0273", "a": "I'm trying to cancel automatic loan payments in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Could you explain how I cancel a recurring transfer to savings from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0274", "a": "How high is the daily limit for Zelle?", "b": "How high is the monthly limit for Zelle?", "same": false}
+{"id": "gd0275", "a": "What time does the Coral Springs branch close on a weekday?", "b": "What time does the Coral Springs branch close on Saturday?", "same": false}
+{"id": "gd0276", "a": "What rate do you offer on a new auto loan?", "b": "What rate do you offer on a new boat loan?", "same": false}
+{"id": "gd0277", "a": "What's the way to lock my debit card?", "b": "What's the way to unlock my debit card?", "same": false}
+{"id": "gd0278", "a": "I'm trying to turn on text alerts in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Good morning. i'm trying to turn off text alerts in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0279", "a": "Hi, I have a question about my account. I would like to turn on text alerts, can you walk me through how to do that in the mobile app?", "b": "hi, i have a question about my account. i would like to turn on biometric sign-in, can you walk me through how to do that in the mobile app", "same": false}
+{"id": "gd0280", "a": "Tell me the daily limit for Zelle.", "b": "Tell me the daily limit for external transfers.", "same": false}
+{"id": "gd0281", "a": "When does the Coral Springs branch close on Saturday?", "b": "How late is the Coral Springs branch open on Sunday?", "same": false}
+{"id": "gd0282", "a": "How much is the fee for an overdraft?", "b": "How much is the fee for a safe deposit box?", "same": false}
+{"id": "gd0283", "a": "I was looking at the rate sheet on your website and wanted to confirm the APY on the 12-month certificate before I open one this week.", "b": "I was looking at the rate sheet on your website and wanted to confirm the APY on the Money Market account before I open one this week.", "same": false}
+{"id": "gd0284", "a": "What's the way to turn on quick balance?", "b": "What's the way to turn on biometric sign-in?", "same": false}
+{"id": "gd0285", "a": "What is the fee for a returned deposited check?", "b": "what is the fee for paper statements", "same": false}
+{"id": "gd0286", "a": "How do I set up a recurring transfer?", "b": "How do I cancel a recurring transfer?", "same": false}
+{"id": "gd0287", "a": "What's the way to close a savings account?", "b": "What's the way to open a savings account?", "same": false}
+{"id": "gd0288", "a": "What time does the Plantation branch close on Sunday?", "b": "What time does the Plantation branch close on Saturday?", "same": false}
+{"id": "gd0289", "a": "What is the rate on a new auto loan?", "b": "Hi there, what is the rate on a new RV loan?", "same": false}
+{"id": "gd0290", "a": "When does the Weston branch close on Saturday?", "b": "When does the Weston branch close on Sunday?", "same": false}
+{"id": "gd0291", "a": "So nothing gets declined while I'm traveling next month, what is the daily limit for external transfers?", "b": "So nothing gets declined while I'm traveling next month, what is the daily limit for debit card purchases?", "same": false}
+{"id": "gd0292", "a": "So nothing gets declined while I'm traveling next month, what is the monthly limit for external transfers?", "b": "So nothing gets declined while I'm traveling next month, what is the monthly limit for ATM withdrawals", "same": false}
+{"id": "gd0293", "a": "Can you tell me how to turn on paperless statements?", "b": "Can you tell me how to turn off paperless statements?", "same": false}
+{"id": "gd0294", "a": "Is it possible to deposit cash at a CO-OP network ATM?", "b": "Is it possible to deposit cash at a CO-OP shared branch?", "same": false}
+{"id": "gd0295", "a": "What time does the Miramar branch close on Saturday?", "b": "What time does the Miramar branch close on a weekday?", "same": false}
+{"id": "gd0296", "a": "How late is the Miramar branch open on Saturday?", "b": "How late is the Miramar branch open on Sunday?", "same": false}
+{"id": "gd0297", "a": "Tell me the dividend rate on the 6-month certificate.", "b": "Tell me the APY on the 6-month certificate.", "same": false}
+{"id": "gd0298", "a": "What is the fee for a cashier's check?", "b": "How much does a notary stamp cost?", "same": false}
+{"id": "gd0299", "a": "Could you explain how I turn off biometric sign-in from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I turn on biometric sign-in from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0300", "a": "What's the current dividend rate for the 6-month certificate?", "b": "What APY do you pay on the 6-month certificate ?", "same": false}
+{"id": "gd0301", "a": "Can you tell me how to turn on two-step verification?", "b": "How can I turn on overdraft coverage?", "same": false}
+{"id": "gd0302", "a": "What APY do you pay on the Money Market account?", "b": "What is the APY on the 12-month certificate?", "same": false}
+{"id": "gd0303", "a": "Who do I contact to report a Zelle payment sent to the wrong person?", "b": "Who do I contact to report a change of address?", "same": false}
+{"id": "gd0304", "a": "Could you explain how I cancel a recurring transfer to savings from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I cancel automatic loan payments from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0305", "a": "What does a cashier's check cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "b": "What does an extenral transfer cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "same": false}
+{"id": "gd0306", "a": "I'm going on a trip next month and need to know the daily limit for debit card purchases so my transactions don't get declined while I'm away.", "b": "I'm going on a trip next month and need to know the daily limit for ATM withdrawals so my transactions don't get declined while I'm away.", "same": false}
+{"id": "gd0307", "a": "Is it possible to make a loan payment at a CO-OP shared branch?", "b": "Good morning. is it possible to open a new account at a CO-OP shared branch?", "same": false}
+{"id": "gd0308", "a": "How late is the Davie branch open on Sunday?", "b": "How late is the Davie branch open on Saturday?", "same": false}
+{"id": "gd0309", "a": "What's the current dividend rate for the 36-month certificate?", "b": "Tell me the APY on the 36-month certfiicate.", "same": false}
+{"id": "gd0310", "a": "What's the way to turn on text alerts?", "b": "What's the way to turn off text alerts?", "same": false}
+{"id": "gd0311", "a": "How much does an outgoing domestic wire cost?", "b": "How much does paper statements cost?", "same": false}
+{"id": "gd0312", "a": "Before I open one this week, can you confirm the early withdrawal penalty on the 12-month certificate? I saw it on the rate sheet on your website.", "b": "Before I open one this week, can you confirm the early withdrawal penalty on the Money Market account? I saw it on the rate sheet on your website.", "same": false}
+{"id": "gd0313", "a": "What are the steps to set up automatic loan payments?", "b": "How can I set up a recurring transfer?", "same": false}
+{"id": "gd0314", "a": "I was looking at the rate sheet on your website and wanted to confirm the early withdrawal penalty on the 12-month certificate before I open one this week.", "b": "I was looking at the rate sheet on your website and wanted to confirm the early withdrawal penalty on the Money Market account before I open one this week.", "same": false}
+{"id": "gd0315", "a": "How much does a replacement debit card cost?", "b": "How much does an out-of-network ATM withdrawal cost?", "same": false}
+{"id": "gd0316", "a": "How long does a mailed paper statement take?", "b": "How long does a new box of checks take?", "same": false}
+{"id": "gd0317", "a": "What is the daily limit for Zelle?", "b": "What's my daily limit on external transfers?", "same": false}
+{"id": "gd0318", "a": "What are the steps to turn on paperless statements?", "b": "Can you tell me how to turn off paperless statements?", "same": false}
+{"id": "gd0319", "a": "Can I make a loan payment at a CO-OP shared branch?", "b": "Can I open a new account at a CO-OP shared branch?", "same": false}
+{"id": "gd0320", "a": "Hi, I have a question about my account. I would like to turn on two-step verification, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to turn on biometric sign-in, can you walk me through how to do that in the mobile app", "same": false}
+{"id": "gd0321", "a": "What are the steps to turn off two-step verification?", "b": "what are the steps to turn on two-step verification", "same": false}
+{"id": "gd0322", "a": "What are the steps to cancel a travel notice?", "b": "How can I cancel a recurring transfer?", "same": false}
+{"id": "gd0323", "a": "What do you charge for a returned deposited check?", "b": "What do you charge for a replacement debit card?", "same": false}
+{"id": "gd0324", "a": "What's the current dividend rate for the Money Market account?", "b": "What's the current dividend rate for the 12-month certificate?", "same": false}
+{"id": "gd0325", "a": "What's the way to open a Holiday Club account?", "b": "What's the way to open a checking account?", "same": false}
+{"id": "gd0326", "a": "When should I expect a loan payoff letter?", "b": "When should I expect expedited card delivery?", "same": false}
+{"id": "gd0327", "a": "Could you explain how I set up automatic loan payments from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I set up a recurring transfer to savings from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0328", "a": "I'm going on a trip next month and need to know the monthly limit for Zelle so my transactions don't get declined while I'm away.", "b": "I'm going on a trip next month and need to know the daily limit for Zelle so my tarnsactions don't get declined while I'm away.", "same": false}
+{"id": "gd0329", "a": "Am I able to withdraw cash at a CO-OP network ATM?", "b": "Can I withdraw cash at a CO-OP shared branch?", "same": false}
+{"id": "gd0330", "a": "What is the APY on the 18-month certificate?", "b": "What is the APY on the Money Market account?", "same": false}
+{"id": "gd0331", "a": "How many days does a new box of checks take?", "b": "How many days does a replacement debit card take?", "same": false}
+{"id": "gd0332", "a": "Am I able to open a new account at a Cypress Harbor branch?", "b": "Am I able to open a new account at a CO-OP shared branch?", "same": false}
+{"id": "gd0333", "a": "I'm trying to turn off paperless statements in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "Could you explain how I turn on paperless statements from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0334", "a": "I'm going on a trip next month and need to know the monthly limit for ATM withdrawals so my transactions don't get declined while I'm away.", "b": "So nothing gets declined while I'm traveling next month, what is the daily limit for ATM withdrawals?", "same": false}
+{"id": "gd0335", "a": "Can you tell me how to cancel automatic loan payments?", "b": "Can you tell me how to set up automatic loan payments?", "same": false}
+{"id": "gd0336", "a": "What's the current APY for the 18-month certificate?", "b": "what's the current dividend rate for the 18-month certificate", "same": false}
+{"id": "gd0337", "a": "What time does the Boca Raton branch close on Sunday?", "b": "Hi there, how late is the Boca Raton branch open on Saturday?", "same": false}
+{"id": "gd0338", "a": "How can I unlock my debit card?", "b": "How can I lock my debit card?", "same": false}
+{"id": "gd0339", "a": "Am I able to deposit cash at a CO-OP shared branch?", "b": "am i able to withdraw cash at a co-op shared branch", "same": false}
+{"id": "gd0340", "a": "Tell me the dividend rate on the 18-month certificate.", "b": "Tell me the dividend rate on the 6-month certificate.", "same": false}
+{"id": "gd0341", "a": "What are the steps to lock my debit card?", "b": "What are the steps to unlock my debit card?", "same": false}
+{"id": "gd0342", "a": "Tell me the dividend rate on the Money Market account.", "b": "Tell me the dividend rate on the 18-month certificate.", "same": false}
+{"id": "gd0343", "a": "I need to remove my daughter as the payable-on-death beneficiary on my checking account now that she is in college. What do I have to bring with me to a branch?", "b": "My daughter is starting college in the fall and I want to remove her as a joint owner on my checking account. What do I need to bring to the branch?", "same": false}
+{"id": "gd0344", "a": "Hi, I have a question about my account. I would like to cancel a recurring transfer to savings, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to set up a recurring transfer to savings, can you walk me through how to do that in the mobile app?", "same": false}
+{"id": "gd0345", "a": "I need to add my daughter as the payable-on-death beneficiary on my checking account now that she is in college. What do I have to bring with me to a branch?", "b": "My daughter is starting college in the fall and I want to add her as a joint owner on my checking account. What do I need to bring to the branch?", "same": false}
+{"id": "gd0346", "a": "What do you charge for a cashier's check?", "b": "How much does a replacement debit card cost?", "same": false}
+{"id": "gd0347", "a": "Where can I find my year-end loan interest summary?", "b": "Where can I find my monthly statement?", "same": false}
+{"id": "gd0348", "a": "What is the dividend rate on the 18-month certificate?", "b": "What is the dividend rate on the Money Market account?", "same": false}
+{"id": "gd0349", "a": "How can I remove a joint owner?", "b": "  How can I add a joint owner?  ", "same": false}
+{"id": "gd0350", "a": "I was looking at the rate sheet on your website and wanted to confirm the minimum deposit on the Money Market account before I open one this week.", "b": "Hi, before I open one this week, can you confirm the APY on the Money Market account? I saw it on the rate sheet on your website.", "same": false}
+{"id": "gd0351", "a": "What's the way to set up direct deposit?", "b": "What's the way to cancel direct deposit?", "same": false}
+{"id": "gd0352", "a": "What's the current dividend rate for the 12-month certificate?", "b": "What APY do you pay on the 12-month certificate ?", "same": false}
+{"id": "gd0353", "a": "What time does the Plantation branch close on a weekday?", "b": "When does the Plantation branch close on Sunday?", "same": false}
+{"id": "gd0354", "a": "How late is the Plantation branch open on Sunday?", "b": "What time does the Plantation branch close on Saturday?", "same": false}
+{"id": "gd0355", "a": "How much is the fee for a cashier's check?", "b": "Hi, how much is the fee for an incoming domestic wire?", "same": false}
+{"id": "gd0356", "a": "What do you charge for an outgoing international wire?", "b": "What do you charge for a cashier's check?", "same": false}
+{"id": "gd0357", "a": "How can I turn on paperless statements?", "b": "Hi, how can I turn off paperless statements?", "same": false}
+{"id": "gd0358", "a": "What do you charge for paper statements?", "b": "What do you charge for a stop payment?", "same": false}
+{"id": "gd0359", "a": "Can you tell me how to lock my debit card?", "b": "How do I unlock my debit card? Thank you.", "same": false}
+{"id": "gd0360", "a": "Could you explain how I cancel automatic loan payments from my phone? I looked in the app settings and did not see it.", "b": "Hi, I have a question about my account. I would like to cancel a recurring transfer to savings, can you walk me through how to do that in the mobile app?", "same": false}
+{"id": "gd0361", "a": "Can you tell me how to close a Money Market account?", "b": "Can you tell me how to open a Money Market account?", "same": false}
+{"id": "gd0362", "a": "How do I download my monthly statement?", "b": "How do I download my direct deposit form? Thanks!", "same": false}
+{"id": "gd0363", "a": "What is the rate on a used motorcycle loan?", "b": "What is the rate on a new motorcycle loan?", "same": false}
+{"id": "gd0364", "a": "What are the steps to unlock my debit card?", "b": "What are the steps to unlock my credit card? Thank you.", "same": false}
+{"id": "gd0365", "a": "How long does an outgoing international wire take?", "b": "How long does a mailed paper statement take?", "same": false}
+{"id": "gd0366", "a": "How much is the fee for a safe deposit box?", "b": "How much is the fee for an outgoing domestic wire?", "same": false}
+{"id": "gd0367", "a": "What are the steps to turn off overdraft coverage?", "b": "How can I turn off biometric sign-in?", "same": false}
+{"id": "gd0368", "a": "I need to send money to my landlord before the end of the day. What is the fee for a cashier's check, and how long does it take to arrive?", "b": "I need to send money to my landlord before the end of the day. What is the fee for an outgoing domestic wire, and how long does it take to arrive?", "same": false}
+{"id": "gd0369", "a": "What is the fee for a stop payment?", "b": "What is the fee for paper statements ?", "same": false}
+{"id": "gd0370", "a": "Can you tell me how to turn off quick balance?", "b": "Could you tell me how to turn on quick balance?", "same": false}
+{"id": "gd0371", "a": "How can I lock my debit card?", "b": "How can I lock my credit card?", "same": false}
+{"id": "gd0372", "a": "What are the steps to close a Money Market account?", "b": "What are the steps to open a Money Market accuont?", "same": false}
+{"id": "gd0373", "a": "How do I open a Holiday Club account?", "b": "Good morning. how do I open a checking account?", "same": false}
+{"id": "gd0374", "a": "Can you tell me how to add a beneficiary?", "b": "Can you tell me how to add an authorized user? Thanks", "same": false}
+{"id": "gd0375", "a": "How many days does an outgoing international wire take?", "b": "How many days does a mailed paper statement take?", "same": false}
+{"id": "gd0376", "a": "What's the current APY for the 6-month certificate?", "b": "What APY do you pay on the 36-month certificate?", "same": false}
+{"id": "gd0377", "a": "How can I turn off overdraft coverage?", "b": "Can you tell me how to turn off text aelrts?", "same": false}
+{"id": "gd0378", "a": "What time does the Boca Raton branch close on Saturday?", "b": "What time does the Boca Raton branch close on a weekday?", "same": false}
+{"id": "gd0379", "a": "How much does a returned deposited check cost?", "b": "How much does paper statements cost?", "same": false}
+{"id": "gd0380", "a": "I was looking at the rate sheet on your website and wanted to confirm the APY on the Money Market account before I open one this week.", "b": "Before I open one this week, can you confirm the dividend rate on the Money Market account? I saw it on the rate sheet on your website.", "same": false}
+{"id": "gd0381", "a": "Is it possible to open a new account at a Cypress Harbor branch?", "b": "Is it possible to make a loan payment at a Cypress Harbor branch?", "same": false}
+{"id": "gd0382", "a": "How do I turn off two-step verification?", "b": "How do I turn off overdraft coverage?", "same": false}
+{"id": "gd0383", "a": "What are the steps to turn on overdraft coverage?", "b": "What are the steps to turn off overdraft coverage? Thank you.", "same": false}
+{"id": "gd0384", "a": "What time does the Davie branch close on Sunday?", "b": "Hi there, what time does the Davie branch close on Saturday?", "same": false}
+{"id": "gd0385", "a": "How can I add an authorized user?", "b": "Hey, how can I add a beneficiary?", "same": false}
+{"id": "gd0386", "a": "What are the steps to remove a joint owner?", "b": "What are the steps to remove a beneficiary?", "same": false}
+{"id": "gd0387", "a": "How do I turn on text alerts?", "b": "Can you tell me how to turn off text alerts?", "same": false}
+{"id": "gd0388", "a": "Tell me the monthly limit for external transfers.", "b": "How high is the daily limit for external transfers? Thanks", "same": false}
+{"id": "gd0389", "a": "How late is the Weston branch open on Sunday?", "b": "Good morning. how late is the Weston branch open on a weekday?", "same": false}
+{"id": "gd0390", "a": "How do I cancel automatic loan payments?", "b": "  How do I cancel a travel notice?  ", "same": false}
+{"id": "gd0391", "a": "Where do I get my year-end loan interest summary?", "b": "How do I download my account agreement?", "same": false}
+{"id": "gd0392", "a": "What is the fee for an outgoing international wire?", "b": "What is the fee for expedited card delivery?", "same": false}
+{"id": "gd0393", "a": "Can you tell me how to remove a joint owner?", "b": "Can you tell me how to remove a beneficiary? Thanks!", "same": false}
+{"id": "gd0394", "a": "What APY do you pay on the 6-month certificate?", "b": "what dividend rate do you pay on the 6-month certificate", "same": false}
+{"id": "gd0395", "a": "How do I cancel direct deposit?", "b": "What are the steps to set up direct deposit?", "same": false}
+{"id": "gd0396", "a": "What are the steps to turn off biometric sign-in?", "b": "What are the steps to turn off text alerts? Thanks", "same": false}
+{"id": "gd0397", "a": "I'm going on a trip next month and need to know the monthly limit for debit card purchases so my transactions don't get declined while I'm away.", "b": "I'm going on a trip next month and need to know the daily limit for debit card purchases so my transactions don't get declined while I'm away.", "same": false}
+{"id": "gd0398", "a": "How do I lock my credit card?", "b": "How do I lock my dbeit card?", "same": false}
+{"id": "gd0399", "a": "Could you explain how I turn on text alerts from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I turn off text alerts from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0400", "a": "Could you explain how I turn on paperless statements from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I turn off paperless statements from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0401", "a": "What are the steps to unlock my credit card?", "b": "Can you tell me how to unlock my debit card?", "same": false}
+{"id": "gd0402", "a": "What's the way to add a joint owner?", "b": "What's the way to add a beneficiary?", "same": false}
+{"id": "gd0403", "a": "So nothing gets declined while I'm traveling next month, what is the monthly limit for debit card purchases?", "b": "I'm going on a trip next month and need to know the daily limit for debit card purchases so my transactions don't get declined while I'm away.", "same": false}
+{"id": "gd0404", "a": "How do I report a lost debit card?", "b": "How do I report an unauthorized ACH debit?", "same": false}
+{"id": "gd0405", "a": "How late is the Sunrise branch open on a weekday?", "b": "How late is the Sunrise branch open on Saturday?", "same": false}
+{"id": "gd0406", "a": "Can you tell me how to lock my credit card?", "b": "Can you tell me how to lock my deibt card?", "same": false}
+{"id": "gd0407", "a": "How high is the monthly limit for mobile check deposit?", "b": "How high is the monthly limit for external transfers?", "same": false}
+{"id": "gd0408", "a": "How long does a new box of checks take?", "b": "How long does a replacement debit card take", "same": false}
+{"id": "gd0409", "a": "How long does a replacement debit card take?", "b": "How long does a loan payoff letter take?", "same": false}
+{"id": "gd0410", "a": "When does the Miramar branch close on Saturday?", "b": "When does the Miramar branch close on a weekday?", "same": false}
+{"id": "gd0411", "a": "What's my daily limit on mobile check deposit?", "b": "Tell me the monthly limit for mobile check deposit .", "same": false}
+{"id": "gd0412", "a": "What's my daily limit on Zelle?", "b": "What's my monthly limit on Zelle?", "same": false}
+{"id": "gd0413", "a": "What are the steps to add a joint owner?", "b": "How do I remove a joint owner?", "same": false}
+{"id": "gd0414", "a": "How can I open a checking account?", "b": "how can i open a holiday club account", "same": false}
+{"id": "gd0415", "a": "How do I report a deceased member?", "b": "How do I report a Zelle payment sent to the wrong person?", "same": false}
+{"id": "gd0416", "a": "Can you tell me how to turn off two-step verification?", "b": "Can you tell me how to turn off paperless statements?", "same": false}
+{"id": "gd0417", "a": "What time does the Sunrise branch close on a weekday?", "b": "Hi, how late is the Sunrise branch open on Sunday?", "same": false}
+{"id": "gd0418", "a": "How much does an incoming domestic wire cost?", "b": "How much does skip-a-pay cost?", "same": false}
+{"id": "gd0419", "a": "How late is the Boca Raton branch open on Sunday?", "b": "How late is the Boca Raton branch open on a weekday? thx", "same": false}
+{"id": "gd0420", "a": "Can you tell me how to cancel direct deposit?", "b": "Can you tell me how to cancel a recurring transfer?", "same": false}
+{"id": "gd0421", "a": "What are the steps to add an authorized user?", "b": "What are the steps to add a beneficiary?", "same": false}
+{"id": "gd0422", "a": "When does the Boca Raton branch close on Saturday?", "b": "How late is the Boca Raton branch open on Sunday?", "same": false}
+{"id": "gd0423", "a": "What are the steps to open a checking account?", "b": "What are the steps to close a checking account?", "same": false}
+{"id": "gd0424", "a": "How high is the monthly limit for external transfers?", "b": "What is the monthly limit for ATM withdrawals?", "same": false}
+{"id": "gd0425", "a": "Tell me the monthly limit for ATM withdrawals.", "b": "What is the monthly limit for external transfers?", "same": false}
+{"id": "gd0426", "a": "What's the way to turn on biometric sign-in?", "b": "What's the way to turn off biometric sign-in?", "same": false}
+{"id": "gd0427", "a": "When should I expect a replacement debit card?", "b": "  When should I expect expedited card delivery?  ", "same": false}
+{"id": "gd0428", "a": "How do I report identity theft?", "b": "Who do I contact to report a deceased member?", "same": false}
+{"id": "gd0429", "a": "What do you charge for skip-a-pay?", "b": "What do you charge for an out-of-network ATM withdrawal?", "same": false}
+{"id": "gd0430", "a": "How do I turn on paperless statements?", "b": "How do I turn off paperless statements?", "same": false}
+{"id": "gd0431", "a": "What's the way to cancel automatic loan payments?", "b": "What's the way to set up automatic loan payments?", "same": false}
+{"id": "gd0432", "a": "What time does the Coral Springs branch close on Saturday?", "b": "When does the Coral Springs branch close on Sunday?", "same": false}
+{"id": "gd0433", "a": "Can you tell me how to close a Holiday Club account?", "b": "Can you tell me how to open a Holiday Club account?", "same": false}
+{"id": "gd0434", "a": "When should I expect a new box of checks?", "b": "When should I expect a loan payoff letter?", "same": false}
+{"id": "gd0435", "a": "How late is the Davie branch open on Saturday?", "b": "Good morning. how late is the Davie branch open on a weekday?", "same": false}
+{"id": "gd0436", "a": "How much does a cashier's check cost?", "b": "How much does a noatry stamp cost?", "same": false}
+{"id": "gd0437", "a": "Is it possible to deposit cash at a CO-OP shared branch?", "b": "Is it possible to withdraw cash at a CO-OP shared branch?", "same": false}
+{"id": "gd0438", "a": "Before I open one this week, can you confirm the APY on the Money Market account? I saw it on the rate sheet on your website.", "b": "  Before I open one this week, can you confirm the minimum deposit on the Money Market account? I saw it on the rate sheet on your website.  ", "same": false}
+{"id": "gd0439", "a": "What's the way to turn off text alerts?", "b": "how do i turn off quick balance", "same": false}
+{"id": "gd0440", "a": "What is the rate on a used auto loan?", "b": "What is the rate on a used boat loan?", "same": false}
+{"id": "gd0441", "a": "What is the fee for a replacement debit card?", "b": "What is the fee for paper statements?", "same": false}
+{"id": "gd0442", "a": "How do I report an unauthorized ACH debit?", "b": "How do I report a change of address?", "same": false}
+{"id": "gd0443", "a": "How can I lock my credit card?", "b": "How can I unlock my credit card?", "same": false}
+{"id": "gd0444", "a": "How do I set up automatic loan payments?", "b": "how do i cancel automatic loan payments", "same": false}
+{"id": "gd0445", "a": "How long does expedited card delivery take?", "b": "How long does an outgoing domestic wire take?", "same": false}
+{"id": "gd0446", "a": "How much does paper statements cost?", "b": "What is the fee for an incoming international wire?", "same": false}
+{"id": "gd0447", "a": "Can you tell me how to close a savings account?", "b": "Can you tell me how to open a savings account?", "same": false}
+{"id": "gd0448", "a": "How many days does a replacement debit card take?", "b": "How many days does expedited card delivery take?", "same": false}
+{"id": "gd0449", "a": "How can I unlock my credit card?", "b": "What are the steps to lock my credit card?", "same": false}
+{"id": "gd0450", "a": "Can I open a new account at a Cypress Harbor branch?", "b": "Am I able to open a new account at a CO-OP shared branch?", "same": false}
+{"id": "gd0451", "a": "What are the steps to set up a recurring transfer?", "b": "How can I set up automatic loan payments?", "same": false}
+{"id": "gd0452", "a": "How can I turn on overdraft coverage?", "b": "How can I turn off overdraft coverage?", "same": false}
+{"id": "gd0453", "a": "What do you charge for a replacement debit card?", "b": "What do you charge for paper statements?", "same": false}
+{"id": "gd0454", "a": "Hi, I have a question about my account. I would like to turn off text alerts, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to turn off paperless statements, can you walk me through how to do that in the mobile app?", "same": false}
+{"id": "gd0455", "a": "What are the steps to set up a travel notice?", "b": "What are the steps to cancel a travel notice?", "same": false}
+{"id": "gd0456", "a": "How late is the Boca Raton branch open on a weekday?", "b": "How late is the Boca Raton branch open on Saturday?", "same": false}
+{"id": "gd0457", "a": "Tell me the daily limit for mobile check deposit.", "b": "Tell me the daily limit for debit card purchases.", "same": false}
+{"id": "gd0458", "a": "What is the monthly limit for external transfers?", "b": "What is the daily limit for external transfers?", "same": false}
+{"id": "gd0459", "a": "What's the way to turn on overdraft coverage?", "b": "What's the way to turn off overdraft coverage?", "same": false}
+{"id": "gd0460", "a": "When does the Boca Raton branch close on Sunday?", "b": "What time does the Boca Raton branch close on a weekday?", "same": false}
+{"id": "gd0461", "a": "What are the steps to close a Holiday Club account?", "b": "What are the steps to close a Money Market account?", "same": false}
+{"id": "gd0462", "a": "What do you charge for an incoming domestic wire?", "b": "What do you charge for a money order?", "same": false}
+{"id": "gd0463", "a": "What dividend rate do you pay on the Money Market account?", "b": "What APY do you pay on the Money Market account? Thank you.", "same": false}
+{"id": "gd0464", "a": "When does the Miramar branch close on Sunday?", "b": "When does the Miramar branch close on Staurday?", "same": false}
+{"id": "gd0465", "a": "How late is the Sunrise branch open on Saturday?", "b": "How late is the Sunirse branch open on a weekday?", "same": false}
+{"id": "gd0466", "a": "How can I set up a travel notice?", "b": "How can I cancel a travel notice?", "same": false}
+{"id": "gd0467", "a": "What APY do you pay on the 18-month certificate?", "b": "What APY do you pay on the Money Market account?", "same": false}
+{"id": "gd0468", "a": "Hi, I have a question about my account. I would like to turn on biometric sign-in, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to turn off biometric sign-in, can you walk me through how to do that in the mobile app?", "same": false}
+{"id": "gd0469", "a": "How can I set up a recurring transfer?", "b": "How can I set up a travel notice?", "same": false}
+{"id": "gd0470", "a": "What's the way to remove a joint owner?", "b": "What's the way to remove an authorized user?", "same": false}
+{"id": "gd0471", "a": "How much does an incoming international wire cost?", "b": "Hi, how much does an overdraft cost?", "same": false}
+{"id": "gd0472", "a": "When should I expect an outgoing international wire?", "b": "When should I expect expedited card delivery?", "same": false}
+{"id": "gd0473", "a": "How can I turn on biometric sign-in?", "b": "How can I turn on overdraft coverage?", "same": false}
+{"id": "gd0474", "a": "What's the way to set up a travel notice?", "b": "Hi, what's the way to cancel a travel notice?", "same": false}
+{"id": "gd0475", "a": "What are the steps to cancel automatic loan payments?", "b": "What are the steps to set up automatic loan payments?", "same": false}
+{"id": "gd0476", "a": "What's the way to turn off paperless statements?", "b": "What's the way to turn off quick balance?", "same": false}
+{"id": "gd0477", "a": "Before I open one this week, can you confirm the minimum deposit on the 12-month certificate? I saw it on the rate sheet on your website.", "b": "Before I open one this week, can you confirm the early withdrawal penalty on the 12-month certificate? I saw it on the rate sheet on your website.", "same": false}
+{"id": "gd0478", "a": "Tell me the monthly limit for Zelle.", "b": "Quick question: tell me the daily limit for Zelle.", "same": false}
+{"id": "gd0479", "a": "Can you tell me how to set up a travel notice?", "b": "can you tell me how to cancel a travel notice", "same": false}
+{"id": "gd0480", "a": "What are the steps to set up direct deposit?", "b": "What are the steps to set up automatic loan payments?", "same": false}
+{"id": "gd0481", "a": "What is the APY on the Money Market account?", "b": "What is the dividend rate on the Money Market account? thx", "same": false}
+{"id": "gd0482", "a": "Hi, I have a question about my account. I would like to turn off paperless statements, can you walk me through how to do that in the mobile app?", "b": "Could you explain how I turn off biometric sign-in from my phone ? I looked in the app settings and did not see it .", "same": false}
+{"id": "gd0483", "a": "How many days does a loan payoff letter take?", "b": "How many days does a new box of checks take?", "same": false}
+{"id": "gd0484", "a": "What does an outgoing international wire cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "b": "What does an external transfer cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "same": false}
+{"id": "gd0485", "a": "Can you tell me how to set up automatic loan payments?", "b": "What's the way to set up a recurring transfer?", "same": false}
+{"id": "gd0486", "a": "How many days does a mailed paper statement take?", "b": "How many days does an outgoing internatoinal wire take?", "same": false}
+{"id": "gd0487", "a": "What are the steps to turn on quick balance?", "b": "What are the steps to turn off quick balance?", "same": false}
+{"id": "gd0488", "a": "What rate do you offer on a new RV loan?", "b": "What is the rate on a new auto loan?", "same": false}
+{"id": "gd0489", "a": "Hi, I have a question about my account. I would like to set up automatic loan payments, can you walk me through how to do that in the mobile app?", "b": "hi, i have a question about my account. i would like to cancel automatic loan payments, can you walk me through how to do that in the mobile app", "same": false}
+{"id": "gd0490", "a": "Is it possible to withdraw cash at a CO-OP network ATM?", "b": "Is it possible to withdraw cash at a CO-OP shared branch?", "same": false}
+{"id": "gd0491", "a": "What time does the Weston branch close on Sunday?", "b": "What time does the Weston branch close on a weekday?", "same": false}
+{"id": "gd0492", "a": "Hi, I have a question about my account. I would like to lock my debit card, can you walk me through how to do that in the mobile app?", "b": "Hi, I have a question about my account. I would like to lock my credit card, can you walk me through how to do that in the mobile app?", "same": false}
+{"id": "gd0493", "a": "How can I turn on two-step verification?", "b": "How can I turn on paperless statements?", "same": false}
+{"id": "gd0494", "a": "How can I set up direct deposit?", "b": "How can I set up a travel notice", "same": false}
+{"id": "gd0495", "a": "Tell me the dividend rate on the 12-month certificate.", "b": "Tell me the APY on the 12-month certificate.", "same": false}
+{"id": "gd0496", "a": "Can you tell me how to turn on biometric sign-in?", "b": "How can I turn on quick balance?", "same": false}
+{"id": "gd0497", "a": "How do I unlock my credit card?", "b": "how do i unlock my debit card", "same": false}
+{"id": "gd0498", "a": "What is the fee for paper statements?", "b": "What is the fee for an overdraft?", "same": false}
+{"id": "gd0499", "a": "Can I make a loan payment at a Cypress Harbor branch?", "b": "Can I make a loan payment at a CO-OP shared branch?", "same": false}
+{"id": "gd0500", "a": "What's my daily limit on external transfers?", "b": "What is the daily limit for ATM withdrawals?", "same": false}
+{"id": "gd0501", "a": "Before I open one this week, can you confirm the dividend rate on the 12-month certificate? I saw it on the rate sheet on your website.", "b": "Before I open one this week, can you confirm the dividend rate on the Money Market account ? I saw it on the rate sheet on your website .", "same": false}
+{"id": "gd0502", "a": "What are the steps to remove a beneficiary?", "b": "Hi there, how can I remove a joint owner?", "same": false}
+{"id": "gd0503", "a": "Can you tell me how to unlock my credit card?", "b": "Can you tell me how to unlock my debit card? Thanks", "same": false}
+{"id": "gd0504", "a": "Could you explain how I lock my debit card from my phone? I looked in the app settings and did not see it.", "b": "Could you explain how I lock my credit card from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0505", "a": "I'm trying to turn off two-step verification in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "I'm trying to turn off paperless statements in the mobile app but I can't find where to do it. Can you tell me the steps?", "same": false}
+{"id": "gd0506", "a": "I'm going on a trip next month and need to know the daily limit for external transfers so my transactions don't get declined while I'm away.", "b": "So nothing gets declined while I'm traveling next month, what is the monthly limit for external transfers?", "same": false}
+{"id": "gd0507", "a": "What's the APR for a used motorcycle loan?", "b": "What's the APR for a used auto loan?", "same": false}
+{"id": "gd0508", "a": "Can you tell me how to turn off text alerts?", "b": "Can you tell me how to turn off quick balance ?", "same": false}
+{"id": "gd0509", "a": "My daughter is starting college in the fall and I want to add her as the payable-on-death beneficiary on my checking account. What do I need to bring to the branch?", "b": "My daughter is starting college in the fall and I want to remove her as the payable-on-death beneficiary on my checking account. What do I need to bring to the branch?", "same": false}
+{"id": "gd0510", "a": "How do I download my dividend tax form?", "b": "How do I download my account agreement?", "same": false}
+{"id": "gd0511", "a": "How do I download my privacy notice?", "b": "Where can I find my year-end loan interest summary?", "same": false}
+{"id": "gd0512", "a": "How late is the Davie branch open on a weekday?", "b": "How late is the Davie branch open on Saturday?", "same": false}
+{"id": "gd0513", "a": "What's the way to lock my credit card?", "b": "Waht's the way to unlock my credit card?", "same": false}
+{"id": "gd0514", "a": "Can you tell me how to set up direct deposit?", "b": "Hi there, can you tell me how to cancel direct deposit?", "same": false}
+{"id": "gd0515", "a": "Where can I find my fee schedule?", "b": "Where can I find my year-end loan interest summary?", "same": false}
+{"id": "gd0516", "a": "What time does the Plantation branch close on Saturday?", "b": "When does the Plantation branch close on a weekday?", "same": false}
+{"id": "gd0517", "a": "What is the daily limit for ATM withdrawals?", "b": "What is the daily limit for Zelle?", "same": false}
+{"id": "gd0518", "a": "What rate do you offer on a new motorcycle loan?", "b": "What rate do you offer on a new boat loan?", "same": false}
+{"id": "gd0519", "a": "What is the APY on the 12-month certificate?", "b": "What is the APY on the 6-month certificate?", "same": false}
+{"id": "gd0520", "a": "How much is the fee for an incoming domestic wire?", "b": "How much does a cashier's check cost?", "same": false}
+{"id": "gd0521", "a": "How can I cancel direct deposit?", "b": "How can I set up direct deposit?", "same": false}
+{"id": "gd0522", "a": "So nothing gets declined while I'm traveling next month, what is the daily limit for ATM withdrawals?", "b": "So nothing gets declined while I'm traveling next month, what is the monthly limit for ATM withdrawals?", "same": false}
+{"id": "gd0523", "a": "How much is the fee for an out-of-network ATM withdrawal?", "b": "How much is the fee for a returned deposited check?", "same": false}
+{"id": "gd0524", "a": "What's the current APY for the Money Market account?", "b": "What's the current dividend rate for the Money Market account?", "same": false}
+{"id": "gd0525", "a": "What is the fee for a safe deposit box?", "b": "What is the fee for sikp-a-pay?", "same": false}
+{"id": "gd0526", "a": "I was looking at the rate sheet on your website and wanted to confirm the dividend rate on the 12-month certificate before I open one this week.", "b": "I was looking at the rate sheet on your website and wanted to confirm the early withdrawal penalty on the 12-month certificate before I open one this week", "same": false}
+{"id": "gd0527", "a": "How can I close a Holiday Club account?", "b": "How can I close a Money Market account", "same": false}
+{"id": "gd0528", "a": "What are the steps to turn off quick balance?", "b": "What's the way to turn off biometric sign-in?", "same": false}
+{"id": "gd0529", "a": "How do I cancel a travel notice?", "b": "How do I cancel a recurring transfer?", "same": false}
+{"id": "gd0530", "a": "How do I turn on quick balance?", "b": "What's the way to turn off quick balance?", "same": false}
+{"id": "gd0531", "a": "How do I close a checking account?", "b": "How can I close a Holiday Club account?", "same": false}
+{"id": "gd0532", "a": "How do I set up direct deposit?", "b": "How do I set up a recurring transfer?", "same": false}
+{"id": "gd0533", "a": "How late is the Coral Springs branch open on Sunday?", "b": "What time does the Coral Springs branch close on a weekday?", "same": false}
+{"id": "gd0534", "a": "How much is the fee for a money order?", "b": "How much does expedited card delivery cost?", "same": false}
+{"id": "gd0535", "a": "Can I withdraw cash at a CO-OP network ATM?", "b": "can i withdraw cash at a co-op shared branch", "same": false}
+{"id": "gd0536", "a": "What does an outgoing domestic wire cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "b": "What does an outgoing international wire cost and how long does it take to arrive? I need to pay my landlord before the end of the day.", "same": false}
+{"id": "gd0537", "a": "How can I remove an authorized user?", "b": "How can I remove a beneficiary ?", "same": false}
+{"id": "gd0538", "a": "What is the fee for expedited card delivery?", "b": "What is the fee for a cashier's check?", "same": false}
+{"id": "gd0539", "a": "Tell me the daily limit for debit card purchases.", "b": "Tell me the daily limit for Zelle.", "same": false}
+{"id": "gd0540", "a": "How can I open a Money Market account?", "b": "How can I open a savings account? Thanks", "same": false}
+{"id": "gd0541", "a": "What is the fee for an out-of-network ATM withdrawal?", "b": "What is the fee for a cashier's check?", "same": false}
+{"id": "gd0542", "a": "When should I expect an outgoing domestic wire?", "b": "How many days does an outgoing international wire take?", "same": false}
+{"id": "gd0543", "a": "Could you explain how I turn off text alerts from my phone? I looked in the app settings and did not see it.", "b": "Quick question: could you explain how I turn off paperless statements from my phone? I looked in the app settings and did not see it.", "same": false}
+{"id": "gd0544", "a": "How high is the daily limit for ATM withdrawals?", "b": "How high is the monthly limit for ATM withdrawals?", "same": false}
+{"id": "gd0545", "a": "What's my monthly limit on Zelle?", "b": "How high is the daily limit for Zelle?", "same": false}
+{"id": "gd0546", "a": "Am I able to withdraw cash at a CO-OP shared branch?", "b": "Am I able to withdraw cash at a CO-OP network ATM?", "same": false}
+{"id": "gd0547", "a": "How do I open a Money Market account?", "b": "How do I open a savings account?", "same": false}
+{"id": "gd0548", "a": "How can I set up automatic loan payments?", "b": "what's the way to set up direct deposit", "same": false}
+{"id": "gd0549", "a": "I need to remove my daughter as a joint owner on my checking account now that she is in college. What do I have to bring with me to a branch?", "b": "Hi there, i need to remove my daughter as an authorized signer on my checking account now that she is in college. What do I have to bring with me to a branch?", "same": false}
+{"id": "gd0550", "a": "I'm trying to cancel a recurring transfer to savings in the mobile app but I can't find where to do it. Can you tell me the steps?", "b": "  I'm trying to set up a recurring transfer to savings in the mobile app but I can't find where to do it. Can you tell me the steps?  ", "same": false}
+{"id": "gd0551", "a": "Can I open a new account at a CO-OP shared branch?", "b": "Am I able to make a loan payment at a CO-OP shared branch?", "same": false}
+{"id": "gd0552", "a": "My daughter is starting college in the fall and I want to remove her as an authorized signer on my checking account. What do I need to bring to the branch?", "b": "I need to remove my daughter as the payable-on-death beneficiary on my checking account now that she is in college. What do I have to bring with me to a branch?", "same": false}
+{"id": "gd0553", "a": "What is the dividend rate on the Money Market account?", "b": "Tell me the APY on the Money Market account.", "same": false}
+{"id": "gd0554", "a": "How can I close a Money Market account?", "b": "How can I open a Money Market account?", "same": false}
+{"id": "gd0555", "a": "Tell me the APY on the 18-month certificate.", "b": "What's the dividend rate on the 18-month certificate?", "same": false}
+{"id": "gd0556", "a": "How do I add a joint owner?", "b": "How do i add an authorized user?", "same": false}
+{"id": "gd0557", "a": "How do I download my fee schedule?", "b": "How do I download my privacy notice? thx", "same": false}
+{"id": "gd0558", "a": "What's the way to open a checking account?", "b": "What's the way to close a checking account?", "same": false}
+{"id": "gd0559", "a": "I need to add my daughter as an authorized signer on my checking account now that she is in college. What do I have to bring with me to a branch?", "b": "I need to remove my daughter as an authorized signer on my checking account now that she is in college. What do I have to bring with me to a branch?", "same": false}
+{"id": "gd0560", "a": "What's the current APY for the 36-month certificate?", "b": "What dividend rate do you pay on the 36-month certificate?", "same": false}
+{"id": "gd0561", "a": "How do I turn on overdraft coverage?", "b": "How do I turn on quick blaance?", "same": false}
+{"id": "gd0562", "a": "How can I turn off text alerts?", "b": "What's the way to turn on text alerts?", "same": false}
+{"id": "gd0563", "a": "What should I do to report identity theft?", "b": "What should I do to report a Zelle pyament sent to the wrong person?", "same": false}
+{"id": "gd0564", "a": "What is the fee for an incoming international wire?", "b": "What is the fee for paper statements?", "same": false}

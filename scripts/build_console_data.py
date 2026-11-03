@@ -67,7 +67,7 @@ def calibration() -> dict:
     rep["pairs_file"] = "evals/semcache_pairs.jsonl"
     rep["command"] = "python scripts/calibrate_semcache.py"
     rep["measured"] = (
-        "measured: the hashing embedder on 160 bundled fictional credit-union pairs (not production traffic)"
+        "measured: the hashing embedder on 1,324 bundled fictional credit-union pairs (not production traffic)"
     )
     return rep
 

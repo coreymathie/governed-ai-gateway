@@ -256,16 +256,19 @@ DEMO_MCP_ARGS = {  # fictional: a reserved example domain and an invented member
     "delete_file": {"path": "policies/bsa-procedures.txt"},
 }
 # A reworded question (hit), a number change (refused by the guard), and a lookalike that differs in meaning: it
-# misses at the calibrated threshold and is a false hit at a looser one (evals/semcache_pairs.jsonl s001, d033, d014).
+# misses at the calibrated threshold and is a false hit at a looser one (evals/semcache_pairs.jsonl s001 and d014).
+# The number change is a longer message, so it clears the calibrated threshold and the guard is what refuses it.
 SEMANTIC_EXAMPLES = [
     "What is Cypress Harbor's routing number?",
     "what is cypress harbor's routing number",
-    "How many days do I have to report a 60 day old charge?",
-    "How many days do I have to report a 90 day old charge?",
+    "There is a charge on my checking account that I did not make, and it first showed up on my monthly statement "
+    "60 days ago. How many days do I have to report it to the credit union?",
+    "There is a charge on my checking account that I did not make, and it first showed up on my monthly statement "
+    "90 days ago. How many days do I have to report it to the credit union?",
     "How do I turn on two-step verification for online banking?",
     "How do I turn off two-step verification for online banking?",
 ]
-SEMANTIC_THRESHOLD = 0.90  # config/routes.yaml semantic_cache.threshold, from scripts/calibrate_semcache.py
+SEMANTIC_THRESHOLD = 0.97  # config/routes.yaml semantic_cache.threshold, from scripts/calibrate_semcache.py
 # Same document as config/policies.yaml (tests/test_demo_engine.py fails if they drift); the browser has no YAML parser.
 DEMO_POLICIES = {
     "version": 1,
