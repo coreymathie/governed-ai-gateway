@@ -172,7 +172,7 @@ function drawerHtml(tr) {
           .map(
             (s) => `<li>
           <span class="ic ${esc(s.decision)}" aria-hidden="true">${esc(decisionIcon(s.decision))}</span>
-          <div class="st"><b>${esc(s.label)}</b><span class="small faint num">${s.ms == null ? "" : ms(s.ms)}</span></div>
+          <div class="st"><b>${esc(s.label)}</b><span class="small faint num" translate="no">${s.ms == null ? "" : ms(s.ms)}</span></div>
           <div class="sm"><span class="pill ${esc(s.decision)}">${esc(s.decision)}</span> ${esc(s.summary)}</div>
           ${s.detail && s.detail.attempts ? renderAttempts(s.detail.attempts) : ""}
           ${s.detail && Object.keys(s.detail).filter((k) => k !== "attempts").length ? `<details><summary>details</summary><pre class="box">${esc(JSON.stringify(Object.fromEntries(Object.entries(s.detail).filter(([k]) => k !== "attempts")), null, 2))}</pre></details>` : ""}

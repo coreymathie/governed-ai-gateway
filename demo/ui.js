@@ -4,11 +4,15 @@ export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 export const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
+// Money is always en-US with a leading "$" ($940, $1,100, $0.0123), whatever the browser locale. Elements that
+// hold figures carry translate="no" so page translation does not rewrite "$1,100" as "1 100 USD".
 export function usd(v, digits) {
   const n = Number(v || 0);
   if (digits == null) digits = n !== 0 && Math.abs(n) < 0.01 ? 5 : n < 100 ? 4 : 2;
-  return "$" + n.toFixed(digits);
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
+/** Wrap money in already-escaped prose so translation leaves the figure alone. Text content only, never attributes. */
+export const figs = (html) => String(html).replace(/\$\d[\d,]*(?:\.\d+)?[KMB]?/g, (m) => `<span translate="no">${m}</span>`);
 export const pct = (v, d = 1) => (v == null ? "–" : (Number(v) * 100).toFixed(d) + "%");
 export const int = (v) => (v == null ? "–" : Number(v).toLocaleString("en-US"));
 export const ms = (v) => (v == null ? "–" : Number(v) >= 1000 ? (Number(v) / 1000).toFixed(2) + " s" : Math.round(Number(v)) + " ms");
@@ -107,7 +111,7 @@ export function hourlyChart({ today, baseline, currentHour, simulatedBefore = nu
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * max);
   const digits = tickDigits(ticks, max < 0.1 ? 3 : max < 10 ? 2 : 0);
   const fmt = (v) => "$" + v.toFixed(digits);
-  let svg = `<svg class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Spend per hour today compared with the 7-day average for each hour">`;
+  let svg = `<svg translate="no" class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Spend per hour today compared with the 7-day average for each hour">`;
   svg += `<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#a78bfa" opacity="0.45"/><line x1="0" y1="0" x2="0" y2="6" stroke="#0e0a1d" stroke-width="2" opacity="0.5"/></pattern></defs>`;
   for (const t of ticks) svg += `<line class="grid-line" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${fmt(t)}</text>`;
   today.forEach((v, h) => {
@@ -132,7 +136,7 @@ export function hbars(items, { format = usd, color = "var(--chart-1)" } = {}) {
     .map(
       (i) => `<div class="hbar"><span class="name" title="${esc(i.name)}">${esc(i.name)}${i.sub ? `<span class="faint small"> ${esc(i.sub)}</span>` : ""}</span>
       <span class="track" aria-hidden="true"><span class="fill" style="display:block;width:${Math.max(2, (100 * i.value) / max).toFixed(1)}%;background:${i.color || color}"></span></span>
-      <span class="num right">${esc(format(i.value))}</span></div>`,
+      <span class="num right" translate="no">${esc(format(i.value))}</span></div>`,
     )
     .join("");
 }
@@ -146,7 +150,7 @@ export function scatter(points, { xLabel = "Cost per 1K requests (USD)", yLabel 
   const x = (v) => L + (W - L - R) * (v / xmax);
   const y = (v) => T + (H - T - B) * (1 - (v - ymin) / (1 - ymin));
   const colors = ["#a78bfa", "#60a5fa", "#4ade80", "#fbbf24", "#f472b6", "#f87171"];
-  let svg = `<svg class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Route quality against cost">`;
+  let svg = `<svg translate="no" class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Route quality against cost">`;
   const yt = [0, 1, 2, 3, 4].map((i) => ymin + ((1 - ymin) * i) / 4), xt = [0, 1, 2, 3, 4].map((i) => (xmax * i) / 4);
   const labelled = (i) => !compact || i % 2 === 0; // compact: label every other tick so the text fits
   const yd = tickDigits(yt.filter((_, i) => labelled(i)), 2), xd = tickDigits(xt.filter((_, i) => labelled(i)), 2);
@@ -187,7 +191,7 @@ export function curves(grid, chosen, { compact = false } = {}) {
   const xmin = Math.min(...xs), xmax = Math.max(...xs);
   const x = (v) => L + (W - L - R) * ((v - xmin) / (xmax - xmin || 1));
   const y = (v) => T + (H - T - B) * (1 - v);
-  let svg = `<svg class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Hit rate and false-hit rate by similarity threshold">`;
+  let svg = `<svg translate="no" class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Hit rate and false-hit rate by similarity threshold">`;
   for (const t of [0, 0.25, 0.5, 0.75, 1]) svg += `<line class="grid-line" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${Math.round(t * 100)}%</text>`;
   for (let v = Math.ceil(xmin * 10) / 10; v <= xmax + 1e-9; v += 0.1) svg += `<text x="${x(v)}" y="${H - 12}" text-anchor="middle">${v.toFixed(1)}</text>`;
   const line = (key, color, dash = "") =>
@@ -207,7 +211,7 @@ export function stackedDaily(points, series, { format = usd, compact = false, ar
   const step = (W - L - R) / Math.max(1, points.length);
   const bw = Math.max(2, Math.min(16, step * 0.72));
   const y = (v) => T + (H - T - B) * (1 - v / max);
-  let svg = `<svg class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(ariaLabel)}">`;
+  let svg = `<svg translate="no" class="chart${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(ariaLabel)}">`;
   for (const t of ticks) svg += `<line class="grid-line" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${esc(format(t))}</text>`;
   const every = Math.max(1, Math.ceil(points.length / (compact ? 4 : 8)));
   points.forEach((p, i) => {

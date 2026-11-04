@@ -41,6 +41,11 @@
    "tests": 21
   },
   {
+   "about": "Console money reads en-US with a leading \"$\" in any locale, and figures are marked translate=\"no\".",
+   "file": "tests/test_demo_money.py",
+   "tests": 3
+  },
+  {
    "about": "Eval harness (simulated providers only: no real model is called here) and shadow mode through the API.",
    "file": "tests/test_evals_shadow.py",
    "tests": 16
@@ -107,11 +112,11 @@
   }
  ],
  "last_run": {
-  "collected": 305,
-  "date": "2026-10-09",
-  "exit_code": 0,
-  "summary": "304 passed, 1 skipped, 2 warnings"
+  "collected": 308,
+  "date": "2026-11-03",
+  "exit_code": 1,
+  "summary": "1 failed, 306 passed, 1 skipped, 2 warnings"
  },
  "measured": "counted from the test sources; CI runs pytest -q on every push",
- "total": 255
+ "total": 258
 }
