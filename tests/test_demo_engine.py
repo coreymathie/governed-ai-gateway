@@ -263,20 +263,22 @@ def test_semantic_panel_hit_guard_isolation_and_known_false_hit():
     run_sync(e.semantic_ask("digital-banking", ex[2]))
     assert run_sync(e.semantic_ask("digital-banking", ex[3]))["reason"] == "guard: numbers differ"
     run_sync(e.semantic_ask("digital-banking", ex[4]))
-    wrong = run_sync(e.semantic_ask("digital-banking", ex[5], 0.85))  # turn on vs. turn off: a looser threshold errs
-    assert wrong["result"] == "hit" and wrong["nearest"] == ex[4]
-    right = run_sync(e.semantic_ask("digital-banking", ex[5]))  # the calibrated threshold (0.90) does not
-    assert right["result"] == "miss" and right["reason"] == "below_threshold" and e.semantic.threshold == 0.90
-    assert e.semantic_view()["counts"] == {"hit": 2, "miss": 5, "guard": 1}
+    refused = run_sync(e.semantic_ask("digital-banking", ex[5], 0.5))  # turn on vs. turn off, even at a loose 0.5
+    assert refused["result"] == "miss" and refused["reason"] == "guard: opposite action (on/off)"
+    run_sync(e.semantic_ask("digital-banking", ex[6]))
+    wrong = run_sync(e.semantic_ask("digital-banking", ex[7], 0.89))  # language vs. theme: no guard covers it
+    assert wrong["result"] == "hit" and wrong["nearest"] == ex[6] and e.semantic.threshold == 0.89
+    assert e.semantic_view()["counts"] == {"hit": 2, "miss": 5, "guard": 2}
 
 
 def test_demo_calibration_matches_the_script():
     from scripts import calibrate_semcache
 
-    pairs = ROOT / "evals" / "semcache_pairs.jsonl"
-    demo = json.loads(JsBridge().calibrate(pairs.read_text(), 0.01))
-    script = calibrate_semcache.run(str(pairs), 0.01, 0.50, 0.99, 0.01)
+    pairs, heldout = ROOT / "evals" / "semcache_pairs.jsonl", ROOT / "evals" / "semcache_heldout.jsonl"
+    demo = json.loads(JsBridge().calibrate(pairs.read_text(), 0.01, heldout.read_text()))
+    script = calibrate_semcache.run(str(pairs), 0.01, 0.50, 0.99, 0.01, heldout_file=str(heldout))
     assert demo["chosen"] == script["chosen"] and demo["holdout_at_chosen"] == script["holdout_at_chosen"]
+    assert demo["heldout"] == script["heldout"]
 
 
 # ---------- MCP tool gateway panel (router/mcp_policy.py) ----------

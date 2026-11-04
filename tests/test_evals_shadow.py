@@ -17,6 +17,7 @@ from scripts import eval_gate, eval_routes
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = ROOT / "evals" / "sample_cases.jsonl"
+HARD = "hard"
 ADMIN = {"Authorization": "Bearer sk-router-admin"}
 
 
@@ -32,7 +33,8 @@ def restore_prices():
 
 def test_bundled_cases_load_and_every_answer_passes_its_reference():
     cases = evals.load_cases(CASES.read_text().splitlines())
-    assert len(cases) == 40 and len({c.id for c in cases}) == 40
+    assert len(cases) == 271 and len({c.id for c in cases}) == 271
+    assert sum(HARD in c.tags for c in cases) == 54  # boundary values, holidays, lookalikes, unanswerable
     assert all(evals.score_reference(c.reference, c.answer) == 1.0 for c in cases)
     wrong = "I'm not certain; it may depend on details not given."
     assert all(evals.score_reference(c.reference, wrong) == 0.0 for c in cases)
@@ -129,12 +131,14 @@ def test_shipped_routes_simulated_report_numbers():
     q = {name: r["summary"]["quality"] for name, r in rep["routes"].items()}
     cost = {name: r["summary"]["total_cost_usd"] for name, r in rep["routes"].items()}
     assert q == {
-        "cheap-batch": 0.625, "fast-chat": 0.85, "heavy-reasoning": 1.0, "local-first": 0.6, "regulated-fast": 0.6,
-        "smart-fast": 0.85,
+        "cheap-batch": 0.7048, "fast-chat": 0.8782, "heavy-reasoning": 0.9742, "local-first": 0.6679,
+        "regulated-fast": 0.6679, "smart-fast": 0.8782,
     }  # fmt: skip
-    assert cost["smart-fast"] == pytest.approx(0.11055, abs=1e-6)
-    assert cost["cheap-batch"] == pytest.approx(0.01215, abs=1e-6)
-    assert cost["heavy-reasoning"] == pytest.approx(0.335109, abs=1e-6)
+    assert cost["smart-fast"] == pytest.approx(0.695661, abs=1e-6)
+    assert cost["cheap-batch"] == pytest.approx(0.074439, abs=1e-6)
+    assert cost["heavy-reasoning"] == pytest.approx(2.101042, abs=1e-6)
+    # The simulation draws each answer from the deployment's profile, so hard cases score like the rest.
+    assert rep["routes"]["smart-fast"]["summary"]["quality_by_tag"]["hard"] == 0.9259
     # Realistic prompt sizes: per 1,000 requests, smart-fast costs about what the sample company's apps pay.
     assert 2.0 < rep["routes"]["smart-fast"]["summary"]["cost_per_1k_requests_usd"] < 4.0
     md = evals.to_markdown(rep)
@@ -183,7 +187,7 @@ def test_cli_report_and_gate(tmp_path, capsys):
         )
     )
     assert eval_gate.main([*args, "--routes-after", str(pricier)]) == 1
-    assert "cost rose 203.1%" in capsys.readouterr().out
+    assert "cost rose 200.5%" in capsys.readouterr().out
     rep_json = str(out.with_suffix(".json"))
     pair = ["--baseline-report", rep_json, "--candidate-report", rep_json]
     assert eval_gate.main([*pair, "--alias", "smart-fast", "--candidate-alias", "cheap-batch"]) == 1

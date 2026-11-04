@@ -141,20 +141,24 @@ shadow: {}
 #  smart-fast: { candidate: cheap-batch, percent: 10, billing: ledger, max_daily_usd: 5 }
 
 # Semantic cache (router/semcache.py): serve a cached answer when a new prompt's last
-# user turn is similar enough to a cached one. OFF by default. On the bundled
-# fictional credit-union pairs the offline hashing embedder at 0.90 had no wrong hits among
-# 10 held-out hits (0.0%), but 10 hits cannot certify 1% (95% upper bound 27.8%), so
-# calibrate on your own labelled traffic first:
-#   python scripts/calibrate_semcache.py --pairs your_pairs.jsonl --target 0.01
+# user turn is similar enough to a cached one. OFF by default. The threshold (0.89) is
+# picked on the calibration half of the 1,324 bundled fictional development pairs. On the
+# separate 2,800-pair held-out set it serves 28 wrong answers among 531 hits (5.3%; 95%
+# upper bound 7.5%), above the 1% target, so calibrate on your own labelled traffic first:
+#   python scripts/calibrate_semcache.py --pairs your_pairs.jsonl --heldout your_heldout.jsonl
+# The guards apply at any threshold: a candidate is refused when the numbers differ, one
+# side is negated, an action meets its opposite (turn on/off, add/remove, open/close,
+# lock/unlock, start/stop, ...) or an entity value differs (checking/savings, daily/monthly,
+# Saturday/Sunday, a different branch or product name, ...). A refusal is a cache miss.
 # Entries are partitioned by team, alias, policy decision, content hooks, earlier
 # turns and generation parameters, and live in this worker's memory only.
 semantic_cache:
   enabled: false
-  threshold: 0.90
+  threshold: 0.89
   ttl_seconds: 3600
   max_entries_per_partition: 1000
   max_temperature: 0.0
   embedder: hashing            # or: provider (with embedding_model: openai/text-embedding-3-small)
-  guards: { numbers: true, negation: true }
+  guards: { numbers: true, negation: true, opposites: true, entities: true }
   teams: []                    # empty = every team when enabled; otherwise only these teams
   team_thresholds: {}          # per-team calibrated thresholds

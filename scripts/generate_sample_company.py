@@ -539,6 +539,7 @@ def build() -> dict:
         "period": {"start": start.isoformat(), "end": END.isoformat(), "days": DAYS},
         "company": ch.COMPANY,
         "assumptions": ASSUMPTIONS,
+        "benchmarks": [{k: v for k, v in b.items() if k not in ("deployment", "price")} for b in ch.BENCHMARKS],
         "teams": teams,
         "apps": apps,
         "org_budget": {**b["org"], "source": "config/routes.yaml"},

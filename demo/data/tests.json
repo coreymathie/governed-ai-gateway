@@ -83,7 +83,7 @@
   {
    "about": "One story across the console: the sample company's usage file, request log, in-browser engine, route evals,",
    "file": "tests/test_sample_consistency.py",
-   "tests": 13
+   "tests": 14
   },
   {
    "about": "The console's sample request log: reproducible, priced from tokens, and consistent with the sample company.",
@@ -93,7 +93,7 @@
   {
    "about": "Semantic cache: embedder, guards, partitions, TTL/LRU, calibration (bundled fictional pairs), and the API path.",
    "file": "tests/test_semcache.py",
-   "tests": 12
+   "tests": 18
   },
   {
    "about": "Token estimation, TPM limiter, budget hierarchy, showback aggregation (pure functions).",
@@ -112,11 +112,11 @@
   }
  ],
  "last_run": {
-  "collected": 308,
-  "date": "2026-11-03",
-  "exit_code": 1,
-  "summary": "1 failed, 306 passed, 1 skipped, 2 warnings"
+  "collected": 336,
+  "date": "2026-11-04",
+  "exit_code": 0,
+  "summary": "335 passed, 1 skipped, 2 warnings"
  },
  "measured": "counted from the test sources; CI runs pytest -q on every push",
- "total": 258
+ "total": 265
 }

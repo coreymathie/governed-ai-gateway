@@ -22,6 +22,9 @@ jobs:
       - run: python scripts/generate_sample_company.py --check
       - run: python scripts/sample_requests.py --check
       - run: python scripts/build_eval_cases.py --check
+      - run: python scripts/build_semcache_pairs.py --check
+      - run: python scripts/build_semcache_heldout.py --check
+      - run: python scripts/calibrate_semcache.py
 
   console-smoke:
     # Headless Chromium over the console (demo/). Live mode needs no network beyond installs; demo mode loads
@@ -41,3 +44,14 @@ jobs:
       - name: Demo mode (Pyodide from the CDN)
         continue-on-error: true
         run: python scripts/demo_smoke.py
+
+  docker:
+    # Builds the image from the Dockerfile (no push) and runs one command inside it, so a base-image bump
+    # (Dependabot) is only green if the image still builds and the gateway still imports.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the image
+        run: docker build --tag governed-ai-gateway:ci .
+      - name: Smoke command inside the image
+        run: docker run --rm governed-ai-gateway:ci python -c "import router.main; print(router.main.app.title)"

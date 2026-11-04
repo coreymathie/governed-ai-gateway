@@ -1,0 +1,162 @@
+# Labelled pairs for semantic-cache calibration (scripts/calibrate_semcache.py). Fictional credit-union questions.
+# same=true: one cached answer serves both. same=false: reusing the answer would be wrong.
+{"id": "s001", "a": "What is Cypress Harbor's routing number?", "b": "what is cypress harbor's routing number", "same": true}
+{"id": "s002", "a": "What are the branch hours on Saturday?", "b": "What are the branch hours on Saturday", "same": true}
+{"id": "s003", "a": "Can I change the mailing address on my account?", "b": "Can I change the mailing address for my account?", "same": true}
+{"id": "s004", "a": "How do I download my statements as PDF?", "b": "How can I download my statements as PDF?", "same": true}
+{"id": "s005", "a": "Where can I download the mobile banking app?", "b": "Where do I download the mobile banking app?", "same": true}
+{"id": "s006", "a": "How do I close my savings account?", "b": "How do I close my savings account please?", "same": true}
+{"id": "s007", "a": "Is there a fee for paper statements?", "b": "Is there a fee for paper statements at all?", "same": true}
+{"id": "s008", "a": "Which forms of ID do you accept to open an account?", "b": "What forms of ID do you accept to open an account?", "same": true}
+{"id": "s009", "a": "How long does a mobile check deposit take to clear?", "b": "How long does a mobile check deposit usually take to clear?", "same": true}
+{"id": "s010", "a": "How do I turn on two-step verification for online banking?", "b": "How do I enable two-step verification for online banking?", "same": true}
+{"id": "s011", "a": "Can I dispute a charge on my debit card?", "b": "Can I dispute a charge made on my debit card?", "same": true}
+{"id": "s012", "a": "How do I add a joint owner to my checking account?", "b": "How can I add a joint owner to my checking account?", "same": true}
+{"id": "s013", "a": "What is the overdraft fee on checking?", "b": "What's the overdraft fee on checking?", "same": true}
+{"id": "s014", "a": "Does the Harbor Rewards Visa have a foreign transaction fee?", "b": "Does the Harbor Rewards Visa charge a foreign transaction fee?", "same": true}
+{"id": "s015", "a": "How do I update the email on my account?", "b": "How do I change the email on my account?", "same": true}
+{"id": "s016", "a": "Summarize the key points of the fee schedule.", "b": "Summarise the key points of the fee schedule.", "same": true}
+{"id": "s017", "a": "Translate 'account balance' into Spanish.", "b": "Translate account balance into Spanish", "same": true}
+{"id": "s018", "a": "What does error code E104 mean in the mobile app?", "b": "What does the error code E104 mean in the mobile app?", "same": true}
+{"id": "s019", "a": "How do I set up direct deposit?", "b": "How do I set up my direct deposit?", "same": true}
+{"id": "s020", "a": "Can I skip a loan payment this month?", "b": "Can I skip a loan payment this month instead?", "same": true}
+{"id": "s021", "a": "Where is my new debit card?", "b": "Where's my new debit card?", "same": true}
+{"id": "s022", "a": "How do I reset my online banking password?", "b": "How can I reset my online banking password?", "same": true}
+{"id": "s023", "a": "What is the dividend rate on the money market account?", "b": "What's the dividend rate on the money market account?", "same": true}
+{"id": "s024", "a": "How do I order checks?", "b": "How can I order checks?", "same": true}
+{"id": "s025", "a": "Explain what a share certificate is.", "b": "Explain what a share certificate is?", "same": true}
+{"id": "s026", "a": "How do I set up automatic loan payments?", "b": "How do I set up automated loan payments?", "same": true}
+{"id": "s027", "a": "Is the Davie branch wheelchair accessible?", "b": "Is the Davie branch accessible by wheelchair?", "same": true}
+{"id": "s028", "a": "How do I send money with Zelle?", "b": "How do I send money using Zelle?", "same": true}
+{"id": "s029", "a": "Which documents do I need for an auto loan?", "b": "What documents do I need for an auto loan?", "same": true}
+{"id": "s030", "a": "How do I download last month's statement?", "b": "How can I download last month's statement?", "same": true}
+{"id": "s031", "a": "How can I get my money back for a duplicate charge?", "b": "I want a refund for a duplicate charge, how?", "same": true}
+{"id": "s032", "a": "What time do branches close on Fridays?", "b": "When do branches close on Friday?", "same": true}
+{"id": "s033", "a": "How do I sign out of online banking on all devices?", "b": "How do I log out of online banking on all my devices?", "same": true}
+{"id": "s034", "a": "Can I open an account without a Social Security number?", "b": "Is opening an account possible without a Social Security number?", "same": true}
+{"id": "s035", "a": "How do I change the language in the mobile app?", "b": "How can I switch the mobile app language?", "same": true}
+{"id": "s036", "a": "My statement shows the wrong address, how do I fix it?", "b": "How do I fix the wrong address on my statement?", "same": true}
+{"id": "s037", "a": "Where can I see my transaction history?", "b": "Where do I find my transaction history?", "same": true}
+{"id": "s038", "a": "How do I close my account permanently?", "b": "How can I permanently close my account?", "same": true}
+{"id": "s039", "a": "Do you have an ATM in Weston?", "b": "Is there an ATM in Weston?", "same": true}
+{"id": "s040", "a": "Can I make a loan payment at a branch?", "b": "Can loan payments be made at a branch?", "same": true}
+{"id": "s041", "a": "How do I recover a deleted payee?", "b": "How can a deleted payee be recovered?", "same": true}
+{"id": "s042", "a": "Why is my mobile deposit stuck on pending?", "b": "My mobile deposit is stuck on pending, why?", "same": true}
+{"id": "s043", "a": "How do I add a beneficiary to my account?", "b": "How can I add beneficiaries to my account?", "same": true}
+{"id": "s044", "a": "Which browsers does online banking support?", "b": "What browsers does online banking support?", "same": true}
+{"id": "s045", "a": "Can I move my CD to a new term at maturity?", "b": "How do I move my CD to a new term at maturity?", "same": true}
+{"id": "s046", "a": "How do I report a lost card?", "b": "Where can I report a lost card?", "same": true}
+{"id": "s047", "a": "What's included in Premier Checking?", "b": "What does Premier Checking include?", "same": true}
+{"id": "s048", "a": "How do I turn off text alerts?", "b": "How can I disable text alerts?", "same": true}
+{"id": "s049", "a": "How do I change my PIN?", "b": "How can I update my PIN?", "same": true}
+{"id": "s050", "a": "Is my online banking data encrypted?", "b": "Do you encrypt my online banking data?", "same": true}
+{"id": "s051", "a": "How do I reset my online banking password?", "b": "I forgot my login for online banking, what now?", "same": true}
+{"id": "s052", "a": "What are your branch hours?", "b": "When are your branches open?", "same": true}
+{"id": "s053", "a": "How do I close my checking account?", "b": "I want to stop using my checking account and close it.", "same": true}
+{"id": "s054", "a": "Do you have ATMs outside Florida?", "b": "Can I use a fee-free ATM when I travel out of state?", "same": true}
+{"id": "s055", "a": "How do I contact member services?", "b": "Who can I talk to about a problem with my account?", "same": true}
+{"id": "s056", "a": "Is there a minimum balance for savings?", "b": "How much do I need to keep in savings?", "same": true}
+{"id": "s057", "a": "How do I change my email address?", "b": "My contact email is outdated; how do I update it?", "same": true}
+{"id": "s058", "a": "The mobile app keeps crashing when I log in.", "b": "The app closes immediately every time I sign in.", "same": true}
+{"id": "s059", "a": "How much is the monthly fee on checking?", "b": "What does checking cost per month?", "same": true}
+{"id": "s060", "a": "Can I get a letter confirming my account?", "b": "I need a proof of account letter for my landlord.", "same": true}
+{"id": "s061", "a": "How do I raise my credit score?", "b": "My credit score is low, any tips to improve it?", "same": true}
+{"id": "s062", "a": "Where is my replacement card?", "b": "My new card hasn't arrived yet, can you check?", "same": true}
+{"id": "s063", "a": "Explain APR simply.", "b": "What is an annual percentage rate, in plain words?", "same": true}
+{"id": "s064", "a": "Write a polite reminder about a missed loan payment.", "b": "Draft a courteous note asking a member to bring a late loan payment current.", "same": true}
+{"id": "s065", "a": "What is the routing number?", "b": "Which ABA number do I use for direct deposit?", "same": true}
+{"id": "s066", "a": "Give me tips for budgeting.", "b": "How should I plan my monthly spending?", "same": true}
+{"id": "s067", "a": "How do I make my password stronger?", "b": "What makes a good secure passphrase?", "same": true}
+{"id": "s068", "a": "Is the Plantation branch open today?", "b": "Can I visit the Plantation branch right now?", "same": true}
+{"id": "s069", "a": "Which account is best for a teenager?", "b": "What account should my 15-year-old open?", "same": true}
+{"id": "s070", "a": "How do I freeze my card?", "b": "Can I temporarily lock my debit card?", "same": true}
+{"id": "s071", "a": "For loan 5521, can I change the due date?", "b": "Can I change the due date for loan 5521?", "same": true}
+{"id": "s072", "a": "In the mobile app, how do I add a payee?", "b": "How do I add a payee in the mobile app?", "same": true}
+{"id": "s073", "a": "Before closing, can I transfer my balance to savings?", "b": "Can I transfer my balance to savings before closing?", "same": true}
+{"id": "s074", "a": "On weekends, is phone support available?", "b": "Is phone support available on weekends?", "same": true}
+{"id": "s075", "a": "When the card reader beeps twice, what does it mean?", "b": "What does it mean when the card reader beeps twice?", "same": true}
+{"id": "s076", "a": "For the Harbor Rewards Visa, who is the issuer?", "b": "Who is the issuer of the Harbor Rewards Visa?", "same": true}
+{"id": "s077", "a": "If I pay off my auto loan early, is there a penalty?", "b": "Is there a penalty if I pay off my auto loan early?", "same": true}
+{"id": "s078", "a": "After a dispute is filed, when do I get provisional credit?", "b": "When do I get provisional credit after a dispute is filed?", "same": true}
+{"id": "s079", "a": "To view statements, which permission does a joint owner need?", "b": "Which permission does a joint owner need to view statements?", "same": true}
+{"id": "s080", "a": "Without internet, does the card still work?", "b": "Does the card still work without internet?", "same": true}
+{"id": "d001", "a": "How do I reset my online banking password?", "b": "How do I reset my debit card PIN?", "same": false}
+{"id": "d002", "a": "What are the branch hours on Saturday?", "b": "What are the branch hours on Monday?", "same": false}
+{"id": "d003", "a": "Does the Harbor Rewards Visa have a foreign transaction fee?", "b": "Does the Harbor Cash Back Visa have a foreign transaction fee?", "same": false}
+{"id": "d004", "a": "What does error code E104 mean in the mobile app?", "b": "What does error code E117 mean in the mobile app?", "same": false}
+{"id": "d005", "a": "Is the Davie branch wheelchair accessible?", "b": "Is the Sunrise branch wheelchair accessible?", "same": false}
+{"id": "d006", "a": "Translate 'account balance' into Spanish.", "b": "Translate 'account balance' into Haitian Creole.", "same": false}
+{"id": "d007", "a": "How do I download my statements as PDF?", "b": "How do I download my statements as CSV?", "same": false}
+{"id": "d008", "a": "Do you have an ATM in Weston?", "b": "Do you have an ATM in Miramar?", "same": false}
+{"id": "d009", "a": "What is the dividend rate on the money market account?", "b": "What is the dividend rate on the holiday club account?", "same": false}
+{"id": "d010", "a": "Who is the issuer of the Harbor Rewards Visa?", "b": "Who is the issuer of the Harbor Platinum Mastercard?", "same": false}
+{"id": "d011", "a": "How do I set up direct deposit?", "b": "How do I set up a wire transfer?", "same": false}
+{"id": "d012", "a": "What is the overdraft fee on checking?", "b": "What is the overdraft fee on savings?", "same": false}
+{"id": "d013", "a": "How do I add a joint owner to my checking account?", "b": "How do I remove a joint owner from my checking account?", "same": false}
+{"id": "d014", "a": "How do I turn on two-step verification for online banking?", "b": "How do I turn off two-step verification for online banking?", "same": false}
+{"id": "d015", "a": "How do I add a beneficiary to my account?", "b": "How do I add a beneficiary to my IRA?", "same": false}
+{"id": "d016", "a": "Which browsers does online banking support?", "b": "Which phones does online banking support?", "same": false}
+{"id": "d017", "a": "Which forms of ID do you accept to open an account?", "b": "Which forms of payment do you accept for a loan?", "same": false}
+{"id": "d018", "a": "Which account is best for a teenager?", "b": "Which account is best for a small business?", "same": false}
+{"id": "d019", "a": "How do I update the email on my account?", "b": "How do I update the phone number on my account?", "same": false}
+{"id": "d020", "a": "Summarize the key points of the fee schedule.", "b": "Summarize the key points of the privacy notice.", "same": false}
+{"id": "d021", "a": "Where can I download the mobile banking app?", "b": "Where can I download the tax forms?", "same": false}
+{"id": "d022", "a": "How do I send money with Zelle?", "b": "How do I request money with Zelle?", "same": false}
+{"id": "d023", "a": "How do I change the language in the mobile app?", "b": "How do I change the theme in the mobile app?", "same": false}
+{"id": "d024", "a": "What's included in Premier Checking?", "b": "What's included in Basic Checking?", "same": false}
+{"id": "d025", "a": "How do I turn off text alerts?", "b": "How do I turn off email alerts?", "same": false}
+{"id": "d026", "a": "What is the rate on a 12-month certificate?", "b": "What is the rate on an 18-month certificate?", "same": false}
+{"id": "d027", "a": "What is 3% of $2,500?", "b": "What is 3% of $5,200?", "same": false}
+{"id": "d028", "a": "Can I change the due date for loan 5521?", "b": "Can I change the due date for loan 5512?", "same": false}
+{"id": "d029", "a": "Is my 2019 car eligible for refinancing?", "b": "Is my 2014 car eligible for refinancing?", "same": false}
+{"id": "d030", "a": "Transfer $40 to my savings account.", "b": "Transfer $400 to my savings account.", "same": false}
+{"id": "d031", "a": "What happens if I pay on day 10 of the grace period?", "b": "What happens if I pay on day 15 of the grace period?", "same": false}
+{"id": "d032", "a": "Set a balance alert for $100.", "b": "Set a balance alert for $10.", "same": false}
+{"id": "d033", "a": "How many days do I have to report a 60 day old charge?", "b": "How many days do I have to report a 90 day old charge?", "same": false}
+{"id": "d034", "a": "Withdraw $300 from the ATM.", "b": "Withdraw $3,000 from the ATM.", "same": false}
+{"id": "d035", "a": "Round 4.1567 to two decimal places.", "b": "Round 4.1567 to three decimal places.", "same": false}
+{"id": "d036", "a": "What does status code 401 mean in the API?", "b": "What does status code 500 mean in the API?", "same": false}
+{"id": "d037", "a": "Is the 6-month CD still available?", "b": "Is the 9-month CD still available?", "same": false}
+{"id": "d038", "a": "Refund the $35 overdraft fee.", "b": "Refund the $350 overdraft fee.", "same": false}
+{"id": "d039", "a": "Schedule the transfer for the 1st.", "b": "Schedule the transfer for the 15th.", "same": false}
+{"id": "d040", "a": "What is the payment on a $20,000 loan?", "b": "What is the payment on a $25,000 loan?", "same": false}
+{"id": "d041", "a": "Does the card work abroad?", "b": "Why does the card not work abroad?", "same": false}
+{"id": "d042", "a": "Can I cancel the wire transfer?", "b": "Why can't I cancel the wire transfer?", "same": false}
+{"id": "d043", "a": "Is the branch open on Veterans Day?", "b": "Is the branch never open on Veterans Day?", "same": false}
+{"id": "d044", "a": "Should I sign the back of my new card?", "b": "Should I not sign the back of my new card?", "same": false}
+{"id": "d045", "a": "The deposit went through.", "b": "The deposit did not go through.", "same": false}
+{"id": "d046", "a": "I received the verification code.", "b": "I never received the verification code.", "same": false}
+{"id": "d047", "a": "Does Premier Checking include free checks?", "b": "Does Premier Checking come without free checks?", "same": false}
+{"id": "d048", "a": "Is my information shared with affiliates?", "b": "Is my information not shared with affiliates?", "same": false}
+{"id": "d049", "a": "The card is activated.", "b": "The card is not activated.", "same": false}
+{"id": "d050", "a": "Can joint owners see the statements?", "b": "Why can't joint owners see the statements?", "same": false}
+{"id": "d051", "a": "How do I lock my debit card?", "b": "How do I unlock my debit card?", "same": false}
+{"id": "d052", "a": "How do I close my savings account?", "b": "How do I reopen my savings account?", "same": false}
+{"id": "d053", "a": "How do I close my account permanently?", "b": "How do I recover my account after closing it?", "same": false}
+{"id": "d054", "a": "Can I dispute a charge on my debit card?", "b": "Can I cancel a dispute on my debit card?", "same": false}
+{"id": "d055", "a": "How do I sign out of online banking on all devices?", "b": "How do I sign in to online banking on all devices?", "same": false}
+{"id": "d056", "a": "Where is my new debit card?", "b": "Where is my old debit card?", "same": false}
+{"id": "d057", "a": "How do I deposit a check?", "b": "How do I stop payment on a check?", "same": false}
+{"id": "d058", "a": "Explain what a share certificate is.", "b": "Explain what a share draft is.", "same": false}
+{"id": "d059", "a": "How do I increase my daily ATM limit?", "b": "How do I check my daily ATM limit?", "same": false}
+{"id": "d060", "a": "Write a polite reminder about a missed loan payment.", "b": "Write a polite thank-you for a paid-off loan.", "same": false}
+{"id": "d061", "a": "How do I make my password stronger?", "b": "How do I make my password shorter?", "same": false}
+{"id": "d062", "a": "Is my online banking data encrypted?", "b": "Is my online banking data backed up?", "same": false}
+{"id": "d063", "a": "What is the return policy for duplicate charges?", "b": "What is the reporting deadline for duplicate charges?", "same": false}
+{"id": "d064", "a": "Can I skip a loan payment this month?", "b": "Can I double a loan payment this month?", "same": false}
+{"id": "d065", "a": "How do I add a payee in the mobile app?", "b": "How do I delete a payee in the mobile app?", "same": false}
+{"id": "d066", "a": "Why is my mobile deposit stuck on pending?", "b": "Why was my mobile deposit rejected?", "same": false}
+{"id": "d067", "a": "How long does a mobile check deposit take to clear?", "b": "How much does a mobile check deposit cost?", "same": false}
+{"id": "d068", "a": "Can I move my CD to a new term at maturity?", "b": "Can I withdraw my CD before maturity?", "same": false}
+{"id": "d069", "a": "How do I set up automatic loan payments?", "b": "How do I stop automatic loan payments?", "same": false}
+{"id": "d070", "a": "Who can I talk to about a problem with my account?", "b": "Who can I talk to about a job opening?", "same": false}
+{"id": "d071", "a": "What is the routing number?", "b": "How do I reset my online banking password?", "same": false}
+{"id": "d072", "a": "Give me tips for budgeting.", "b": "Give me tips for hurricane preparation.", "same": false}
+{"id": "d073", "a": "Explain APR simply.", "b": "Explain inflation simply.", "same": false}
+{"id": "d074", "a": "How do I freeze my card?", "b": "How do I clean my card reader?", "same": false}
+{"id": "d075", "a": "Is there a minimum balance for savings?", "b": "Is there parking at the branch?", "same": false}
+{"id": "d076", "a": "Is the Plantation branch open today?", "b": "What's the address of the Plantation branch?", "same": false}
+{"id": "d077", "a": "How do I raise my credit score?", "b": "How do I raise my daily Zelle limit?", "same": false}
+{"id": "d078", "a": "Draft a courteous note asking a member to bring a late loan payment current.", "b": "Draft a courteous note inviting members to the annual meeting.", "same": false}
+{"id": "d079", "a": "Which ABA number do I use for direct deposit?", "b": "Which branch hosts the shred day?", "same": false}
+{"id": "d080", "a": "My new card hasn't arrived yet, can you check?", "b": "My new card arrived damaged, what now?", "same": false}

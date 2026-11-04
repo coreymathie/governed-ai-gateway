@@ -134,9 +134,9 @@ teams:
 [router/semcache.py](../router/semcache.py) serves a cached answer when a new prompt's last user turn is similar enough to a cached one ([ADR 0005](adr/0005-semantic-cache-off-by-default-calibrated.md)). It is **off by default**; the measured calibration that keeps it off is in [evaluation](evaluation.md#semantic-cache-calibration).
 
 - **Embedder:** offline deterministic hashing (word and character n-grams) by default; a provider embedding model with `embedder: provider`.
-- **False-hit guards:** a hit also needs the same numbers and the same negation in both prompts.
+- **False-hit guards** (`guards: { numbers, negation, opposites, entities }`, all on by default): a candidate is refused, at any threshold, when the two prompts contain different numbers (digits or number words), one is negated and the other is not, an action meets its opposite (turn on/off, add/remove, open/close, lock/unlock, start/stop, increase/decrease, approve/deny, before/after, more/less, send/receive, deposit/withdraw, un-/dis- forms), or one kind of entity has different values (checking/savings, debit/credit, daily/monthly, Saturday/Sunday, APY/APR, PDF/CSV, a different branch or product name). Every candidate at or above the threshold is checked, best first. A refusal is a miss.
 - **Isolation:** entries are partitioned by team, alias, policy decision, content hooks, earlier messages, `max_tokens` and embedding space (`test_cache_never_crosses_teams_policies_or_context`). Per-team opt-in (`teams`) and per-team thresholds (`team_thresholds`).
-- **Visibility:** `x-router-cache: semantic-hit`, `x-router-semantic-similarity`, `x-router-semantic-match` (`hit`, `below_threshold`, `guard-numbers-differ`, …); `router_semantic_cache_total`; `GET /admin/semantic-cache`.
+- **Visibility:** `x-router-cache: semantic-hit`, `x-router-semantic-similarity`, `x-router-semantic-match` (`hit`, `below_threshold`, `guard-numbers-differ`, `guard-opposite-action-on/off`, `guard-different-account-checking/savings`, …); `router_semantic_cache_total`; `GET /admin/semantic-cache`.
 
 The exact-match cache (`policies.cache_ttl_seconds`, `policies.cache_max_temperature`) is described in [ADR 0004](adr/0004-exact-match-cache-now-semantic-later.md).
 

@@ -12,10 +12,11 @@ from fastapi.testclient import TestClient
 from router import config_loader, main, metrics, semcache
 from router.config_loader import settings
 from router.models import RouterConfig
-from scripts import calibrate_semcache
+from scripts import build_semcache_heldout, build_semcache_pairs, calibrate_semcache
 
 ROOT = Path(__file__).resolve().parent.parent
 PAIRS = ROOT / "evals" / "semcache_pairs.jsonl"
+HELDOUT = ROOT / "evals" / "semcache_heldout.jsonl"
 ADMIN = {"Authorization": "Bearer sk-router-admin"}
 
 
@@ -40,6 +41,56 @@ def test_guards_numbers_and_negation():
     assert semcache.guard("Does the app work offline?", "Why doesn't the app work offline?") == "negation differs"
     assert semcache.guard("I never got it", "I did not get it") is None  # both negated
     assert semcache.guard("Convert 5 km", "Convert 7 km", check_numbers=False) is None
+    # number words count as numbers, and match their digits
+    assert semcache.guard("Transfer five hundred dollars", "Transfer 500 dollars") is None
+    assert semcache.guard("Transfer five hundred dollars", "Transfer 700 dollars") == "numbers differ"
+    assert semcache.guard("Can I add twenty-five payees?", "Can I add 25 payees?") is None
+    assert semcache.numbers("Which one has two-step login?") == ()  # a pronoun and a compound, not amounts
+    # the old guard set, kept to reproduce the figures from before the opposite-action and entity guards
+    assert semcache.guard("Send five dollars", "Send 5 dollars", checks=semcache.GUARDS_V1) == "numbers differ"
+    assert semcache.guard("turn on alerts", "turn off alerts", checks=semcache.GUARDS_V1) is None
+
+
+@pytest.mark.parametrize(
+    ("a", "b", "why"),
+    [
+        ("Can I enable push alerts?", "Can I disable push alerts?", "opposite action (on/off)"),
+        ("How do I turn the alerts off?", "How do I turn on the alerts?", "opposite action (on/off)"),
+        ("Please freeze my card", "Please unfreeze my card", "opposite action (lock/unlock)"),
+        ("Link my brokerage account", "Unlink my brokerage account", "opposite action (add/remove)"),
+        ("When do you open on holidays?", "When do you close on holidays?", "opposite action (open/close)"),
+        ("I want to start a payroll deduction", "I want to stop a payroll deduction", "opposite action (start/stop)"),
+        ("Can I raise my card limit?", "Can I lower my card limit?", "opposite action (increase/decrease)"),
+        ("Why was my claim approved?", "Why was my claim denied?", "opposite action (approve/deny)"),
+        ("Can I pay before the due date?", "Can I pay after the due date?", "opposite action (before/after)"),
+        ("Is there a fee to receive money?", "Is there a fee to send money?", "opposite action (send/receive)"),
+        ("Report an unauthorized payment", "Report an authorized payment", "opposite action (authoriz/unauthoriz)"),
+        ("Do I earn dividends on checking?", "Do I earn dividends on savings?", "different account: checking/savings"),
+        ("Is my debit card contactless?", "Is my credit card contactless?", "different card: debit/credit"),
+        ("What's my weekly ATM limit?", "What's my daily ATM limit?", "different period: weekly/daily"),
+        ("Open on Monday?", "Open on Friday?", "different weekday: monday/friday"),
+        ("Export my history as CSV", "Export my history as PDF", "different file format: csv/pdf"),
+        ("Is the Riverside branch busy?", "Is the Hillcrest branch busy?", "different name: riverside/hillcrest"),
+    ],
+)
+def test_guard_refuses_opposite_actions_and_swapped_entities(a, b, why):
+    assert semcache.guard(a, b) == why
+    assert semcache.guard(b, a) is not None  # either order
+
+
+@pytest.mark.parametrize(
+    ("a", "b"),
+    [
+        ("How do I enable alerts?", "How do I turn on alerts?"),  # synonyms share a pole
+        ("Freeze my card please", "lock my card please"),
+        ("Lock my card", "Lock my debit card"),  # one side does not name the kind at all
+        ("Does the credit union offer a debit card?", "Do you offer a debit card at the credit union?"),  # not "credit"
+        ("I cancelled the transfer", "cancel the transfer"),  # inflections meet
+        ("Is the Riverside branch open late?", "is the riverside branch open late"),  # case is not a name change
+    ],
+)
+def test_guard_lets_same_meaning_through(a, b):
+    assert semcache.guard(a, b) is None
 
 
 # ---------- cache mechanics ----------
@@ -78,6 +129,25 @@ def test_lookup_threshold_guard_partition_ttl_and_lru():
     assert c.lookup("team-a", n, e.embed(n)).reason == "empty"  # expired
 
 
+def test_guards_apply_at_any_threshold_and_to_every_candidate():
+    e = semcache.HashingEmbedder()
+    on = "Hi, I want to turn on card alerts for my account in the mobile app. Where is that setting?"
+    off = on.replace("turn on", "turn off")
+    for t in (0.01, 0.5, 0.89, 0.94):  # however loose the threshold, the opposite never serves the cached answer
+        c = semcache.SemanticCache(threshold=t)
+        c.put("p", on, e.embed(on), "on-answer")
+        found = c.lookup("p", off, e.embed(off))
+        assert not found.hit and found.reason == "guard: opposite action (on/off)", t
+    # a refused best match does not hide a second entry that does mean the same thing
+    c = semcache.SemanticCache(threshold=0.89)
+    para = "hi, i want to switch off card alerts for my account in the mobile app, where is that setting"
+    c.put("p", on, e.embed(on), "on-answer")
+    c.put("p", para, e.embed(para), "off-answer")
+    found = c.lookup("p", off, e.embed(off))
+    assert found.hit and found.entry.value == "off-answer"
+    assert semcache.cosine(e.embed(off), e.embed(on)) > found.similarity  # the closer entry was the refused one
+
+
 # ---------- calibration ----------
 
 
@@ -98,23 +168,56 @@ def test_wilson_bound_and_pick_rules():
 
 def test_bundled_pairs_calibration_numbers():
     """The figures quoted in the README: bundled fictional credit-union pairs, hashing-v1 embedder, target 1%."""
+    assert build_semcache_pairs.main(["--check"]) == 0
     pairs = semcache.load_pairs(PAIRS.read_text().splitlines())
-    assert len(pairs) == 160 and sum(p.same for p in pairs) == 80
+    assert len(pairs) == 1324 and sum(p.same for p in pairs) == 680
+    assert sum(1 for p in pairs if not p.id.startswith("g")) == 160  # the hand-written pairs, unchanged
     rep = calibrate_semcache.run(str(PAIRS), 0.01, 0.50, 0.99, 0.01)
-    assert rep["pairs"] == {"total": 160, "calibration": 80, "holdout": 80}
-    assert rep["chosen"]["threshold"] == 0.90
-    assert (rep["chosen"]["hits"], rep["chosen"]["false_hits"], rep["chosen"]["hit_rate"]) == (12, 0, 0.2857)
+    assert rep["pairs"] == {"total": 1324, "calibration": 678, "holdout": 646}
+    assert rep["chosen"]["threshold"] == 0.89  # picked on the development calibration half only
+    assert (rep["chosen"]["hits"], rep["chosen"]["false_hits"], rep["chosen"]["hit_rate"]) == (156, 1, 0.4318)
     h, g = rep["holdout_at_chosen"], rep["holdout_without_guards_at_chosen"]
-    assert (h["true_hits"], h["hits"], h["hit_rate"], h["false_hit_rate"]) == (10, 10, 0.2632, 0.0)
-    assert h["false_hit_rate_upper95"] == 0.2775  # ten hits cannot certify a 1% false-hit rate
-    assert (g["false_hits"], g["hits"], g["false_hit_rate"]) == (0, 10, 0.0)
+    assert (h["true_hits"], h["hits"], h["hit_rate"], h["false_hit_rate"]) == (129, 130, 0.4019, 0.0077)
+    assert h["false_hit_rate_upper95"] == 0.0423
+    assert (g["false_hits"], g["hits"], g["false_hit_rate"]) == (32, 162, 0.1975)
+    # the held-out set: written after the development pairs had been read, never used for a choice
+    ho = rep["heldout"]
+    assert (ho["pairs"], ho["positives"]) == (2800, 1400)
+    a, n = ho["at_chosen"], ho["without_guards_at_chosen"]
+    assert (a["true_hits"], a["hits"], a["hit_rate"], a["false_hit_rate"]) == (503, 531, 0.3593, 0.0527)
+    assert a["false_hit_rate_upper95"] == 0.0752  # above the 1% target: the cache stays off by default
+    assert (n["false_hits"], n["hits"], n["true_hits"]) == (170, 675, 505)  # the guards cost 2 correct hits
     assert calibrate_semcache.run(str(PAIRS), 0.01, 0.5, 0.99, 0.01, conservative=True)["chosen"] is None
+
+
+def test_before_fix_figures_reproduce():
+    """The guards before the opposite-action and entity checks (numbers and negation only): the 'before' column."""
+    rep = calibrate_semcache.run(str(PAIRS), 0.01, 0.50, 0.99, 0.01, guards="v1")
+    assert rep["chosen"]["threshold"] == 0.97 and rep["guards"] == ["digits", "negation"]
+    h, a = rep["holdout_at_chosen"], rep["heldout"]["at_chosen"]
+    assert (h["true_hits"], h["hits"], h["hit_rate"], h["false_hit_rate_upper95"]) == (78, 80, 0.243, 0.0866)
+    assert (a["true_hits"], a["hits"], a["hit_rate"], a["false_hit_rate"]) == (58, 62, 0.0414, 0.0645)
+    assert a["false_hit_rate_upper95"] == 0.1545
+    old = semcache.calibrate(semcache.split(semcache.load_pairs(PAIRS.read_text().splitlines()))[1],
+                             semcache.HashingEmbedder(), [0.90], guards=semcache.GUARDS_V1)[0]  # fmt: skip
+    assert (old["false_hits"], old["hits"], old["false_hit_rate"]) == (19, 140, 0.1357)  # the default before 0.97
+
+
+def test_heldout_set_is_current_separate_and_balanced():
+    assert build_semcache_heldout.main(["--check"]) == 0
+    held = semcache.load_pairs(HELDOUT.read_text().splitlines())
+    dev = semcache.load_pairs(PAIRS.read_text().splitlines())
+    assert len(held) == 2800 and sum(p.same for p in held) == 1400 and all(p.id.startswith("h") for p in held)
+    texts = {t.casefold() for p in dev for t in (p.a, p.b)}
+    assert not any(t.casefold() in texts for p in held for t in (p.a, p.b))  # no question shared with development
+    assert build_semcache_heldout.SEED != build_semcache_pairs.SEED
 
 
 def test_calibration_script_outputs(tmp_path, capsys):
     assert calibrate_semcache.main(["--out", str(tmp_path / "cal")]) == 0
     md = (tmp_path / "cal.md").read_text()
-    assert "0.90 **(chosen)**" in md and "Holdout at 0.90" in md and "not a prediction for production" in md
+    assert "0.89 **(chosen)**" in md and "Holdout at 0.89" in md and "Held-out set at 0.89" in md
+    assert "not a prediction for production" in md
     assert json.loads((tmp_path / "cal.json").read_text())["embedder"] == "hashing-v1"
     assert calibrate_semcache.main(["--conservative"]) == 1
     with pytest.raises(ValueError):
@@ -203,13 +306,29 @@ def test_semantic_hit_serves_cached_answer_for_free(client, provider, router_env
 
 
 def test_number_guard_and_threshold_misses_call_the_provider(client, provider, router_env):
-    _config(router_env)
+    _config(router_env, semantic="{ enabled: true, threshold: 0.90 }")  # low enough for the guard to decide
     h = _key(client)
     _ask(client, h, "How many days do I have to report a 60 day old charge?")
     r = _ask(client, h, "How many days do I have to report a 90 day old charge?")
     assert r.headers["x-router-cache"] == "miss" and r.headers["x-router-semantic-match"] == "guard-numbers-differ"
     r = _ask(client, h, "Is there parking at the branch?")
     assert r.headers["x-router-semantic-match"] == "below_threshold" and len(provider) == 3
+    on = "Hi, I want to turn on card alerts for my account in the mobile app. Where is that setting?"
+    _ask(client, h, on)
+    r = _ask(client, h, on.replace("turn on", "turn off"))
+    assert r.headers["x-router-semantic-match"] == "guard-opposite-action-on/off" and len(provider) == 5
+
+
+def test_guard_switches_in_config(client, provider, router_env):
+    _config(router_env, semantic="{ enabled: true, threshold: 0.80, guards: { opposites: false } }")
+    h = _key(client)
+    on = "Hi, I want to turn on card alerts for my account in the mobile app. Where is that setting?"
+    _ask(client, h, on)
+    r = _ask(client, h, on.replace("turn on", "turn off"))
+    assert r.headers["x-router-cache"] == "semantic-hit"  # switched off, the opposite is served: why it is on
+    cfg = RouterConfig.model_validate({"aliases": {"a": [{"provider": "ollama", "model": "m"}]}})
+    assert all(cfg.semantic_cache.guards.model_dump().values())  # every guard is on unless switched off
+    assert set(cfg.semantic_cache.guards.model_dump()) == {"numbers", "negation", "opposites", "entities"}
 
 
 def test_cache_never_crosses_teams_policies_or_context(client, provider, router_env):
@@ -265,7 +384,8 @@ def test_provider_embedder_and_failure_falls_through(client, provider, router_en
 def test_per_team_opt_in_and_threshold(client, provider, router_env):
     _config(
         router_env,
-        "{ enabled: true, teams: [member-services, risk-analytics], team_thresholds: { risk-analytics: 0.99 } }",
+        "{ enabled: true, threshold: 0.90, teams: [member-services, risk-analytics],"
+        " team_thresholds: { risk-analytics: 0.99 } }",
     )
     q, q2 = "How do I download my statements as PDF?", "Please, how do I download my statements as PDF"
     for team in ("digital-banking", "member-services", "risk-analytics"):

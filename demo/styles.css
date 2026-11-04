@@ -575,3 +575,6 @@ body.tech .biz-only { display: none !important; }
 .warn-text { color: var(--warn); }
 .month-card table .meter { width: 120px; }
 .page-head + .note, .rq-head + .note { margin-bottom: 14px; }
+table.sources td { vertical-align: top; }
+table.sources td:first-child { min-width: 140px; }
+table.sources td:last-child { min-width: 240px; }
