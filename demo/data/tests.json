@@ -93,7 +93,7 @@
   {
    "about": "Semantic cache: embedder, guards, partitions, TTL/LRU, calibration (bundled fictional pairs), and the API path.",
    "file": "tests/test_semcache.py",
-   "tests": 12
+   "tests": 18
   },
   {
    "about": "Token estimation, TPM limiter, budget hierarchy, showback aggregation (pure functions).",
@@ -112,11 +112,11 @@
   }
  ],
  "last_run": {
-  "collected": 309,
-  "date": "2026-11-03",
+  "collected": 336,
+  "date": "2026-11-04",
   "exit_code": 0,
-  "summary": "308 passed, 1 skipped, 2 warnings"
+  "summary": "335 passed, 1 skipped, 2 warnings"
  },
  "measured": "counted from the test sources; CI runs pytest -q on every push",
- "total": 259
+ "total": 265
 }

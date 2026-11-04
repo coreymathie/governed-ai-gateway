@@ -480,7 +480,7 @@ async function renderCache(box, A) {
   }
   const view = await A.semanticView();
   const teams = (await A.teams()).filter((t) => ["digital-banking", "member-services", "risk-analytics"].includes(t));
-  box.innerHTML = `<div class="grid g2"><section class="card"><div class="card-head"><div><h2>Ask through the semantic cache</h2><p><code>router/semcache.py</code>: hashing embedder, number and negation guards, partitions per team and policy.</p></div>${realTag()}</div>
+  box.innerHTML = `<div class="grid g2"><section class="card"><div class="card-head"><div><h2>Ask through the semantic cache</h2><p><code>router/semcache.py</code>: hashing embedder; guards for numbers, negation, opposite actions and swapped entities, applied at any threshold; partitions per team and policy.</p></div>${realTag()}</div>
     <div class="form-grid"><label class="field wide">Team<select id="smTeam">${teams.map((t) => opt(t, t, t === "digital-banking")).join("")}</select></label>
     <label class="field wide">Threshold <output id="smThrOut">${view.threshold}</output><input id="smThr" type="range" min="0.7" max="0.99" step="0.01" value="${view.threshold}"/></label>
     <label class="field full">Question<input id="smText" type="text" value="${esc(view.examples[0])}"/></label></div>
@@ -889,6 +889,8 @@ const evalsScreen = {
     } catch (e) { body.innerHTML = errorState(e); return; }
     const rows = Object.entries(routes.routes).map(([alias, r]) => ({ alias, ...r.summary, targets: r.targets }));
     const h = cal.holdout_at_chosen, g = cal.holdout_without_guards_at_chosen;
+    const ho = cal.heldout.at_chosen, hg = cal.heldout.without_guards_at_chosen, bf = cal.before_fix;
+    const calRow = (name, t, r) => `<tr><td>${name}</td><td class="num" translate="no">${t.toFixed(2)}</td><td class="num" translate="no">${int(r.false_hits)} of ${int(r.hits)}</td><td class="num" translate="no">${pct(r.false_hit_rate)}</td><td class="num" translate="no">${pct(r.false_hit_rate_upper95)}</td><td class="num" translate="no">${pct(r.hit_rate)}</td></tr>`;
     body.innerHTML = `
       <section class="card"><div class="card-head"><div><h2>Route evaluation: cost vs. quality</h2><p>${esc(routes.cases_source)} (${rows[0] ? rows[0].cases : 0} credit-union tasks, fictional, with prompts the size the apps send) replayed through every alias in <code>config/routes.yaml</code> with the gateway's fallback chain and pricing. <code>${esc(routes.command)}</code></p></div>${simTag("simulated: invented model profiles")}</div>
         <div class="grid g2 stack-md"><div>${scatter(Object.values(rows.reduce((acc, r) => {
@@ -916,23 +918,31 @@ const evalsScreen = {
           <div class="table-wrap scroll"><table><thead><tr><th>File</th><th class="num" translate="no">Tests</th></tr></thead><tbody>${tests.files.map((f) => `<tr><td><code>${esc(f.file)}</code>${f.about ? `<span class="sub">${esc(f.about)}</span>` : ""}</td><td class="num" translate="no">${f.tests}</td></tr>`).join("")}</tbody></table></div>
         </section>
       </div>
-      <section class="card" style="margin-top:16px"><div class="card-head"><div><h2>Semantic cache calibration</h2><p>${esc(cal.pairs.total)} labelled pairs of member questions (fictional), threshold chosen on ${esc(cal.pairs.calibration)}, reported on ${esc(cal.pairs.holdout)} held out. Target false-hit rate ${pct(cal.target_false_hit_rate)}. <code>${esc(cal.command)}</code></p></div>${measuredTag("measured on bundled pairs")}</div>
+      <section class="card" style="margin-top:16px"><div class="card-head"><div><h2>Semantic cache calibration</h2><p>Threshold chosen on ${int(cal.pairs.calibration)} of ${int(cal.pairs.total)} labelled development pairs of member questions (fictional), then measured on the other ${int(cal.pairs.holdout)} and on a separate held-out set of ${int(cal.heldout.pairs)} pairs that played no part in choosing the threshold or designing the guards. Target false-hit rate ${pct(cal.target_false_hit_rate)}. <code>${esc(cal.command)}</code></p></div>${measuredTag("measured on bundled pairs")}</div>
         <div class="grid g2"><div>${curves(cal.calibration_grid, cal.chosen && cal.chosen.threshold, { compact: compactCharts() })}<div class="legend"><span><i style="background:#a78bfa"></i>hit rate</span><span><i style="background:#f87171"></i>false-hit rate</span><span><i style="background:#fbbf24"></i>chosen threshold</span></div></div>
         <div>
           <div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))">
             <div class="kpi"><div class="l">Chosen threshold</div><div class="v" translate="no" id="calThr">${cal.chosen ? cal.chosen.threshold.toFixed(2) : "none"}</div><div class="s" translate="no">${esc(cal.rule)}</div></div>
-            <div class="kpi"><div class="l">Holdout hit rate</div><div class="v" translate="no">${pct(h.hit_rate)}</div><div class="s" translate="no">${h.true_hits} of ${cal.positives.holdout} same-meaning pairs</div></div>
-            <div class="kpi ${h.false_hit_rate > cal.target_false_hit_rate ? "warn" : ""}"><div class="l">Holdout false-hit rate</div><div class="v" translate="no" id="calHold">${pct(h.false_hit_rate)}</div><div class="s" translate="no">${h.false_hits} of ${h.hits} hits · 95% upper ${pct(h.false_hit_rate_upper95)}</div></div>
-            <div class="kpi"><div class="l">Without guards</div><div class="v" translate="no">${pct(g.false_hit_rate)}</div><div class="s" translate="no">false-hit rate at the same threshold</div></div>
+            <div class="kpi"><div class="l">Held-out hit rate</div><div class="v" translate="no">${pct(ho.hit_rate)}</div><div class="s" translate="no">${int(ho.true_hits)} of ${int(cal.heldout.positives)} same-meaning pairs</div></div>
+            <div class="kpi ${ho.false_hit_rate_upper95 > cal.target_false_hit_rate ? "warn" : ""}"><div class="l">Held-out false-hit rate</div><div class="v" translate="no" id="calHold">${pct(ho.false_hit_rate)}</div><div class="s" translate="no">${ho.false_hits} of ${ho.hits} hits · 95% upper ${pct(ho.false_hit_rate_upper95)}</div></div>
+            <div class="kpi"><div class="l">Without guards</div><div class="v" translate="no">${pct(hg.false_hit_rate)}</div><div class="s" translate="no">held-out false-hit rate at the same threshold</div></div>
           </div>
-          <p class="small muted">${h.false_hit_rate > cal.target_false_hit_rate ? "The held-out false-hit rate misses the 1% target, which is why the semantic cache ships off." : `No held-out hit was wrong, but ${int(h.hits)} hits cannot certify a 1% rate (95% upper bound ${pct(h.false_hit_rate_upper95)}), so the semantic cache still ships off.`} Calibrate on pairs labelled from your own traffic before turning it on.</p>
+          <div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>Pair set</th><th class="num" translate="no">Threshold</th><th class="num" translate="no">Wrong hits</th><th class="num" translate="no">False-hit</th><th class="num" translate="no">95% upper</th><th class="num" translate="no">Hit rate</th></tr></thead><tbody>
+            ${calRow("Before · dev half", bf.chosen.threshold, bf.holdout_at_chosen)}
+            ${calRow("Before · held-out", bf.chosen.threshold, bf.heldout_at_chosen)}
+            ${calRow("After · dev half", cal.chosen.threshold, h)}
+            ${calRow("After · held-out", cal.chosen.threshold, ho)}
+          </tbody></table></div>
+          <p class="small muted">Before the guard fix: number and negation guards. After: also opposite actions (turn on/off, add/remove, …) and swapped entities (checking/savings, daily/monthly, a different branch, …), at any threshold. <code>${esc(bf.command)}</code> reproduces the before rows.</p>
+          <p class="small muted">${ho.false_hit_rate_upper95 > cal.target_false_hit_rate ? `The development half reads ${pct(h.false_hit_rate)} wrong, the held-out set ${pct(ho.false_hit_rate)}: the guards were designed on the development pairs, so the held-out figure is the honest one, and its 95% upper bound (${pct(ho.false_hit_rate_upper95)}) misses the 1% target. That is why the semantic cache ships off.` : `The held-out 95% upper bound (${pct(ho.false_hit_rate_upper95)}) meets the 1% target.`} Calibrate on pairs labelled from your own traffic before turning it on.</p>
           ${A.caps.calibrate ? `<div class="row"><button id="calRun">Re-run calibration in your browser</button><span class="small muted" id="calMsg" aria-live="polite"></span></div>` : ""}
         </div></div>
       </section>`;
     if ($("#calRun")) $("#calRun").onclick = (e) => busy(e.currentTarget, async () => {
       const r = await A.calibrate(cal.target_false_hit_rate);
-      const same = r.chosen && cal.chosen && r.chosen.threshold === cal.chosen.threshold && r.holdout_at_chosen.false_hit_rate === h.false_hit_rate;
-      $("#calMsg").textContent = `In-browser result: threshold ${r.chosen ? r.chosen.threshold : "none"}, holdout ${pct(r.holdout_at_chosen.hit_rate)} hit / ${pct(r.holdout_at_chosen.false_hit_rate)} false-hit. ${same ? "Identical to the committed report." : "Differs from the committed report."}`;
+      const rh = r.heldout && r.heldout.at_chosen;
+      const same = r.chosen && cal.chosen && r.chosen.threshold === cal.chosen.threshold && r.holdout_at_chosen.false_hit_rate === h.false_hit_rate && rh && rh.false_hits === ho.false_hits && rh.hits === ho.hits;
+      $("#calMsg").textContent = `In-browser result: threshold ${r.chosen ? r.chosen.threshold : "none"}, held-out ${rh ? `${pct(rh.hit_rate)} hit / ${pct(rh.false_hit_rate)} false-hit` : "not run"}. ${same ? "Identical to the committed report." : "Differs from the committed report."}`;
     });
   },
 };

@@ -227,8 +227,8 @@ export class DemoAdapter {
   async semanticAsk(team, text, threshold) { return this.call("semantic_ask", { team, text, threshold }); }
   async semanticView() { return this.call("semantic_view"); }
   async calibrate(target) {
-    const pairs = await fetchText("../evals/semcache_pairs.jsonl");
-    return JSON.parse(this.bridge.calibrate(pairs, target));
+    const [pairs, heldout] = await Promise.all(["semcache_pairs", "semcache_heldout"].map((n) => fetchText(`../evals/${n}.jsonl`)));
+    return JSON.parse(this.bridge.calibrate(pairs, target, heldout));
   }
   async reset() { this.call("reset"); }
 }

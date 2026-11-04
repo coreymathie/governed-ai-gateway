@@ -155,9 +155,13 @@ class PrivacySettings(BaseModel):
 
 
 class SemanticGuards(BaseModel):
+    """Checks a candidate must pass at any threshold (router/semcache.py guard()). A failed check is a miss."""
+
     model_config = ConfigDict(extra="forbid")
-    numbers: bool = True  # both prompts must contain the same numbers
-    negation: bool = True  # ...and both or neither must be negated
+    numbers: bool = True  # both prompts must contain the same numbers (digits or number words)
+    negation: bool = True  # ...both or neither must be negated
+    opposites: bool = True  # ...no action against its opposite (turn on/off, add/remove, open/close, ...)
+    entities: bool = True  # ...no swapped entity value (checking/savings, daily/monthly, a different name, ...)
 
 
 class SemanticCacheSettings(BaseModel):
@@ -165,7 +169,7 @@ class SemanticCacheSettings(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     enabled: bool = False
-    threshold: float = Field(0.97, gt=0, le=1)  # from scripts/calibrate_semcache.py on the bundled pairs
+    threshold: float = Field(0.89, gt=0, le=1)  # from scripts/calibrate_semcache.py on the bundled pairs
     ttl_seconds: int = Field(3600, ge=1)
     max_entries_per_partition: int = Field(1000, ge=1)
     max_temperature: float = Field(0.0, ge=0)  # only deterministic requests are served from or stored in it

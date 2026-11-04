@@ -255,9 +255,9 @@ DEMO_MCP_ARGS = {  # fictional: a reserved example domain and an invented member
     "read_file": {"path": "policies/bsa-procedures.txt"},
     "delete_file": {"path": "policies/bsa-procedures.txt"},
 }
-# A reworded question (hit), a number change (refused by the guard), and a lookalike that differs in meaning: it
-# misses at the calibrated threshold and is a false hit at a looser one (evals/semcache_pairs.jsonl s001 and d014).
-# The number change is a longer message, so it clears the calibrated threshold and the guard is what refuses it.
+# A reworded question (hit); a number change and an action against its opposite, both refused by a guard at any
+# threshold; and a lookalike no guard covers ("language" vs "theme"), which is a wrong hit at the calibrated
+# threshold: the residual risk that keeps the cache off by default (evals/semcache_pairs.jsonl s001, d014, d023).
 SEMANTIC_EXAMPLES = [
     "What is Cypress Harbor's routing number?",
     "what is cypress harbor's routing number",
@@ -267,8 +267,10 @@ SEMANTIC_EXAMPLES = [
     "90 days ago. How many days do I have to report it to the credit union?",
     "How do I turn on two-step verification for online banking?",
     "How do I turn off two-step verification for online banking?",
+    "How do I change the language in the mobile app?",
+    "How do I change the theme in the mobile app?",
 ]
-SEMANTIC_THRESHOLD = 0.97  # config/routes.yaml semantic_cache.threshold, from scripts/calibrate_semcache.py
+SEMANTIC_THRESHOLD = 0.89  # config/routes.yaml semantic_cache.threshold, from scripts/calibrate_semcache.py
 # Same document as config/policies.yaml (tests/test_demo_engine.py fails if they drift); the browser has no YAML parser.
 DEMO_POLICIES = {
     "version": 1,
@@ -868,10 +870,11 @@ class Engine:
             "examples": SEMANTIC_EXAMPLES,
         }
 
-    def calibrate(self, pairs_jsonl: str, target: float = 0.01) -> dict:
-        """The calibration in scripts/calibrate_semcache.py, on the bundled pairs the page fetched."""
+    def calibrate(self, pairs_jsonl: str, target: float = 0.01, heldout_jsonl: str = "") -> dict:
+        """The calibration in scripts/calibrate_semcache.py, on the bundled pair sets the page fetched."""
         pairs = semcache.load_pairs(pairs_jsonl.splitlines())
-        return semcache.calibration_report(pairs, float(target))
+        heldout = semcache.load_pairs(heldout_jsonl.splitlines()) if heldout_jsonl.strip() else None
+        return semcache.calibration_report(pairs, float(target), heldout=heldout)
 
     # ---------- MCP tool gateway (router/mcp_policy.py) ----------
 
@@ -1648,8 +1651,8 @@ class JsBridge:
     def semantic_view(self) -> str:
         return json.dumps(self.engine.semantic_view())
 
-    def calibrate(self, pairs_jsonl: str, target: float = 0.01) -> str:
-        return json.dumps(self.engine.calibrate(pairs_jsonl, target))
+    def calibrate(self, pairs_jsonl: str, target: float = 0.01, heldout_jsonl: str = "") -> str:
+        return json.dumps(self.engine.calibrate(pairs_jsonl, target, heldout_jsonl))
 
     def mcp_call(self, team: str, server: str, tool: str, args_json: str = "") -> str:
         args = json.loads(args_json) if args_json.strip() else None

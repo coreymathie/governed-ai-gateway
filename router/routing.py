@@ -29,6 +29,7 @@ import hashlib
 import json
 import logging
 import math
+import re
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 
@@ -53,7 +54,7 @@ log = logging.getLogger("router")
 breakers = BreakerRegistry()
 latency = LatencyTracker()
 tpm = TokenRateLimiter()
-semantic = semcache.SemanticCache(threshold=0.97)
+semantic = semcache.SemanticCache(threshold=0.89)
 _hashing = semcache.HashingEmbedder()
 _applied: RouterConfig | None = None
 _overrides: list[dict] | None = None  # budget caps set through the admin API (store.budget_overrides)
@@ -79,6 +80,7 @@ def sync_config(cfg: RouterConfig | None = None) -> RouterConfig:
         semantic.threshold, semantic.ttl_seconds = sc.threshold, float(sc.ttl_seconds)
         semantic.max_entries = sc.max_entries_per_partition
         semantic.check_numbers, semantic.check_negation = sc.guards.numbers, sc.guards.negation
+        semantic.check_opposites, semantic.check_entities = sc.guards.opposites, sc.guards.entities
         _applied = cfg
     return cfg
 
@@ -312,7 +314,8 @@ async def _semantic_lookup(cfg, key, body, content, decision, extra):
         f"{found.reason} (similarity {found.similarity:.3f})",
         similarity=round(found.similarity, 4),
     )
-    extra["x-router-semantic-match"] = found.reason.replace("guard: ", "guard-").replace(" ", "-")
+    # "guard: opposite action (on/off)" -> "guard-opposite-action-on/off"; header-safe, still readable.
+    extra["x-router-semantic-match"] = re.sub(r"[^a-z0-9/_]+", "-", found.reason.casefold()).strip("-")
     return part, text, vec
 
 

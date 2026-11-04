@@ -93,7 +93,7 @@ The modules marked "none" (plus `configcheck.py`, and `models.py` on demand with
 
 **Exact-match cache, per team.** Only deterministic requests, only within a team, with a TTL. See [ADR 0004](adr/0004-exact-match-cache-now-semantic-later.md).
 
-**Semantic cache, off by default.** After an exact miss, the last user turn is embedded and compared with entries in the same partition (team, alias, policy decision, content hooks, earlier messages, parameters, embedding space). A hit needs the threshold and the number/negation guards. Its calibration is published as measured on held-out pairs, including the miss against a 1% target. See [ADR 0005](adr/0005-semantic-cache-off-by-default-calibrated.md).
+**Semantic cache, off by default.** After an exact miss, the last user turn is embedded and compared with entries in the same partition (team, alias, policy decision, content hooks, earlier messages, parameters, embedding space). A hit needs the threshold and every guard, checked at any threshold on each candidate at or above it: the same numbers, the same negation, no action against its opposite, no swapped entity value. Its calibration is published as measured on a separate held-out set, including the miss against a 1% target. See [ADR 0005](adr/0005-semantic-cache-off-by-default-calibrated.md).
 
 **LiteLLM for wire formats.** Provider adapters are LiteLLM's job; the control plane is this repo's. See [ADR 0001](adr/0001-litellm-for-provider-adapters.md).
 

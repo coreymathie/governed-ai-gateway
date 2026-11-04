@@ -63,11 +63,21 @@ def gate_example(rep: dict) -> dict:
 
 
 def calibration() -> dict:
-    rep = calibrate_semcache.run(str(ROOT / "evals/semcache_pairs.jsonl"), 0.01, 0.50, 0.99, 0.01)
-    rep["pairs_file"] = "evals/semcache_pairs.jsonl"
+    pairs, heldout = str(ROOT / "evals/semcache_pairs.jsonl"), str(ROOT / "evals/semcache_heldout.jsonl")
+    rep = calibrate_semcache.run(pairs, 0.01, 0.50, 0.99, 0.01, heldout_file=heldout)
+    v1 = calibrate_semcache.run(pairs, 0.01, 0.50, 0.99, 0.01, heldout_file=heldout, guards="v1")
+    rep["pairs_file"], rep["heldout_file"] = "evals/semcache_pairs.jsonl", "evals/semcache_heldout.jsonl"
     rep["command"] = "python scripts/calibrate_semcache.py"
+    rep["before_fix"] = {  # the same calibration with the guards as they were (numbers and negation only)
+        "command": "python scripts/calibrate_semcache.py --guards v1",
+        "guards": v1["guards"],
+        "chosen": v1["chosen"],
+        "holdout_at_chosen": v1["holdout_at_chosen"],
+        "heldout_at_chosen": v1["heldout"]["at_chosen"],
+    }
     rep["measured"] = (
-        "measured: the hashing embedder on 1,324 bundled fictional credit-union pairs (not production traffic)"
+        "measured: the hashing embedder on 1,324 bundled fictional development pairs and a separate 2,800-pair "
+        "held-out set (not production traffic)"
     )
     return rep
 

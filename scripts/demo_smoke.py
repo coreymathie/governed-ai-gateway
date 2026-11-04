@@ -459,6 +459,12 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
         page.click("#smAsk")
         wait_idle(page)
         check(page.inner_text("#smResult").startswith("hit"), "semantic cache: reworded question hits")
+        for i in ("4", "5"):
+            page.click(f"[data-ex='{i}']")
+            page.click("#smAsk")
+            wait_idle(page)
+        refused = "guard: opposite action (on/off)" in page.inner_text("#smResult")
+        check(refused, "semantic cache: turn off is refused after turn on")
 
         # --- traces: list, filters, drawer via the URL, back button ---
         goto(page, base, "#/traces")
@@ -577,7 +583,7 @@ def run_demo(p, pyodide_dir: Path | None, shots: Path | None, headed: bool) -> C
 
         # --- evals ---
         goto(page, base, "#/evals")
-        check(page.inner_text("#calThr") == "0.97" and page.inner_text("#calHold") == "2.5%", "evals: calibration")
+        check(page.inner_text("#calThr") == "0.89" and page.inner_text("#calHold") == "5.3%", "evals: calibration")
         check(page.inner_text("#gateResult") == "FAIL", "evals: CI gate example fails on quality")
         page.click("#calRun")
         wait_idle(page)
@@ -740,7 +746,7 @@ def run_live(p, shots: Path | None, headed: bool) -> Checks:
         check("[REDACTED:EMAIL]" in page.inner_text("#mcLog"), "mcp: audit row shows redacted arguments")
 
         goto(page, base, "#/evals")
-        check(page.inner_text("#calThr") == "0.97", "evals: committed reports load")
+        check(page.inner_text("#calThr") == "0.89", "evals: committed reports load")
 
         layout_checks(check, b, base, shots, "live")
         check(not b.errors, f"no page or console errors {b.errors[:3]}")
