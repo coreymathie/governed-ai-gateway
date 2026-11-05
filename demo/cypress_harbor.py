@@ -215,13 +215,18 @@ def first_choice_shares(alias: str, targets: list) -> list[float]:
 
 # How the sample numbers were set: each headline figure on Spend, the value the sample uses, and either the
 # published source it is checked against (only pages that were fetched and read, with the figure quoted from
-# them) or the assumption it rests on. The Spend screen's sources panel and docs/console.md show this table;
+# them) or the assumption it rests on. A cited row may carry a `check`: how the sample value compares with the
+# published figure. The Spend screen's sources panel and docs/console.md show this table;
 # tests/test_sample_consistency.py checks that every cited figure has a URL and a quote, that cited prices equal
-# PRICES above, and that docs/console.md lists every row.
-NOT_CITED = (
-    "assumption (no public benchmark cited): the benchmark pages for this figure could not be fetched when the "
-    "table was built, so none is quoted"
-)
+# PRICES above, that the checked values follow from COMPANY and the usage data, and that docs/console.md lists
+# every row.
+OPENAI_PRICING = {
+    "title": "Pricing",
+    "publisher": "OpenAI",
+    "year": 2026,
+    "url": "https://developers.openai.com/api/docs/pricing.md",
+    "accessed": "2026-11-05",
+}
 BENCHMARKS = [
     {
         "figure": "Claude Haiku 4.5 list price",
@@ -256,16 +261,64 @@ BENCHMARKS = [
         "price": (3.00, 15.00),
     },
     {
-        "figure": "OpenAI GPT-4.1, GPT-4.1 mini and GPT-4.1 nano list prices",
-        "value": "$2.00/$8.00, $0.40/$1.60 and $0.10/$0.40 in/out per 1M tokens",
-        "basis": "assumption",
-        "note": NOT_CITED + " (OpenAI's pricing page).",
+        "figure": "GPT-4.1 list price",
+        "value": "$2.00 in, $8.00 out per 1M tokens",
+        "basis": "cited",
+        "source": {
+            **OPENAI_PRICING,
+            "quote": "gpt-4.1 $2.00 $8.00 $0.50",
+            "context": "Standard pricing table, prices per 1M tokens, columns Model, Input, Output, Cached input",
+        },
+        "deployment": "openai/gpt-4.1",
+        "price": (2.00, 8.00),
+    },
+    {
+        "figure": "GPT-4.1 mini list price",
+        "value": "$0.40 in, $1.60 out per 1M tokens",
+        "basis": "cited",
+        "source": {
+            **OPENAI_PRICING,
+            "quote": "gpt-4.1-mini $0.40 $1.60 $0.10",
+            "context": "Standard pricing table, prices per 1M tokens, columns Model, Input, Output, Cached input",
+        },
+        "deployment": "openai/gpt-4.1-mini",
+        "price": (0.40, 1.60),
+    },
+    {
+        "figure": "GPT-4.1 nano list price",
+        "value": "$0.10 in, $0.40 out per 1M tokens",
+        "basis": "cited",
+        "source": {
+            "title": "GPT-4.1 nano",
+            "publisher": "OpenAI",
+            "year": 2026,
+            "url": "https://developers.openai.com/api/docs/models/gpt-4.1-nano",
+            "quote": "Input $0.10 Cached input $0.025 Output $0.40",
+            "context": 'Pricing, Text tokens, per 1M tokens. The page now marks the model "Shut down", and the '
+            "current pricing page no longer lists it",
+            "accessed": "2026-11-05",
+        },
+        "deployment": "openai/gpt-4.1-nano",
+        "price": (0.10, 0.40),
     },
     {
         "figure": "Gemini 2.5 Flash list price",
         "value": "$0.30 in, $2.50 out per 1M tokens",
-        "basis": "assumption",
-        "note": NOT_CITED + " (Google's Gemini API pricing page).",
+        "basis": "cited",
+        "source": {
+            "title": "Gemini Developer API pricing",
+            "publisher": "Google",
+            "year": 2026,
+            "url": "https://aistudio.google.com/docs/pricing",
+            "quote": "Input price Free of charge $0.30 (text / image / video) $1.00 (audio) "
+            "Output price (including thinking tokens) Free of charge $2.50",
+            "context": "Gemini 2.5 Flash, Standard table, columns Feature, Free Tier, Paid Tier per 1M tokens in USD. "
+            "The page marks gemini-2.5-flash deprecated, with requests routed to Gemini 3.5 Flash-Lite from "
+            "December 1, 2026",
+            "accessed": "2026-11-05",
+        },
+        "deployment": "gemini/gemini-2.5-flash",
+        "price": (0.30, 2.50),
     },
     {
         "figure": "On-prem Llama 3.1 8B chargeback",
@@ -274,35 +327,83 @@ BENCHMARKS = [
         "note": "assumption (no public benchmark): an internal GPU chargeback rate, which no provider publishes.",
     },
     {
-        "figure": "Credit union size",
-        "value": "92,400 members, $1.4B in assets, 340 employees, 11 branches",
+        "figure": "Credit union size: members and assets",
+        "value": "92,400 members, $1.4B in assets",
+        "basis": "cited",
+        "source": {
+            "title": "Quarterly Credit Union Data Summary 2026 Q2",
+            "publisher": "NCUA",
+            "year": 2026,
+            "url": "https://ncua.gov/files/publications/analysis/quarterly-data-summary-2026-Q2.pdf",
+            "quote": "As of June 30, 2026, there were 4,214 federally insured credit unions with 146.1 million "
+            "members.",
+            "context": "Tables, 2026 Q2: total assets $2,498.9 billion; by type, complex credit unions (assets greater "
+            "than $500 million) 124.2 million members and $2,186.3 billion in assets, small credit unions (assets "
+            "less than $100 million) 6.3 million and $73.8 billion, federally insured state-chartered credit unions "
+            "65.7 million and $1,191.9 billion; 90% of credit unions are smaller than $1,135.7 million",
+            "accessed": "2026-11-05",
+        },
+        "check": "$1.4B over 92,400 members is $15,152 in assets per member. NCUA's tables give $17,104 per member "
+        "across all federally insured credit unions, $17,603 for complex credit unions, and $11,714 (small credit "
+        "unions) to $18,142 (state-chartered) across the types they report, so the sample sits inside that range. "
+        "At $1.4B the credit union is a complex credit union, larger than 90% of credit unions.",
+        "range": {"metric": "assets per member (USD)", "sample": 15152, "low": 11714, "high": 18142},
+    },
+    {
+        "figure": "Staff and branches",
+        "value": "340 employees, 11 branches",
         "basis": "assumption",
-        "note": NOT_CITED + " (NCUA call-report and system performance data).",
+        "note": "assumption (no public benchmark cited): NCUA's quarterly data summary reports members and assets "
+        "but not employees or branches, and no other published figure for them was read.",
     },
     {
         "figure": "AI requests through the gateway",
         "value": "about 12,000 a day (373,000 in 30 days) across 11 apps",
         "basis": "assumption",
-        "note": NOT_CITED + " (member-contact and AI-usage volumes).",
+        "note": "assumption (no public benchmark cited): set from each app's assumed working-day volume; no published "
+        "figure for AI requests per institution is quoted.",
     },
     {
         "figure": "AI spend and team budgets",
         "value": "$943 in 30 days against $1,099 in team budgets; $2.53 per 1,000 requests",
         "basis": "assumption",
-        "note": "derived: requests times token sizes times the list prices above; "
-        + NOT_CITED
-        + " (enterprise AI-spend reports from Menlo Ventures, a16z, Ramp or Gartner).",
+        "note": "derived: requests times token sizes times the list prices above; the team budgets are the credit "
+        "union's config/routes.yaml, set as assumptions. The next row checks the spend per employee against a "
+        "published figure.",
+    },
+    {
+        "figure": "AI spend per employee",
+        "value": "$2.77 per employee per month ($943 in 30 days over 340 employees)",
+        "basis": "cited",
+        "source": {
+            "title": "August 2026 Ramp AI Index: Cracks in the AI thesis",
+            "publisher": "Ramp",
+            "year": 2026,
+            "url": "https://ramp.com/data/ai-index-august-2026",
+            "quote": "In July, the top 1% of businesses spent a median $7,400 per employee on AI. The top 10% spent "
+            "$650. The median firm spent $11.95 per employee.",
+            "context": 'Chart "AI spend per employee per month"; AI spend includes LLM subscriptions, coding agents, '
+            "API tokens, and GPU cloud spend",
+            "accessed": "2026-11-05",
+        },
+        "check": "The gateway carries API tokens only: $2.77 per employee per month, below the median firm's $11.95, "
+        "which also counts LLM subscriptions, coding agents and GPU cloud that do not pass through a gateway. The "
+        "sample sits in the lower half of Ramp's distribution; 340 employees is an assumption (see Staff and "
+        "branches).",
+        "compare": {"metric": "AI spend per employee per month (USD)", "sample": 2.77, "median": 11.95},
     },
     {
         "figure": "Exact-match cache hit rate",
         "value": "17% to 21% for the member-facing apps, 0% to 9% for back-office apps",
         "basis": "assumption",
-        "note": NOT_CITED + " (published repeat-query rates for LLM applications).",
+        "note": "assumption (no public benchmark cited): set from how often members are expected to ask the same "
+        "question in the same words; no published repeat-query rate is quoted.",
     },
     {
         "figure": "Provider incidents and success rate",
         "value": "three incidents in 90 days (12 to 47 minutes); 4 failed requests in 30 days",
         "basis": "assumption",
-        "note": NOT_CITED + " (provider status-page history).",
+        "note": "assumption (no public benchmark cited): scenarios written to exercise the fallback chain and "
+        "breakers, not taken from provider status-page history.",
     },
 ]
