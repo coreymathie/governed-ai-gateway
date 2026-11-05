@@ -158,7 +158,7 @@ function sourcesCard(rows) {
   if (!rows.length) return "";
   const cited = rows.filter((r) => r.basis === "cited").length;
   const cell = (r) => r.basis === "cited"
-    ? `<a href="${esc(r.source.url)}" target="_blank" rel="noopener noreferrer">${esc(r.source.title)}</a>, ${esc(r.source.publisher)}, ${esc(r.source.year)}: <q translate="no">${esc(r.source.quote)}</q> <span class="faint">(${esc(r.source.context)}; read ${esc(r.source.accessed)})</span>`
+    ? `<a href="${esc(r.source.url)}" target="_blank" rel="noopener noreferrer">${esc(r.source.title)}</a>, ${esc(r.source.publisher)}, ${esc(r.source.year)}: <q translate="no">${esc(r.source.quote)}</q> <span class="faint">(${esc(r.source.context)}; read ${esc(r.source.accessed)})</span>${r.check ? `<br><span class="check" translate="no">Check: ${esc(r.check)}</span>` : ""}`
     : `<span class="muted">${esc(r.note)}</span>`;
   return `<section class="card" id="sources" style="margin-top:16px"><div class="card-head"><div><h2>How these sample numbers were set</h2><p>${cited} of ${rows.length} figures are checked against a published source quoted below; the rest are stated assumptions. The numbers on this screen are generated sample data, not measurements.</p></div><span class="tag sample">sample</span></div>
     <div class="table-wrap"><table class="sources"><thead><tr><th>Figure</th><th>Value used</th><th>Source or assumption</th></tr></thead><tbody>${rows.map((r) => `<tr data-basis="${esc(r.basis)}"><td>${esc(r.figure)}</td><td translate="no">${esc(r.value)}</td><td>${cell(r)}</td></tr>`).join("")}</tbody></table></div></section>`;

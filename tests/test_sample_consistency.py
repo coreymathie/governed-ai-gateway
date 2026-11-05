@@ -293,8 +293,25 @@ def test_every_cited_benchmark_has_a_url_and_quote_and_matches_the_prices():
             src = b["source"]
             assert src["url"].startswith("https://") and src["url"] in console
             assert all(src[k] for k in ("title", "publisher", "year", "quote", "accessed")) and src["quote"] in console
-            assert ch.PRICES[b["deployment"]] == b["price"]  # the price the sample uses is the quoted one
-            pin, pout = re.findall(r"\$([\d.]+) / MTok", src["quote"])
-            assert (float(pin), float(pout)) == b["price"]
+            assert b.get("check", "") in console
+            if "deployment" in b:
+                assert ch.PRICES[b["deployment"]] == b["price"]  # the price the sample uses is the quoted one
+                amounts = [float(a) for a in re.findall(r"\$([\d.]+)", src["quote"])]
+                pin, pout = b["price"]
+                assert pin in amounts and pout in amounts[amounts.index(pin) + 1 :], b["figure"]
         else:
             assert b["note"].startswith(("assumption", "derived")) and "source" not in b
+    rows = {b["figure"]: b for b in ch.BENCHMARKS}
+    assert {b["deployment"] for b in ch.BENCHMARKS if "deployment" in b} == set(ch.PRICES) - {"ollama/llama3.1:8b"}
+    # Credit union size: assets per member from COMPANY, inside the range NCUA's 2026 Q2 tables give by type
+    # (small credit unions $73.8B over 6.3M members to state-chartered $1,191.9B over 65.7M).
+    size = rows["Credit union size: members and assets"]["range"]
+    assert size["sample"] == round(ch.COMPANY["assets_usd"] / ch.COMPANY["members"])
+    assert (size["low"], size["high"]) == (round(73.8e9 / 6.3e6), round(1191.9e9 / 65.7e6))
+    assert size["low"] <= size["sample"] <= size["high"]
+    # AI spend per employee: the 30-day spend on Spend over COMPANY's employees, below Ramp's median firm.
+    per_employee = rows["AI spend per employee"]["compare"]
+    spend_30d = sum(m["spend_30d_usd"] for m in usage["models"])
+    assert per_employee["sample"] == round(spend_30d / ch.COMPANY["employees"], 2)
+    assert f"${round(spend_30d):,}" in rows["AI spend per employee"]["value"]
+    assert per_employee["sample"] < per_employee["median"] == 11.95
